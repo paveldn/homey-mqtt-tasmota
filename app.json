@@ -1,0 +1,93 @@
+{
+    "id": "com.paveld.tasmota",
+    "version": "1.0.0",
+    "compatibility": ">=2.0.0",
+    "sdk": 2,
+    "name": {
+        "en": "Tasmota MQTT"
+    },
+    "description": {
+        "en": "Adding support for tasmota devices through MQTT"
+    },
+    "category": [
+        "energy"
+    ],
+    "permissions": [
+        "homey:app:nl.scanno.mqtt"
+    ],
+    "images": {
+        "large": "/assets/images/large.png",
+        "small": "/assets/images/small.png"
+    },
+    "author": {
+        "name": "Pavlo Dudnytskyi",
+        "email": "paveldudn@gmail.com"
+    },
+    "drivers": [{
+        "id": "tasmota_mqtt",
+        "name": {
+            "en": "Tasmota device"
+        },
+        "class": "socket",
+        "capabilities": [
+            "onoff"
+        ],
+        "images": {
+            "large": "/drivers/tasmota_mqtt/assets/images/large.png",
+            "small": "/drivers/tasmota_mqtt/assets/images/small.png"
+        },
+        "pair": [{
+                "id": "list_devices",
+                "template": "list_devices",
+                "navigation": {
+                    "next": "add_devices"
+                },
+                "options": {
+                    "singular": false
+                }
+            },
+            {
+                "id": "add_devices",
+                "template": "add_devices"
+            }
+        ],
+        "settings": [{
+            "type": "group",
+            "label": "Settings",
+            "children": [{
+                "type": "group",
+                "label": "MQTT",
+                "children": [{
+                    "id": "mqtt_topic",
+                    "type": "text",
+                    "label": {
+                      "en": "Device MQTT topic"
+                    },
+                    "value": "",
+                    "pattern": "^[^#+\\/]+$"
+                }]
+            },
+            {
+                "type": "group",
+                "label": "Hardware",
+                "collapsed": true,
+                "children": [{
+                    "id": "relays_number",
+                    "type": "text",
+                    "label": {
+                        "en": "Number of relays"
+                    },
+                   "value": "1"
+                },
+                {
+                    "id": "pwr_monitor",
+                    "type": "text",
+                    "label": {
+                        "en": "Power monitoring"
+                    },
+                   "value": "No"
+                }]
+            }]
+        }]
+    }]
+}
