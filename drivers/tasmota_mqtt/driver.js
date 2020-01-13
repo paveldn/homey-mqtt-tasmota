@@ -39,21 +39,48 @@ class TasmotaDeviceDriver extends Homey.Driver {
         this.sendMessage('cmnd/tasmotas/Status', '2'); // StatusFWR 
         this.sendMessage('cmnd/tasmotas/Status', '8'); // StatusSNS
         setTimeout(() => {
+            this.log('Deviuces found:', JSON.stringify(this.devicesFound));
             this.searchingDevices = false;
             var devices = []
             for (var key in this.devicesFound)
-                try {
+            {
+                let capabilities = [];
+                let capabilitiesOptions = {};
+                let relaysCount = this.devicesFound[key]['settings']['relays_number'];
+                for (let propIndex = 0; propIndex < relaysCount; propIndex++)
+                {
+                    let capId = 'onoff.' + (propIndex + 1).toString();
+                    capabilities.push(capId);
+                    capabilitiesOptions[capId] = {title: { en: 'switch ' + (propIndex + 1).toString() }};
+                }
+                if (this.devicesFound[key]['settings']['pwr_monitor'])
+                    capabilities.push('meter_power');
+//                try {
                     if (this.devicesFound[key]['data'] !== undefined)
                     {
-                        if (this.devicesFound[key]['name'] === undefined)
-                            this.devicesFound[key]['name'] = key;
-                        devices.push(this.devicesFound[key]);
+                        let devItem = {
+                            name:   (this.devicesFound[key]['name'] === undefined) ? key :  this.devicesFound[key]['name'],
+                            data:   this.devicesFound[key]['data'],
+                            class:  relaysCount == 1 ? 'socket' : 'other',
+                            store:  {
+                            },
+                            settings:   {
+                                relays_number:  this.devicesFound[key]['settings']['relays_number'].toString(),
+                                pwr_monitor:    this.devicesFound[key]['settings']['pwr_monitor'] ? 'Yes' : 'No',
+                                chip_type:      this.devicesFound[key]['settings']['chip_type'],
+                                last_update:    this.devicesFound[key]['settings']['last_update']
+                            },
+                            capabilities,
+                            capabilitiesOptions
+                        };
+                        this.log('Device:',JSON.stringify(devItem));
+                        devices.push(devItem);
                     }
-                }
-                catch (error) {
-                }
-
-
+//                }
+//                catch (error) {
+//                }
+            }
+            this.log('Devices:',JSON.stringify(devices));
             callback( null, devices);
         }, 10000);
 
@@ -70,14 +97,14 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     let deviceTopic = topicParts[1];
                     const msgObj = Object.values(message)[0];
                     if (this.devicesFound[deviceTopic] === undefined)
-                        this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, pwr_monitor: 'No'}};
+                        this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, relays_number: 1, pwr_monitor: false, chip_type: 'unknown'}};
                     if (msgObj['FriendlyName'] !== undefined)
                     {
                         this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
-                        this.devicesFound[deviceTopic]['settings']['relays_number'] = msgObj['FriendlyName'].length.toString();
+                        this.devicesFound[deviceTopic]['settings']['relays_number'] = msgObj['FriendlyName'].length;
                     }
                     if (msgObj['ENERGY'] !== undefined)
-                        this.devicesFound[deviceTopic]['settings']['pwr_monitor'] = 'Yes';
+                        this.devicesFound[deviceTopic]['settings']['pwr_monitor'] = true;
                     if (msgObj['MqttClient'] !== undefined)
                         this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};
                     if (msgObj['Hardware'] !== undefined)

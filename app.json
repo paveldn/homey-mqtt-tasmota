@@ -29,7 +29,7 @@
             "en": "Tasmota device"
         },
         "class": "socket",
-        "capabilities": ["onoff"],
+        "capabilities": [],
         "images": {
             "large": "/drivers/tasmota_mqtt/assets/images/large.png",
             "small": "/drivers/tasmota_mqtt/assets/images/small.png"
@@ -41,7 +41,7 @@
                     "next": "add_devices"
                 },
                 "options": {
-                    "singular": true
+                    "singular": false
                 }
             },
             {
