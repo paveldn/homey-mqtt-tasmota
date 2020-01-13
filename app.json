@@ -29,9 +29,7 @@
             "en": "Tasmota device"
         },
         "class": "socket",
-        "capabilities": [
-            "onoff"
-        ],
+        "capabilities": ["onoff"],
         "images": {
             "large": "/drivers/tasmota_mqtt/assets/images/large.png",
             "small": "/drivers/tasmota_mqtt/assets/images/small.png"
@@ -43,7 +41,7 @@
                     "next": "add_devices"
                 },
                 "options": {
-                    "singular": false
+                    "singular": true
                 }
             },
             {
@@ -69,11 +67,10 @@
             },
             {
                 "type": "group",
-                "label": "Hardware",
-                "collapsed": true,
+                "label": "Device",
                 "children": [{
                     "id": "relays_number",
-                    "type": "text",
+                    "type": "label",
                     "label": {
                         "en": "Number of relays"
                     },
@@ -81,12 +78,32 @@
                 },
                 {
                     "id": "pwr_monitor",
-                    "type": "text",
+                    "type": "label",
                     "label": {
                         "en": "Power monitoring"
                     },
                    "value": "No"
+                },
+                {
+                    "id": "chip_type",
+                    "type": "label",
+                    "label": {
+                        "en": "Hardware"
+                    },
+                    "value": "Unknown"
                 }]
+            },
+            {
+                "type": "group",
+                "label": "Status",
+                "children": [{
+                    "id": "last_update",
+                    "type": "label",
+                    "label": {
+                        "en": "Last update"
+                    },
+                    "value": ""
+                }]                
             }]
         }]
     }]

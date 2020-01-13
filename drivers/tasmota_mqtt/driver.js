@@ -30,15 +30,16 @@ class TasmotaDeviceDriver extends Homey.Driver {
         this.log('onPairListDevices called');
         this.searchingDevices = true;
         this.devicesFound = {};
-        this.sendMessage('cmnd/sonoffs/Status', '');
-        this.sendMessage('cmnd/sonoffs/Status', '6');
-//        this.sendMessage('cmnd/sonoffs/Status', '8');
-        this.sendMessage('cmnd/tasmotas/Status', '');
-        this.sendMessage('cmnd/tasmotas/Status', '6');
-//        this.sendMessage('cmnd/tasmotas/Status', '8');
+        this.sendMessage('cmnd/sonoffs/Status', '');   // Status
+        this.sendMessage('cmnd/sonoffs/Status', '6');  // StatusMQT
+        this.sendMessage('cmnd/sonoffs/Status', '2');  // StatusFWR
+        this.sendMessage('cmnd/sonoffs/Status', '8');  // StatusSNS
+        this.sendMessage('cmnd/tasmotas/Status', '');  // Status
+        this.sendMessage('cmnd/tasmotas/Status', '6'); // StatusMQT
+        this.sendMessage('cmnd/tasmotas/Status', '2'); // StatusFWR 
+        this.sendMessage('cmnd/tasmotas/Status', '8'); // StatusSNS
         setTimeout(() => {
             this.searchingDevices = false;
-            this.log('###: ' + JSON.stringify(this.devicesFound));
             var devices = []
             for (var key in this.devicesFound)
                 try {
@@ -59,23 +60,32 @@ class TasmotaDeviceDriver extends Homey.Driver {
     }
 
     onMessage(topic, message) {
+        var now = new Date();
         if (this.searchingDevices && topic.startsWith('stat/'))
         {
             let topicParts = topic.split('/');
-            if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8')))
+            if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS2')))
             {
-                try {
+                //try {
                     let deviceTopic = topicParts[1];
                     const msgObj = Object.values(message)[0];
                     if (this.devicesFound[deviceTopic] === undefined)
-                        this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic}};
+                        this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, pwr_monitor: 'No'}};
                     if (msgObj['FriendlyName'] !== undefined)
+                    {
                         this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
+                        this.devicesFound[deviceTopic]['settings']['relays_number'] = msgObj['FriendlyName'].length.toString();
+                    }
+                    if (msgObj['ENERGY'] !== undefined)
+                        this.devicesFound[deviceTopic]['settings']['pwr_monitor'] = 'Yes';
                     if (msgObj['MqttClient'] !== undefined)
                         this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};
-                }
-                catch (error) {
-                }
+                    if (msgObj['Hardware'] !== undefined)
+                        this.devicesFound[deviceTopic]['settings']['chip_type'] = msgObj['Hardware'];
+                    this.devicesFound[deviceTopic]['settings']['last_update'] = now.toISOString();
+                //}
+                //catch (error) {
+                //}
             }
 
         }
