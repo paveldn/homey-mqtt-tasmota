@@ -92,18 +92,6 @@
                     },
                     "value": "Unknown"
                 }]
-            },
-            {
-                "type": "group",
-                "label": "Status",
-                "children": [{
-                    "id": "last_update",
-                    "type": "label",
-                    "label": {
-                        "en": "Last update"
-                    },
-                    "value": ""
-                }]                
             }]
         }]
     }]

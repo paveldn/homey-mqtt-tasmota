@@ -9,9 +9,9 @@ class TasmoitaDevice extends Homey.Device {
         this.log('Device init');
         this.log('Name:', this.getName());
         this.log('Class:', this.getClass());
-        this.log('This: ', JSON.stringify(this, null, 4));
         this.log(JSON.stringify(this.getSettings()));
         this.driver = await this.getReadyDriver();
+        var settings = this.getSettings();
     }
 
 
