@@ -94,5 +94,457 @@
                 }]
             }]
         }]
-    }]
+    }],
+    "flow": {
+    "triggers": [
+      {
+        "id": "state_changed_relays_1",
+        "title": {
+          "en": "Event happened"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=relays_1"
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "state_any",
+                "label": {
+                    "en": "changed state"
+                }
+             },    
+             {
+                "id": "state_on",
+                "label": {
+                    "en": "turned on"
+                }
+             },    
+             {
+                "id": "state_off",
+                "label": {
+                    "en": "turned off"
+                }
+             }    
+            ]
+          }
+        ],
+		"tokens": [
+          {
+            "name": "new_state",
+            "type": "boolean",
+            "title": {
+              "en": "New switch state"
+            }
+          }		
+		]
+      },
+      {
+        "id": "state_changed_relays_2",
+        "title": {
+          "en": "Event happened"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=relays_2"
+          },
+          {
+            "name": "socket",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "socket_any",
+                "label": {
+                    "en": "Any socket"
+                }
+             },    
+             {
+                "id": "socket1",
+                "label": {
+                    "en": "Socket 1"
+                }
+             },    
+             {
+                "id": "socket2",
+                "label": {
+                    "en": "Socket 2"
+                }
+             }    
+            ]
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "state_any",
+                "label": {
+                    "en": "changed state"
+                }
+             },    
+             {
+                "id": "state_on",
+                "label": {
+                    "en": "turned on"
+                }
+             },    
+             {
+                "id": "state_off",
+                "label": {
+                    "en": "turned off"
+                }
+             }    
+            ]
+          }
+        ],
+		"tokens": [
+          {
+            "name": "socket_index",
+            "type": "number",
+            "title": {
+              "en": "Socket index"
+            },
+			"example": 2
+          },
+          {
+            "name": "new_state",
+            "type": "boolean",
+            "title": {
+              "en": "New switch state"
+            }
+          }
+		]		
+      },
+      {
+        "id": "state_changed_relays_3",
+        "title": {
+          "en": "Event happened"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=relays_3"
+          },
+          {
+            "name": "socket",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "socket_any",
+                "label": {
+                    "en": "Any socket"
+                }
+             },    
+             {
+                "id": "socket1",
+                "label": {
+                    "en": "Socket 1"
+                }
+             },    
+             {
+                "id": "socket2",
+                "label": {
+                    "en": "Socket 2"
+                }
+             },    
+             {
+                "id": "socket3",
+                "label": {
+                    "en": "Socket 3"
+                }
+             }    
+            ]
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "state_any",
+                "label": {
+                    "en": "changed state"
+                }
+             },    
+             {
+                "id": "state_on",
+                "label": {
+                    "en": "turned on"
+                }
+             },    
+             {
+                "id": "state_off",
+                "label": {
+                    "en": "turned off"
+                }
+             }    
+            ]
+          }
+        ],
+		"tokens": [
+          {
+            "name": "socket_index",
+            "type": "number",
+            "title": {
+              "en": "Socket index"
+            },
+			"example": 2
+          },
+          {
+            "name": "new_state",
+            "type": "boolean",
+            "title": {
+              "en": "New switch state"
+            }
+          }
+		]				
+      },
+      {
+        "id": "state_changed_relays_4",
+        "title": {
+          "en": "Event happened"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=relays_4"
+          },
+          {
+            "name": "socket",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "socket_any",
+                "label": {
+                    "en": "Any socket"
+                }
+             },    
+             {
+                "id": "socket1",
+                "label": {
+                    "en": "Socket 1"
+                }
+             },    
+             {
+                "id": "socket2",
+                "label": {
+                    "en": "Socket 2"
+                }
+             },    
+             {
+                "id": "socket3",
+                "label": {
+                    "en": "Socket 3"
+                }
+             },    
+             {
+                "id": "socket4",
+                "label": {
+                    "en": "Socket 4"
+                }
+             }    
+            ]
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "state_any",
+                "label": {
+                    "en": "changed state"
+                }
+             },    
+             {
+                "id": "state_on",
+                "label": {
+                    "en": "turned on"
+                }
+             },    
+             {
+                "id": "state_off",
+                "label": {
+                    "en": "turned off"
+                }
+             }    
+            ]
+          }
+        ],
+		"tokens": [
+          {
+            "name": "socket_index",
+            "type": "number",
+            "title": {
+              "en": "Socket index"
+            },
+			"example": 2
+          },
+          {
+            "name": "new_state",
+            "type": "boolean",
+            "title": {
+              "en": "New switch state"
+            }
+          }
+		]				
+      },
+      {
+        "id": "state_changed_relays_5",
+        "title": {
+          "en": "Event happened"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=relays_5"
+          },
+          {
+            "name": "socket",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "socket_any",
+                "label": {
+                    "en": "Any socket"
+                }
+             },    
+             {
+                "id": "socket1",
+                "label": {
+                    "en": "Socket 1"
+                }
+             },    
+             {
+                "id": "socket2",
+                "label": {
+                    "en": "Socket 2"
+                }
+             },    
+             {
+                "id": "socket3",
+                "label": {
+                    "en": "Socket 3"
+                }
+             },    
+             {
+                "id": "socket4",
+                "label": {
+                    "en": "Socket 4"
+                }
+             },
+             {
+                "id": "socket5",
+                "label": {
+                    "en": "Socket 5"
+                }
+             }               
+            ]
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "state_any",
+                "label": {
+                    "en": "changed state"
+                }
+             },    
+             {
+                "id": "state_on",
+                "label": {
+                    "en": "turned on"
+                }
+             },    
+             {
+                "id": "state_off",
+                "label": {
+                    "en": "turned off"
+                }
+             }    
+            ]
+          }
+        ],
+		"tokens": [
+          {
+            "name": "socket_index",
+            "type": "number",
+            "title": {
+              "en": "Socket index"
+            },
+			"example": 2
+          },
+          {
+            "name": "new_state",
+            "type": "boolean",
+            "title": {
+              "en": "New switch state"
+            }
+          }
+		]		
+		]		
+      },
+      {
+        "id": "state_changed_relays_alot",
+        "title": {
+          "en": "One of sockets"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=relays_alot"
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+             {
+                "id": "state_any",
+                "label": {
+                    "en": "changed state"
+                }
+             },    
+             {
+                "id": "state_on",
+                "label": {
+                    "en": "turned on"
+                }
+             },    
+             {
+                "id": "state_off",
+                "label": {
+                    "en": "turned off"
+                }
+             }    
+            ]
+          }
+        ],
+		"tokens": [
+          {
+            "name": "socket_index",
+            "type": "number",
+            "title": {
+              "en": "Socket index"
+            },
+			"example": 2
+          },
+          {
+            "name": "new_state",
+            "type": "boolean",
+            "title": {
+              "en": "New switch state"
+            }
+          }
+		]				
+      }
+    ]}
 }
