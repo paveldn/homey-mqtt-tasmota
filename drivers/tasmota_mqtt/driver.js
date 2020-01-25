@@ -52,7 +52,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     capabilities.push(capId);
                     capabilitiesOptions[capId] = {title: { en: 'switch ' + (propIndex + 1).toString() }};
                 }
-                capabilities.push('relays_'+(relaysCount > 3 ? 'alot' : relaysCount.toString()));
+                capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
                 if (this.devicesFound[key]['settings']['pwr_monitor'])
                     capabilities.push('meter_power');
 //                try {

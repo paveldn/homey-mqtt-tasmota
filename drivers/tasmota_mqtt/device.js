@@ -27,6 +27,27 @@ class TasmoitaDevice extends Homey.Device {
             }
             return Promise.resolve();
         }, 500);
+        if (this.hasCapability('multiplesockets'))
+        {
+            this.socketTrigger = new Homey.FlowCardTriggerDevice('multiplesockets_relay_state_changed');
+            this.socketTrigger.register().registerRunListener((args, state) => {
+                    return Promise.resolve(((args.socket_id.name === 'any socket') || (args.socket_id.name === state.socket_id.name)) &&
+                                           ((args.state === 'state_any') || (args.state === state.state)));
+                })
+            this.socketTrigger.getArgument('socket_id').registerAutocompleteListener((query, args) => {
+                    let result = [{name: 'any socket'}];
+                    for (let socketIndex=1; socketIndex <= this.relaysCount; socketIndex++)
+                        result.push({name: 'socket '+socketIndex.toString()});
+                    return Promise.resolve(result);
+                })
+        }
+        else
+        {
+            this.socketTrigger = new Homey.FlowCardTriggerDevice('singlesocket_relay_state_changed');
+            this.socketTrigger.register().registerRunListener((args, state) => {
+                    return Promise.resolve((args.state === 'state_any') || (args.state === state.state));
+                })
+        }
     }
 
 
@@ -68,11 +89,23 @@ class TasmoitaDevice extends Homey.Device {
         if (topicParts[2].startsWith('POWER'))
         {
             let capName = '';
+            let socketIndex = '';
             if (topicParts[2] === 'POWER')
+            {
                 capName = 'onoff.1';
+                socketIndex = '1';
+            }
             else
-                capName = 'onoff.' + topicParts[2][5];
-            this.setCapabilityValue(capName, message === 'ON');
+            {
+                socketIndex = topicParts[2][5];
+                capName = 'onoff.' + socketIndex;
+            }
+            let newState = message === 'ON';
+            this.setCapabilityValue(capName, newState);
+            let newSt = {};
+            newSt['socket_id'] = {name: 'socket ' + socketIndex};
+            newSt['state'] =  newState ? 'state_on' : 'state_off';
+            this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);;
         }
     }
 }
