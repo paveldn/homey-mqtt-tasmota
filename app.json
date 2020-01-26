@@ -1,258 +1,341 @@
 {
-   "id":"com.paveld.tasmota",
-   "version":"0.2.0",
-   "compatibility":">=2.0.0",
-   "sdk":2,
-   "brandColor":"#42A3E9",
-   "name":{
-      "en":"Tasmota MQTT"
-   },
-   "description":{
-      "en":"Adding support for tasmota devices through MQTT"
-   },
-   "category":[
-      "energy"
-   ],
-   "permissions":[
-      "homey:app:nl.scanno.mqtt"
-   ],
-   "images":{
-      "large":"/assets/images/large.png",
-      "small":"/assets/images/small.png"
-   },
-   "author":{
-      "name":"Pavlo Dudnytskyi",
-      "email":"paveldudn@gmail.com"
-   },
-   "drivers":[
-      {
-         "id":"tasmota_mqtt",
-         "name":{
-            "en":"Tasmota device"
-         },
-         "class":"socket",
-         "capabilities":[
+    "id":"com.paveld.tasmota",
+    "version":"0.2.0",
+    "compatibility":">=2.0.0",
+    "sdk":2,
+    "brandColor":"#42A3E9",
+    "name":{
+        "en":"Tasmota MQTT"
+    },
+    "description":{
+        "en":"Adding support for tasmota devices through MQTT"
+    },
+    "category":[
+        "energy"
+    ],
+    "permissions":[
+        "homey:app:nl.scanno.mqtt"
+    ],
+    "images":{
+        "large":"/assets/images/large.png",
+        "small":"/assets/images/small.png"
+    },
+    "author":{
+        "name":"Pavlo Dudnytskyi",
+        "email":"paveldudn@gmail.com"
+    },
+    "drivers":[
+        {
+            "id":"tasmota_mqtt",
+            "name":{
+                "en":"Tasmota device"
+            },
+            "class":"socket",
+            "capabilities":[
 
-         ],
-         "images":{
-            "large":"/drivers/tasmota_mqtt/assets/images/large.png",
-            "small":"/drivers/tasmota_mqtt/assets/images/small.png"
-         },
-         "pair":[
-            {
-               "id":"list_devices",
-               "template":"list_devices",
-               "navigation":{
-                  "next":"add_devices"
-               },
-               "options":{
-                  "singular":false
-               }
+            ],
+            "images":{
+                "large":"/drivers/tasmota_mqtt/assets/images/large.png",
+                "small":"/drivers/tasmota_mqtt/assets/images/small.png"
             },
-            {
-               "id":"add_devices",
-               "template":"add_devices"
-            }
-         ],
-         "settings":[
-            {
-               "type":"group",
-               "label":"Settings",
-               "children":[
-                  {
-                     "type":"group",
-                     "label":"MQTT",
-                     "children":[
+            "pair":[
+                {
+                    "id":"list_devices",
+                    "template":"list_devices",
+                    "navigation":{
+                        "next":"add_devices"
+                    },
+                    "options":{
+                        "singular":false
+                    }
+                },
+                {
+                    "id":"add_devices",
+                    "template":"add_devices"
+                }
+            ],
+            "settings":[
+                {
+                    "type":"group",
+                    "label":"Settings",
+                    "children":[
                         {
-                           "id":"mqtt_topic",
-                           "type":"text",
-                           "label":{
-                              "en":"Device MQTT topic"
-                           },
-                           "value":"",
-                           "pattern":"^[^#+\\/]+$"
-                        }
-                     ]
-                  },
-                  {
-                     "type":"group",
-                     "label":"Device",
-                     "children":[
-                        {
-                           "id":"relays_number",
-                           "type":"label",
-                           "label":{
-                              "en":"Number of relays"
-                           },
-                           "value":"1"
+                            "type":"group",
+                            "label":"MQTT",
+                            "children":[
+                                {
+                                    "id":"mqtt_topic",
+                                    "type":"text",
+                                    "label":{
+                                        "en":"Device MQTT topic"
+                                    },
+                                    "value":"",
+                                    "pattern":"^[^#+\\/]+$"
+                                }
+                            ]
                         },
                         {
-                           "id":"pwr_monitor",
-                           "type":"label",
-                           "label":{
-                              "en":"Power monitoring"
-                           },
-                           "value":"No"
+                            "type":"group",
+                            "label":"Device",
+                            "children":[
+                                {
+                                    "id":"relays_number",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Number of relays"
+                                    },
+                                    "value":"1"
+                                },
+                                {
+                                    "id":"pwr_monitor",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Power monitoring"
+                                    },
+                                    "value":"No"
+                                },
+                                {
+                                    "id":"chip_type",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Hardware"
+                                    },
+                                    "value":"Unknown"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "flow":{
+        "triggers":[
+            {
+                "id":"multiplesockets_relay_state_changed",
+                "title":{
+                    "en":"Event happened"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
+                    },
+                    {
+                        "name":"socket_id",
+                        "type":"autocomplete",
+                        "placeholder":{
+                            "en":"Select one of the values"
+                        }
+                    },
+                    {
+                        "name":"state",
+                        "type":"dropdown",
+                        "values":[
+                            {
+                                "id":"state_any",
+                                "label":{
+                                    "en":"changed state"
+                                }
+                            },
+                            {
+                                "id":"state_on",
+                                "label":{
+                                    "en":"turned on"
+                                }
+                            },
+                            {
+                                "id":"state_off",
+                                "label":{
+                                    "en":"turned off"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "tokens":[
+                    {
+                        "name":"socket_index",
+                        "type":"number",
+                        "title":{
+                            "en":"Socket index"
                         },
-                        {
-                           "id":"chip_type",
-                           "type":"label",
-                           "label":{
-                              "en":"Hardware"
-                           },
-                           "value":"Unknown"
+                        "example":2
+                    },
+                    {
+                        "name":"socket_state",
+                        "type":"boolean",
+                        "title":{
+                            "en":"Socket state"
                         }
-                     ]
-                  }
-               ]
+                    }
+                ]
+            },
+            {
+                "id":"singlesocket_relay_state_changed",
+                "title":{
+                    "en":"Event happened, socket"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=singlesocket"
+                    },
+                    {
+                        "name":"state",
+                        "type":"dropdown",
+                        "values":[
+                            {
+                                "id":"state_any",
+                                "label":{
+                                    "en":"changed state"
+                                }
+                            },
+                            {
+                                "id":"state_on",
+                                "label":{
+                                    "en":"turned on"
+                                }
+                            },
+                            {
+                                "id":"state_off",
+                                "label":{
+                                    "en":"turned off"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "tokens":[
+                    {
+                        "name":"socket_state",
+                        "type":"boolean",
+                        "title":{
+                            "en":"Socket state"
+                        }
+                    }
+                ]
             }
-         ]
-      }
-   ],
-   "flow":{
-      "triggers":[
-         {
-            "id":"multiplesockets_relay_state_changed",
-            "title":{
-               "en":"Event happened"
+        ],
+        "conditions":[
+            {
+                "id":"multiplesockets_switch_turned_on",
+                "title":{
+                    "en":"Socket state is !{{on|off}}"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
+                    },
+                    {
+                        "name":"socket_id",
+                        "type":"autocomplete",
+                        "placeholder":{
+                            "en":"Select one of the values"
+                        }
+                    }
+                ]
             },
-            "args":[
-               {
-                  "name":"device",
-                  "type":"device",
-                  "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
-               },
-               {
-                  "name":"socket_id",
-                  "type":"autocomplete",
-                  "placeholder":{
-                     "en":"Select one of the values"
-                  }
-               },
-               {
-                  "name":"state",
-                  "type":"dropdown",
-                  "values":[
-                     {
-                        "id":"state_any",
-                        "label":{
-                           "en":"changed state"
+            {
+                "id":"singlesocket_switch_turned_on",
+                "title":{
+                    "en":"Socket state is !{{on|off}}"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=singlesocket"
+                    }
+                ]
+            }
+        ],
+        "actions":[
+            {
+                "id":"multiplesockets_switch_action",
+                "title":{
+                    "en":"Action"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
+                    },
+                    {
+                        "name":"socket_id",
+                        "type":"autocomplete",
+                        "placeholder":{
+                            "en":"Select one of the values"
                         }
-                     },
-                     {
-                        "id":"state_on",
-                        "label":{
-                           "en":"turned on"
-                        }
-                     },
-                     {
-                        "id":"state_off",
-                        "label":{
-                           "en":"turned off"
-                        }
-                     }
-                  ]
-               }
-            ],
-            "tokens":[
-               {
-                  "name":"socket_index",
-                  "type":"number",
-                  "title":{
-                     "en":"Socket index"
-                  },
-                  "example":2
-               },
-               {
-                  "name":"socket_state",
-                  "type":"boolean",
-                  "title":{
-                     "en":"Socket state"
-                  }
-               }
-            ]
-         },
-         {
-            "id":"singlesocket_relay_state_changed",
-            "title":{
-               "en":"Event happened, socket"
+                    },
+                    {
+                        "name":"state",
+                        "type":"dropdown",
+                        "values":[
+                            {
+                                "id":"state_on",
+                                "label":{
+                                    "en":"turn on"
+                                }
+                            },
+                            {
+                                "id":"state_off",
+                                "label":{
+                                    "en":"turn off"
+                                }
+                            },
+                            {
+                                "id":"state_toggle",
+                                "label":{
+                                    "en":"toggle"
+                                }
+                            }
+                        ]
+                    }
+                ]
             },
-            "args":[
-               {
-                  "name":"device",
-                  "type":"device",
-                  "filter":"driver_id=tasmota_mqtt&capabilities=singlesocket"
-               },
-               {
-                  "name":"state",
-                  "type":"dropdown",
-                  "values":[
-                     {
-                        "id":"state_any",
-                        "label":{
-                           "en":"changed state"
-                        }
-                     },
-                     {
-                        "id":"state_on",
-                        "label":{
-                           "en":"turned on"
-                        }
-                     },
-                     {
-                        "id":"state_off",
-                        "label":{
-                           "en":"turned off"
-                        }
-                     }
-                  ]
-               }
-            ],
-            "tokens":[
-               {
-                  "name":"socket_state",
-                  "type":"boolean",
-                  "title":{
-                     "en":"Socket state"
-                  }
-               }
-            ]
-         }
-      ],
-      "conditions":[
-         {
-            "id":"multiplesockets_switch_turned_on",
-            "title":{
-               "en":"Socket state is !{{on|off}}"
-            },
-            "args":[
-               {
-                  "name":"device",
-                  "type":"device",
-                  "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
-               },
-               {
-                  "name":"socket_id",
-                  "type":"autocomplete",
-                  "placeholder":{
-                     "en":"Select one of the values"
-                  }
-               }
-            ]
-         },
-         {
-            "id":"singlesocket_switch_turned_on",
-            "title":{
-               "en":"Socket state is !{{on|off}}"
-            },
-            "args":[
-               {
-                  "name":"device",
-                  "type":"device",
-                  "filter":"driver_id=tasmota_mqtt&capabilities=singlesocket"
-               }
-            ]
-         }
-      ]
-   }
+            {
+                "id":"singlesocket_switch_action",
+                "title":{
+                    "en":"Action"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=singlesocket"
+                    },
+                    {
+                        "name":"state",
+                        "type":"dropdown",
+                        "values":[
+                            {
+                                "id":"state_on",
+                                "label":{
+                                    "en":"turn on"
+                                }
+                            },
+                            {
+                                "id":"state_off",
+                                "label":{
+                                    "en":"turn off"
+                                }
+                            },
+                            {
+                                "id":"state_toggle",
+                                "label":{
+                                    "en":"toggle"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
 }
