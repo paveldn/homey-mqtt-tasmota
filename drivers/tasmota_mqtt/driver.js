@@ -56,7 +56,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
                 capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
                 if (this.devicesFound[key]['settings']['pwr_monitor'])
                     capabilities.push('meter_power');
-//                try {
+                try {
                     if (this.devicesFound[key]['data'] !== undefined)
                     {
                         let devItem = {
@@ -77,9 +77,9 @@ class TasmotaDeviceDriver extends Homey.Driver {
                         this.log('Device:',JSON.stringify(devItem));
                         devices.push(devItem);
                     }
-//                }
-//                catch (error) {
-//                }
+                }
+                catch (error) {
+                }
             }
             callback( null, devices);
         }, 10000);
@@ -93,7 +93,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
         {
             if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS2')))
             {
-                //try {
+                try {
                     var deviceTopic = topicParts[1];
                     const msgObj = Object.values(message)[0];
                     if (this.devicesFound[deviceTopic] === undefined)
@@ -109,9 +109,9 @@ class TasmotaDeviceDriver extends Homey.Driver {
                         this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};
                     if (msgObj['Hardware'] !== undefined)
                         this.devicesFound[deviceTopic]['settings']['chip_type'] = msgObj['Hardware'];
-                //}
-                //catch (error) {
-                //}
+                }
+                catch (error) {
+                }
             }
 
         }

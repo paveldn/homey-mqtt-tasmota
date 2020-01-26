@@ -24,6 +24,14 @@
         "name":"Pavlo Dudnytskyi",
         "email":"paveldudn@gmail.com"
     },
+    "contributors":{
+        "developers":[
+            {
+                "name":"Pavlo Dudnytskyi",
+                "email":"paveldudn@gmail.com"
+            }
+        ]
+    },
     "drivers":[
         {
             "id":"tasmota_mqtt",
