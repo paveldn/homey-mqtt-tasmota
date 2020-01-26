@@ -51,6 +51,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     let capId = 'onoff.' + (propIndex + 1).toString();
                     capabilities.push(capId);
                     capabilitiesOptions[capId] = {title: { en: 'switch ' + (propIndex + 1).toString() }};
+                    capabilitiesOptions[capId]['greyout'] = relaysCount === 1;
                 }
                 capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
                 if (this.devicesFound[key]['settings']['pwr_monitor'])
