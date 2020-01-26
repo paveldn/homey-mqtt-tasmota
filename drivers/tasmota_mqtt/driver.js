@@ -40,8 +40,8 @@ class TasmotaDeviceDriver extends Homey.Driver {
         this.sendMessage('cmnd/tasmotas/Status', '8'); // StatusSNS
         setTimeout(() => {
             this.searchingDevices = false;
-            var devices = []
-            for (var key in this.devicesFound)
+            let devices = []
+            for (let key in this.devicesFound)
             {
                 let capabilities = [];
                 let capabilitiesOptions = {};
@@ -87,14 +87,14 @@ class TasmotaDeviceDriver extends Homey.Driver {
     }
 
     onMessage(topic, message) {
-        var now = new Date();
-        var topicParts = topic.split('/');
+        let now = new Date();
+        let topicParts = topic.split('/');
         if (this.searchingDevices && (topicParts[0] === 'stat'))
         {
             if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS2')))
             {
                 try {
-                    var deviceTopic = topicParts[1];
+                    let deviceTopic = topicParts[1];
                     const msgObj = Object.values(message)[0];
                     if (this.devicesFound[deviceTopic] === undefined)
                         this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, relays_number: 1, pwr_monitor: false, chip_type: 'unknown'}};
@@ -153,7 +153,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
     }
 
     register() {
-        for  (var topic in this.topics)
+        for  (let topic in this.topics)
             this.subscribeTopic(this.topics[topic] + "/#");
     }
 
