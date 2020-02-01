@@ -10,9 +10,7 @@ class TasmoitaDevice extends Homey.Device {
         this.log('Class:', this.getClass());
         let settings = this.getSettings();
         this.log('Settings:',JSON.stringify(settings));
-        this.log('This:', JSON.stringify(this));
         this.driver = await this.getReadyDriver();
-        this.log('driver:', JSON.stringify(this.driver));
         this.relaysCount = parseInt(settings.relays_number);
         this.socketsList = [];
         for (let socketIndex=1; socketIndex <= this.relaysCount; socketIndex++)
