@@ -36,25 +36,28 @@ class TasmoitaDevice extends Homey.Device {
                 });
             this.socketCondition = new Homey.FlowCardCondition('multiplesockets_switch_turned_on');
             this.socketCondition.register().registerRunListener((args, state) => {
-                    if ((args.socket_id.name === 'any socket') || (args.socket_id.name === 'all sockets'))
-                    {
-                        let orVal = false;
-                        let andVal = true;
-                        for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
-                        {
-                            let cVal = args.device.getCapabilityValue('onoff.'+socketIndex.toString());
-                            orVal |= cVal;
-                            andVal &= cVal;
-                        }
-                        if (args.socket_id.name === 'any socket')
-                            return Promise.resolve(orVal);
-                        else
-                            return Promise.resolve(andVal);
-                    }                      
                     return Promise.resolve(args.device.getCapabilityValue('onoff.'+args.socket_id.name.slice(-1)) === true);
                 });
             this.socketCondition.getArgument('socket_id').registerAutocompleteListener((query, args) => {
-                    return Promise.resolve([{name: 'any socket'}, {name: 'all sockets'}].concat(args.device.socketsList));
+                    return Promise.resolve(args.device.socketsList);
+                });
+            this.socketConditionAll = new Homey.FlowCardCondition('multiplesockets_all_switches_turned_on'); 
+            this.socketConditionAll.register().registerRunListener((args, state) => {
+                    for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
+                    {
+                        if (!args.device.getCapabilityValue('onoff.'+socketIndex.toString()))
+                            return Promise.resolve(false);
+                    }
+                    return Promise.resolve(true);
+                });
+            this.socketConditionAny = new Homey.FlowCardCondition('multiplesockets_some_switches_turned_on'); 
+            this.socketConditionAny.register().registerRunListener((args, state) => {
+                    for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
+                    {
+                        if (args.device.getCapabilityValue('onoff.'+socketIndex.toString()))
+                            return Promise.resolve(true);
+                    }
+                    return Promise.resolve(false);
                 });
             this.socketAction = new Homey.FlowCardAction('multiplesockets_switch_action');         
             this.socketAction.register().registerRunListener((args, state) => {

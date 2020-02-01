@@ -122,7 +122,7 @@
             {
                 "id":"multiplesockets_relay_state_changed",
                 "title":{
-                    "en":"Event happened"
+                    "en":"Socket status changed"
                 },
                 "args":[
                     {
@@ -144,7 +144,7 @@
                             {
                                 "id":"state_any",
                                 "label":{
-                                    "en":"changed state"
+                                    "en":"toggled"
                                 }
                             },
                             {
@@ -183,7 +183,7 @@
             {
                 "id":"singlesocket_relay_state_changed",
                 "title":{
-                    "en":"Event happened, socket"
+                    "en":"Socket status changed"
                 },
                 "args":[
                     {
@@ -198,7 +198,7 @@
                             {
                                 "id":"state_any",
                                 "label":{
-                                    "en":"changed state"
+                                    "en":"toggled"
                                 }
                             },
                             {
@@ -248,6 +248,32 @@
                     }
                 ]
             },
+			{
+                "id":"multiplesockets_all_switches_turned_on",
+                "title":{
+                    "en":"!{{All sockets is turned on|Some sockets is turned off}}"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
+                    }
+                ]
+            },
+			{
+                "id":"multiplesockets_some_switches_turned_on",
+                "title":{
+                    "en":"!{{Some sockets turned on|All sockets turned off}}"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
+                    }
+                ]
+            },			
             {
                 "id":"singlesocket_switch_turned_on",
                 "title":{
@@ -266,7 +292,7 @@
             {
                 "id":"multiplesockets_switch_action",
                 "title":{
-                    "en":"Action"
+                    "en":"Change socket(s) state"
                 },
                 "args":[
                     {
@@ -310,7 +336,7 @@
             {
                 "id":"singlesocket_switch_action",
                 "title":{
-                    "en":"Action"
+                    "en":"Change socket state"
                 },
                 "args":[
                     {

@@ -1,5 +1,8 @@
 {
   "0.2.0": {
     "en": "Initial implementation"
+  },
+  "0.2.1": {
+    "en": "Fixed bug with wrong object in Flow cards"
   }
 }
