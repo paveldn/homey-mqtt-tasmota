@@ -32,68 +32,68 @@
             }
         ]
     },
-    "capabilities": {
-        "measure_power_factor": {
-          "type": "number",
-          "title": {
-            "en": "Power factor"
-          },
-          "uiComponent": "sensor",
-          "getable": true,
-          "setable": false,
-          "icon": "assets/mobile/power_factor.svg"
+    "capabilities":{
+        "measure_power_factor":{
+            "type":"number",
+            "title":{
+                "en":"Power factor"
+            },
+            "uiComponent":"sensor",
+            "getable":true,
+            "setable":false,
+            "icon":"assets/mobile/power_factor.svg"
         },
-        "measure_power_reactive": {
-          "type": "number",
-          "title": {
-            "en": "Reactive Power"
-          },
-          "uiComponent": "sensor",
-          "getable": true,
-          "setable": false,
-          "units": {
-            "en": "VAr"
-          },
-          "icon": "assets/mobile/power_power.svg"         
+        "measure_power_reactive":{
+            "type":"number",
+            "title":{
+                "en":"Reactive Power"
+            },
+            "uiComponent":"sensor",
+            "getable":true,
+            "setable":false,
+            "units":{
+                "en":"VAr"
+            },
+            "icon":"assets/mobile/power_power.svg"
         },
-        "measure_apparent_power": {
-          "type": "number",
-          "title": {
-            "en": "Apparent Power"
-          },
-          "uiComponent": "sensor",
-          "getable": true,
-          "setable": false,
-          "units": {
-            "en": "VA"
-          },
-          "icon": "assets/mobile/power_power.svg"
+        "measure_apparent_power":{
+            "type":"number",
+            "title":{
+                "en":"Apparent Power"
+            },
+            "uiComponent":"sensor",
+            "getable":true,
+            "setable":false,
+            "units":{
+                "en":"VA"
+            },
+            "icon":"assets/mobile/power_power.svg"
         },
-        "meter_energy_today": {
-          "type": "number",
-          "title": {
-            "en": "Power Meter Today"
-          },
-          "uiComponent": "sensor",
-          "getable": true,
-          "setable": false,
-          "units": {
-            "en": "kWh"
-          },
-          "icon": "assets/mobile/power_meter.svg"
+        "meter_energy_today":{
+            "type":"number",
+            "title":{
+                "en":"Power Meter Today"
+            },
+            "uiComponent":"sensor",
+            "getable":true,
+            "setable":false,
+            "units":{
+                "en":"kWh"
+            },
+            "icon":"assets/mobile/power_meter.svg"
         },
-        "meter_energy_yesterday": {
-          "type": "number",
-          "title": {
-            "en": "Power Meter Yesterday"
-          },
-          "uiComponent": "sensor",
-          "getable": true,
-          "setable": false,
-          "units": {
-            "en": "kWh"
-          },
-          "icon": "assets/mobile/power_meter.svg"
+        "meter_energy_yesterday":{
+            "type":"number",
+            "title":{
+                "en":"Power Meter Yesterday"
+            },
+            "uiComponent":"sensor",
+            "getable":true,
+            "setable":false,
+            "units":{
+                "en":"kWh"
+            },
+            "icon":"assets/mobile/power_meter.svg"
         }
     },
     "drivers":[
@@ -104,6 +104,7 @@
             },
             "class":"socket",
             "capabilities":[
+
             ],
             "images":{
                 "large":"/drivers/tasmota_mqtt/assets/images/large.png",
@@ -424,7 +425,7 @@
                         "filter":"driver_id=tasmota_mqtt&capabilities=multiplesockets"
                     }
                 ]
-            },          
+            },
             {
                 "id":"singlesocket_switch_turned_on",
                 "title":{

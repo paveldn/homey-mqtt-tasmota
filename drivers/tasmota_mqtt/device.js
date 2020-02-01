@@ -1,6 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
+const PowerMeterCapabilities = require('./power')
 
 class TasmoitaDevice extends Homey.Device {
 
@@ -12,10 +13,13 @@ class TasmoitaDevice extends Homey.Device {
         this.log('Settings:',JSON.stringify(settings));
         this.driver = await this.getReadyDriver();
         this.relaysCount = parseInt(settings.relays_number);
+        this.powerMonitoring = settings.pwr_monitor === 'Yes';
         this.socketsList = [];
         for (let socketIndex=1; socketIndex <= this.relaysCount; socketIndex++)
             this.socketsList.push({name: 'socket '+socketIndex.toString()});
         this.invalidateStatus('Waiting for device status');
+        if (this.powerMonitoring)
+            this.driver.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
         this.registerMultipleCapabilityListener(this.getCapabilities(), ( valueObj, optsObj ) => {
             let capName = Object.keys(valueObj)[0];
             if (capName.startsWith('onoff.'))
@@ -197,7 +201,21 @@ class TasmoitaDevice extends Homey.Device {
             let newSt = {};
             newSt['socket_id'] = {name: 'socket ' + socketIndex};
             newSt['state'] =  newState ? 'state_on' : 'state_off';
-            this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);;
+            this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
+            if (this.powerMonitoring)
+                setTimeout(() => {
+                    this.driver.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
+                }, 3000);
+        }
+        if (this.powerMonitoring)
+        {
+            let powValues = message;
+            if (powValues['StatusSNS'] !== undefined)
+                powValues = powValues['StatusSNS'];
+            powValues = powValues['ENERGY'];
+            for (let key in powValues)
+                if (PowerMeterCapabilities[key] !== undefined)
+                    this.setCapabilityValue(PowerMeterCapabilities[key], powValues[key]); 
         }
     }
 }

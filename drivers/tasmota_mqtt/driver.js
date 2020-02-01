@@ -2,81 +2,7 @@
 
 const Homey = require('homey');
 const MQTTClient = new Homey.ApiApp('nl.scanno.mqtt');
-
-const PowerMeterCapabilities = [
-        {
-            field:  "Current",
-            id:     "power_current",
-            title:  {en: "Current"},
-            unit:   "A",
-            type:   "float",
-            icon:   "assets/mobile/power_current.svg"
-        },
-        {
-            field:  "Voltage",
-            id:     "power_voltage",
-            title:  {en: "Voltage"},
-            unit:   "V",
-            type:   "int",
-            icon:   "assets/mobile/power_voltage.svg"
-        },
-        {
-            field:  "Power",
-            id:     "power_power",
-            title:  {en: "Power"},
-            unit:   "W",
-            type:   "int",
-            icon:   "assets/mobile/power_power.svg"
-        },
-        {
-            field:  "ApparentPower",
-            id:     "power_apparent_power",
-            title:  {en: "Apparent Power"},
-            unit:   "VA",
-            type:   "int",
-            icon:   "assets/mobile/power_power.svg"
-        },
-        {
-            field:  "ReactivePower",
-            id:     "power_reactive_power",
-            title:  {en: "Reactive Power"},
-            unit:   "VAr",
-            type:   "int",
-            icon:   "assets/mobile/power_power.svg"
-        },
-        {
-            field:  "Factor",
-            id:     "power_power_factor",
-            title:  {en: "Power Factor"},
-            unit:   "",
-            type:   "float",
-            icon:   "assets/mobile/power_factor.svg"
-        },
-        {
-            field:  "Today",
-            id:     "power_energy_today",
-            title:  {en: "Energy Today"},
-            unit:   "kWh",
-            type:   "float",
-            icon:   "assets/mobile/power_meter.svg"
-        },
-        {
-            field:  "Yesterday",
-            id:     "power_energy_yesterday",
-            title:  {en: "Energy Yesterday"},
-            unit:   "kWh",
-            type:   "float",
-            icon:   "assets/mobile/power_meter.svg"
-        },
-        {
-            field:  "Total",
-            id:     "power_energy_total",
-            title:  {en: "Energy Total"},
-            unit:   "kWh",
-            type:   "float",
-            icon:   "assets/mobile/power_meter.svg"
-        }
-    ];
+const PowerMeterCapabilities = require('./power')
 
 class TasmotaDeviceDriver extends Homey.Driver {
     
@@ -193,11 +119,9 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     if (msgObj['ENERGY'] !== undefined)
                     {
                         let energy = msgObj['ENERGY'];
-                        let arrSize = PowerMeterCapabilities.length;
                         for (let key in energy)
-                            for (let index=0; index < arrSize; index++)
-                                if (key === PowerMeterCapabilities[index].field)
-                                    this.devicesFound[deviceTopic]['settings']['pwr_monitor'].push(PowerMeterCapabilities[index]);
+                            if (PowerMeterCapabilities[key] !== undefined)
+                                this.devicesFound[deviceTopic]['settings']['pwr_monitor'].push(PowerMeterCapabilities[key]);
                     }
                     if (msgObj['MqttClient'] !== undefined)
                         this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};
