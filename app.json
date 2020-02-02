@@ -11,8 +11,14 @@
         "en":"Adding support for tasmota devices through MQTT"
     },
     "category":[
-        "energy"
+        "appliances"
     ],
+    "tags":{
+        "en":[
+            "tasmota",
+            "sonoff"
+        ]
+    },
     "permissions":[
         "homey:app:nl.scanno.mqtt"
     ],
@@ -31,6 +37,17 @@
                 "email":"paveldudn@gmail.com"
             }
         ]
+    },
+    "source":"https://github.com/paveldn/homey-mqtt-tasmota",
+    "bugs":{
+        "url":"https://github.com/paveldn/homey-mqtt-tasmota/issues"
+    },
+    "contributing":{
+        "donate":{
+            "paypal":{
+                "username":"truemark"
+            }
+        }
     },
     "capabilities":{
         "measure_power_factor":{

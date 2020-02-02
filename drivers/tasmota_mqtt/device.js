@@ -17,7 +17,7 @@ class TasmoitaDevice extends Homey.Device {
         this.socketsList = [];
         for (let socketIndex=1; socketIndex <= this.relaysCount; socketIndex++)
             this.socketsList.push({name: 'socket '+socketIndex.toString()});
-        this.invalidateStatus('Waiting for device status');
+        this.invalidateStatus(Homey.__('device.unavailable.startup'));
         if (this.powerMonitoring)
             this.driver.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
         this.registerMultipleCapabilityListener(this.getCapabilities(), ( valueObj, optsObj ) => {
@@ -156,7 +156,11 @@ class TasmoitaDevice extends Homey.Device {
     onSettings(oldSettings, newSettings, changedKeysArr, callback)
     {
         if (changedKeysArr.includes('mqtt_topic'))
-            this.invalidateStatus('Topic settings changed. Waiting for status');
+        {
+            setTimeout(() => {
+                this.invalidateStatus(Homey.__('device.unavailable.update'));
+            }, 3000);
+        }
         return callback(null, true);
     }
 

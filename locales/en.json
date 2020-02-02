@@ -1,1 +1,8 @@
-{}
+{
+    "device": {
+        "unavailable": {
+            "startup":  "Waiting for device status",
+            "update":   "Topic settings changed. Waiting for status"
+        }
+    }
+}
