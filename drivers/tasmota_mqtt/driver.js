@@ -7,7 +7,7 @@ const PowerMeterCapabilities = require('./power')
 class TasmotaDeviceDriver extends Homey.Driver {
     
     onInit() {
-        this.log(this.constructor.name + ' has been inited');
+        this.log(this.constructor.name + ' has been initiated');
         this.log('Manifest: ' + JSON.stringify(this.getManifest()));
         this.topics = ["stat", "tele"];
         this.devicesFound = {};

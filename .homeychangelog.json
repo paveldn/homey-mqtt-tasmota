@@ -4,5 +4,11 @@
   },
   "0.2.1": {
     "en": "Fixed bug with wrong object in Flow cards"
+  },
+  "0.3.0": {
+    "en": "Added support for power monitoring"
+  },
+  "0.3.1": {
+    "en": "Small fixes"
   }
 }
