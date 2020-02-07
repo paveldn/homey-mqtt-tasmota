@@ -1,11 +1,11 @@
 ﻿module.exports = {
-        'Current':          'measure_current',
         'Voltage':          'measure_voltage',
+        'Current':          'measure_current',
         'Power':            'measure_power',
+        'Factor':           'measure_power_factor',
         'ApparentPower':    'measure_apparent_power',
         'ReactivePower':    'measure_power_reactive',
-        'Factor':           'measure_power_factor',
+        'Total':            'meter_power',
         'Today':            'meter_energy_today',
-        'Yesterday':        'meter_energy_yesterday',
-        'Total':            'meter_power'
+        'Yesterday':        'meter_energy_yesterday'
     };

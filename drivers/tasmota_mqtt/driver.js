@@ -40,14 +40,14 @@ class TasmotaDeviceDriver extends Homey.Driver {
         this.sendMessage('cmnd/tasmotas/Status', '6'); // StatusMQT
         this.sendMessage('cmnd/tasmotas/Status', '2'); // StatusFWR 
         this.sendMessage('cmnd/tasmotas/Status', '8'); // StatusSNS
-        setTimeout(() => {
-            this.searchingDevices = false;
-            let devices = []
-            for (let key in this.devicesFound)
+        setTimeout( drvObj => {
+            drvObj.searchingDevices = false;
+            let devices = [];
+            Object.keys(drvObj.devicesFound).sort().forEach( key => 
             {
                 let capabilities = [];
                 let capabilitiesOptions = {};
-                let relaysCount = this.devicesFound[key]['settings']['relays_number'];
+                let relaysCount = drvObj.devicesFound[key]['settings']['relays_number'];
                 for (let propIndex = 0; propIndex < relaysCount; propIndex++)
                 {
                     let capId = 'onoff.' + (propIndex + 1).toString();
@@ -56,46 +56,35 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     capabilitiesOptions[capId]['greyout'] = relaysCount === 1;
                 }
                 capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
-                let mobile = undefined;
-                if (this.devicesFound[key]['settings']['pwr_monitor'].length > 0)
-                {
-                    capabilities.push('measure_current');
-                    capabilities.push('measure_voltage');
-                    capabilities.push('measure_power');
-                    capabilities.push('meter_power');
-                    capabilities.push('measure_power_factor');
-                    capabilities.push('measure_power_reactive');
-                    capabilities.push('measure_apparent_power');
-                    capabilities.push('meter_energy_today');
-                    capabilities.push('meter_energy_yesterday');
-                }
+                for (let capItem in drvObj.devicesFound[key]['settings']['pwr_monitor'])
+                    capabilities.push(drvObj.devicesFound[key]['settings']['pwr_monitor'][capItem]);
                 try {
-                    if (this.devicesFound[key]['data'] !== undefined)
+                    if (drvObj.devicesFound[key]['data'] !== undefined)
                     {
                         let devItem = {
-                            name:   (this.devicesFound[key]['name'] === undefined) ? key :  this.devicesFound[key]['name'],
-                            data:   this.devicesFound[key]['data'],
+                            name:   (drvObj.devicesFound[key]['name'] === undefined) ? key :  drvObj.devicesFound[key]['name'],
+                            data:   drvObj.devicesFound[key]['data'],
                             class:  relaysCount == 1 ? 'socket' : 'other',
                             store: {
                             },
                             settings:   {
-                                mqtt_topic:     this.devicesFound[key]['settings']['mqtt_topic'],
-                                relays_number:  this.devicesFound[key]['settings']['relays_number'].toString(),
-                                pwr_monitor:    this.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
-                                chip_type:      this.devicesFound[key]['settings']['chip_type'],
+                                mqtt_topic:     drvObj.devicesFound[key]['settings']['mqtt_topic'],
+                                relays_number:  drvObj.devicesFound[key]['settings']['relays_number'].toString(),
+                                pwr_monitor:    drvObj.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
+                                chip_type:      drvObj.devicesFound[key]['settings']['chip_type'],
                             },
                             capabilities,
                             capabilitiesOptions
                         };
-                        this.log('Device:',JSON.stringify(devItem));
+                        drvObj.log('Device:',JSON.stringify(devItem));
                         devices.push(devItem);
                     }
                 }
                 catch (error) {
                 }
-            }
+            });
             callback( null, devices);
-        }, 10000);
+        }, 10000, this);
 
     }
 
@@ -118,10 +107,8 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     }
                     if (msgObj['ENERGY'] !== undefined)
                     {
-                        let energy = msgObj['ENERGY'];
-                        for (let key in energy)
-                            if (PowerMeterCapabilities[key] !== undefined)
-                                this.devicesFound[deviceTopic]['settings']['pwr_monitor'].push(PowerMeterCapabilities[key]);
+                        let energyKeys = Object.keys(msgObj['ENERGY']);
+                        Object.keys(PowerMeterCapabilities).filter(value => energyKeys.includes(value)).forEach(key => this.devicesFound[deviceTopic]['settings']['pwr_monitor'].push(PowerMeterCapabilities[key]));
                     }
                     if (msgObj['MqttClient'] !== undefined)
                         this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};
@@ -139,7 +126,6 @@ class TasmotaDeviceDriver extends Homey.Driver {
             for (let index = 0; index < devices.length; index++)
                 if (devices[index].getMqttTopic() === topicParts[1])
                 {
-                    this.log("Hit: " + topic + " => " + JSON.stringify(message));
                     devices[index].processMqttMessage(topic, message);
                     break;
                 }

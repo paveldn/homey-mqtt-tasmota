@@ -10,7 +10,6 @@ class TasmoitaDevice extends Homey.Device {
         this.log('Name:', this.getName());
         this.log('Class:', this.getClass());
         let settings = this.getSettings();
-        this.log('Settings:',JSON.stringify(settings));
         this.driver = await this.getReadyDriver();
         this.relaysCount = parseInt(settings.relays_number);
         this.powerMonitoring = settings.pwr_monitor === 'Yes';
