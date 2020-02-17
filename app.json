@@ -1,6 +1,6 @@
 {
     "id":"com.paveld.tasmota",
-    "version":"0.3.2",
+    "version":"0.4.0",
     "compatibility":">=2.0.0",
     "sdk":2,
     "brandColor":"#42A3E9",
@@ -160,6 +160,20 @@
                                     },
                                     "value":"",
                                     "pattern":"^[^#+\\/]+$"
+                                },
+                                {
+                                    "id":"update_interval",
+                                    "type":"number",
+                                    "label":{
+                                        "en":"Update interval"
+                                    },
+                                    "value":5,
+                                    "min":3,
+                                    "max":20,
+                                    "units":{
+                                        "en":"min"
+                                    }
+
                                 }
                             ]
                         },
@@ -200,6 +214,54 @@
     ],
     "flow":{
         "triggers":[
+            {
+                "id":"device_connection_lost",
+                "title":{
+                    "en":"Lost connection to device"
+                },
+                "tokens":[
+                    {
+                        "name":"name",
+                        "type":"string",
+                        "title":{
+                            "en":"Device name"
+                        },
+                        "example":"Device 1"
+                    },
+                    {
+                        "name":"device_id",
+                        "type":"string",
+                        "title":{
+                            "en":"Device ID"
+                        },
+                        "example":"DVES_123456"
+                    }
+                ]
+            },
+            {
+                "id":"device_connection_restored",
+                "title":{
+                    "en":"Restored connection to device"
+                },
+                "tokens":[
+                    {
+                        "name":"name",
+                        "type":"string",
+                        "title":{
+                            "en":"Device name"
+                        },
+                        "example":"Device 1"
+                    },
+                    {
+                        "name":"device_id",
+                        "type":"string",
+                        "title":{
+                            "en":"Device ID"
+                        },
+                        "example":"DVES_123456"
+                    }
+                ]
+            },
             {
                 "id":"measure_power_factor_changed",
                 "title":{

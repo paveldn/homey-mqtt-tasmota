@@ -2,7 +2,9 @@
     "device": {
         "unavailable": {
             "startup":  "Waiting for device status",
-            "update":   "Topic settings changed. Waiting for status"
+            "update":   "Topic settings changed. Waiting for status",
+            "timeout":  "Device update timeout",
+            "offline":  "Device offline"
         }
     }
 }

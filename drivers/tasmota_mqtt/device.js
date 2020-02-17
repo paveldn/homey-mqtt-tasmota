@@ -14,13 +14,20 @@ class TasmoitaDevice extends Homey.Device {
         this.driver = await this.getReadyDriver();
         this.relaysCount = parseInt(settings.relays_number);
         this.powerMonitoring = settings.pwr_monitor === 'Yes';
+        let now = Date.now();
+        this.update = {
+            status: 'init',
+            answerTimeout: undefined,
+            nextRequest: now,
+            updateInterval: settings.update_interval * 60 * 1000,
+            timeoutInterval: 20 * 1000 
+        };
         this.socketsList = [];
-        this.lastUpdate = undefined;
         for (let socketIndex=1; socketIndex <= this.relaysCount; socketIndex++)
             this.socketsList.push({name: 'socket '+socketIndex.toString()});
         this.invalidateStatus(Homey.__('device.unavailable.startup'));
         if (this.powerMonitoring)
-            this.driver.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
+            this.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
         let onOffList = this.getCapabilities().filter( cap => cap.startsWith('onoff.') );
         if (onOffList.length > 0)
             this.registerMultipleCapabilityListener(onOffList, ( valueObj, optsObj ) => {
@@ -32,6 +39,17 @@ class TasmoitaDevice extends Homey.Device {
             this.registerMultipleSocketsFlows();
         else
             this.registerSingleSocketFlows();
+    }
+
+    getDeviceStatus() {
+        return this.update.status;
+    }
+
+    sendMessage(topic, message) {
+        this.driver.sendMessage(topic, message);
+        let updateTm = Date.now() + this.update.timeoutInterval;
+        if ((this.update.answerTimeout == undefined) || (updateTm < this.update.answerTimeout)) 
+            this.update.answerTimeout = updateTm;
     }
 
     registerMultipleSocketsFlows() {
@@ -127,11 +145,23 @@ class TasmoitaDevice extends Homey.Device {
             });
     }
 
-    invalidateStatus(message)
-    {
+    checkDeviceStatus() {
+        let now = Date.now();
+        if ((this.update.status === 'available') && (this.update.answerTimeout != undefined) && (now >= this.update.answerTimeout))
+        {
+            this.update.status = 'unavailable';
+            this.invalidateStatus(Homey.__('device.unavailable.timeout'));
+        }
+        if (now >= this.update.nextRequest)
+        {
+            this.update.nextRequest = now + this.update.updateInterval;
+            this.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '11');  // StatusSTS
+        }
+    }
+
+    invalidateStatus(message) {
         this.setUnavailable(message);
-        this.unavailable = true;
-        this.driver.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '11');  // StatusSTS
+        this.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '11');  // StatusSTS
     }
 
     sendTasmotaPowerCommand(socketId, status) {
@@ -142,7 +172,7 @@ class TasmoitaDevice extends Homey.Device {
            {
                 let topic = 'cmnd/'+this.getMqttTopic()+'/POWER'+socketId;
                 // this.log('Sending: ' + topic + ' => ' + status);
-                this.driver.sendMessage(topic, status);
+                this.sendMessage(topic, status);
            }
     }
 
@@ -157,41 +187,64 @@ class TasmoitaDevice extends Homey.Device {
         return this.getSettings()['mqtt_topic'];
     }
 
-    onSettings(oldSettings, newSettings, changedKeysArr, callback)
-    {
+    onSettings(oldSettings, newSettings, changedKeysArr, callback) {
         if (changedKeysArr.includes('mqtt_topic'))
         {
             setTimeout(() => {
+                this.update.status='init';
                 this.invalidateStatus(Homey.__('device.unavailable.update'));
             }, 3000);
         }
         return callback(null, true);
     }
 
-
-
     processMqttMessage(topic, message) {
-        this.lastUpdate = Date.now();
+        let now = Date.now();
         let topicParts = topic.split('/');
-        if ((this.unavailable) && topicParts[2] === 'STATUS11')
+        if ((topicParts[2] === 'LWT') && (message === 'Offline'))
         {
-            const status = Object.values(message)[0];
-            let check = 0;
-            for (let i=0; i < this.relaysCount; i++)
-            {
-                if ((i == 0) && (status['POWER'] !== undefined))
+            this.update.status='unavailable';
+            this.invalidateStatus(Homey.__('device.unavailable.offline'));
+            this.update.nextRequest = now + this.update.updateInterval;
+            return;
+        }
+        if (this.update.status === 'init')
+        {
+            if (topicParts[2] === 'STATUS11')
+            {                                  
+                const status = Object.values(message)[0];
+                let check = 0;
+                for (let i=0; i < this.relaysCount; i++)
                 {
-                    this.setCapabilityValue('onoff.1', status['POWER'] === 'ON');
-                    check++;
+                    if ((i == 0) && (status['POWER'] !== undefined))
+                    {
+                        this.setCapabilityValue('onoff.1', status['POWER'] === 'ON');
+                        check++;
+                    }
+                    else if (status['POWER'+(i+1).toString()] !== undefined)
+                    {
+                        this.setCapabilityValue('onoff.'+(i+1).toString(), status['POWER'+(i+1).toString()] === 'ON');
+                        check++;
+                    }
                 }
-                else if (status['POWER'+(i+1).toString()] !== undefined)
+                if (check === this.relaysCount)
                 {
-                    this.setCapabilityValue('onoff.'+(i+1).toString(), status['POWER'+(i+1).toString()] === 'ON');
-                    check++;
+                    this.update.status = 'available';
+                    this.setAvailable();
                 }
             }
-            if (check === this.relaysCount)
-                this.setAvailable();
+            else
+                this.update.nextRequest = now;
+        }
+        if (this.update.status === 'unavailable')
+        {
+            this.update.status = 'available';
+            this.setAvailable();
+        }
+        if (this.update.status === 'available')
+        {
+            this.update.nextRequest = now + this.update.updateInterval;
+            this.update.answerTimeout = undefined;
         }
         if (topicParts[2].startsWith('POWER'))
         {
@@ -215,7 +268,7 @@ class TasmoitaDevice extends Homey.Device {
             this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
             if (this.powerMonitoring)
                 setTimeout(() => {
-                    this.driver.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
+                    this.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
                 }, 3000);
         }
         if (this.powerMonitoring)
