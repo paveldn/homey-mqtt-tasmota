@@ -31,23 +31,24 @@ class TasmotaDeviceDriver extends Homey.Driver {
             .catch(error => {
                 this.log(error)
             });
-        this.deviceOfflineTrigger = new Homey.FlowCardTriggerDevice('device_connection_lost').register();
-        this.deviceOnlineTrigger = new Homey.FlowCardTriggerDevice('device_connection_restored').register();
+        this.deviceConnectionTrigger = new Homey.FlowCardTrigger('device_connection_changed').register();
     }
 
     updateDevices() {
-        this.log('Checking devices...');
         this.getDevices().forEach( device => {
-            let oldStatus = device.getDeviceStatus();
             device.checkDeviceStatus();
-            let newStatus = device.getDeviceStatus();
-            this.log('Device: ' + device.getName() + ' old status: ' + oldStatus + ' new status: ' + newStatus);
-            if ((oldStatus === 'unavailable') && (newStatus === 'available'))
-            {
-                this.deviceOnlineTrigger.trigger({name: device.getName(), device_id: device.getData()}); 
-            }    
-
         });
+    }
+
+    onDeviceStatusChange(device, newStatus, oldStatus) {
+        if ((oldStatus === 'unavailable') && (newStatus === 'available'))
+        {        
+            this.deviceConnectionTrigger.trigger({name: device.getName(), device_id: device.getData().id, status: true}); 
+        }
+        else if ((oldStatus === 'available') && (newStatus === 'unavailable'))
+        {
+            this.deviceConnectionTrigger.trigger({name: device.getName(), device_id: device.getData().id, status: false}); 
+        }
     }
 
     onPairListDevices( data, callback ) {

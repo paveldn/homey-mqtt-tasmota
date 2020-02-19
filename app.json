@@ -173,7 +173,6 @@
                                     "units":{
                                         "en":"min"
                                     }
-
                                 }
                             ]
                         },
@@ -215,9 +214,9 @@
     "flow":{
         "triggers":[
             {
-                "id":"device_connection_lost",
+                "id":"device_connection_changed",
                 "title":{
-                    "en":"Lost connection to device"
+                    "en":"Device aviability status changed"
                 },
                 "tokens":[
                     {
@@ -235,30 +234,14 @@
                             "en":"Device ID"
                         },
                         "example":"DVES_123456"
-                    }
-                ]
-            },
-            {
-                "id":"device_connection_restored",
-                "title":{
-                    "en":"Restored connection to device"
-                },
-                "tokens":[
-                    {
-                        "name":"name",
-                        "type":"string",
-                        "title":{
-                            "en":"Device name"
-                        },
-                        "example":"Device 1"
                     },
                     {
-                        "name":"device_id",
-                        "type":"string",
+                        "name":"status",
+                        "type":"boolean",
                         "title":{
-                            "en":"Device ID"
+                            "en":"Aviability"
                         },
-                        "example":"DVES_123456"
+                        "example":"true"
                     }
                 ]
             },

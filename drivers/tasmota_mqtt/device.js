@@ -41,10 +41,6 @@ class TasmoitaDevice extends Homey.Device {
             this.registerSingleSocketFlows();
     }
 
-    getDeviceStatus() {
-        return this.update.status;
-    }
-
     sendMessage(topic, message) {
         this.driver.sendMessage(topic, message);
         let updateTm = Date.now() + this.update.timeoutInterval;
@@ -145,11 +141,21 @@ class TasmoitaDevice extends Homey.Device {
             });
     }
 
+    setDeviceStatus(newStatus) {
+        if (this.update.status !== newStatus)
+        {
+            let oldStatus = this.update.status;
+            this.update.status = newStatus;
+            this.driver.onDeviceStatusChange(this, newStatus, oldStatus);
+        }
+    }
+
+
     checkDeviceStatus() {
         let now = Date.now();
         if ((this.update.status === 'available') && (this.update.answerTimeout != undefined) && (now >= this.update.answerTimeout))
         {
-            this.update.status = 'unavailable';
+            this.setDeviceStatus('unavailable');
             this.invalidateStatus(Homey.__('device.unavailable.timeout'));
         }
         if (now >= this.update.nextRequest)
@@ -191,7 +197,7 @@ class TasmoitaDevice extends Homey.Device {
         if (changedKeysArr.includes('mqtt_topic'))
         {
             setTimeout(() => {
-                this.update.status='init';
+                this.setDeviceStatus('init');
                 this.invalidateStatus(Homey.__('device.unavailable.update'));
             }, 3000);
         }
@@ -203,7 +209,7 @@ class TasmoitaDevice extends Homey.Device {
         let topicParts = topic.split('/');
         if ((topicParts[2] === 'LWT') && (message === 'Offline'))
         {
-            this.update.status='unavailable';
+            this.setDeviceStatus('unavailable');
             this.invalidateStatus(Homey.__('device.unavailable.offline'));
             this.update.nextRequest = now + this.update.updateInterval;
             return;
@@ -229,7 +235,7 @@ class TasmoitaDevice extends Homey.Device {
                 }
                 if (check === this.relaysCount)
                 {
-                    this.update.status = 'available';
+                    this.setDeviceStatus('available');
                     this.setAvailable();
                 }
             }
@@ -238,7 +244,7 @@ class TasmoitaDevice extends Homey.Device {
         }
         if (this.update.status === 'unavailable')
         {
-            this.update.status = 'available';
+            this.setDeviceStatus('available');
             this.setAvailable();
         }
         if (this.update.status === 'available')
