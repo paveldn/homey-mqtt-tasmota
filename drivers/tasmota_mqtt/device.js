@@ -50,23 +50,12 @@ class TasmoitaDevice extends Homey.Device {
                 let capName = Object.keys(valueObj)[0];
                 let value = valueObj[capName];
                 this.sendTasmotaPowerCommand(capName.slice(-1), valueObj[capName] ? 'ON' : 'OFF');
-/*                if (value)
-                    this.setCapabilityValue('onoff', value);
-                else
-                {
-                    let res = false;
-                    this.onOffList.forEach(function (item, index) {
-                       this.log('### capname:' + item);
-                        res |= this.getCapabilityValue(item);
-                    });
-                    this.setCapabilityValue('onoff', res);
-                }*/                    
                 return Promise.resolve();
             }, 500);
             this.registerCapabilityListener('onoff', ( value, opts ) => {
                 this.log('onoff cap: ' + JSON.stringify(value));
                 this.setCapabilityValue('onoff', value);
-                //this.sendMessage('POWER0', value ? 'ON' : 'OFF'); 
+                this.sendMessage('POWER0', value ? 'ON' : 'OFF'); 
                 return Promise.resolve();
             });
         }
@@ -82,7 +71,6 @@ class TasmoitaDevice extends Homey.Device {
             topic = topic + '/cmnd/' + command;
         else
             topic = 'cmnd/' + topic + '/' + command;
-        this.log('sendMqttCommand: ' + topic + ' => ' + content);
         this.driver.sendMessage(topic, content);
     }
 
@@ -250,6 +238,19 @@ class TasmoitaDevice extends Homey.Device {
         return callback(null, true);
     }
 
+    calculateOnOffCapabilityValue(currentCapName, currentCapValue) {
+        let result = false;
+        let switchCapNumber = this.onOffList.length;
+        for (var itemIndex = 0; !result && (itemIndex < switchCapNumber); itemIndex++)
+        {
+            if (currentCapName === this.onOffList[itemIndex])
+                result = result || currentCapValue;
+            else
+                result = result || this.getCapabilityValue(this.onOffList[itemIndex]);
+        }    
+        return result;
+    }
+
     processMqttMessage(topic, message) {
         let now = Date.now();
         let topicParts = topic.split('/');
@@ -270,12 +271,18 @@ class TasmoitaDevice extends Homey.Device {
                 {
                     if ((i == 0) && (status['POWER'] !== undefined))
                     {
-                        this.setCapabilityValue('switch.1', status['POWER'] === 'ON');
+                        let bValue = status['POWER'] === 'ON';
+                        let capName = 'switch.1';
+                        this.setCapabilityValue(capName, bValue);
+                        this.setCapabilityValue('onoff', this.calculateOnOffCapabilityValue(capName, bValue));
                         check++;
                     }
                     else if (status['POWER'+(i+1).toString()] !== undefined)
                     {
-                        this.setCapabilityValue('switch.'+(i+1).toString(), status['POWER'+(i+1).toString()] === 'ON');
+                        let bValue = status['POWER'+(i+1).toString()] === 'ON';
+                        let capName = 'switch.'+(i+1).toString();
+                        this.setCapabilityValue(capName, bValue);
+                        this.setCapabilityValue('onoff', this.calculateOnOffCapabilityValue(capName, bValue));
                         check++;
                     }
                 }
@@ -314,6 +321,7 @@ class TasmoitaDevice extends Homey.Device {
             }
             let newState = message === 'ON';
             this.setCapabilityValue(capName, newState);
+            this.setCapabilityValue('onoff', this.calculateOnOffCapabilityValue(capName, newState));
             let newSt = {};
             newSt['socket_id'] = {name: 'socket ' + socketIndex};
             newSt['state'] =  newState ? 'state_on' : 'state_off';

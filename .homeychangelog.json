@@ -16,5 +16,8 @@
   },
   "0.4.0": {
     "en": "Device availability monitoring improved"
+  },
+  "0.4.5": {
+    "en": "Now works with devices configured fore Home Assistant. Fixed onoff capability behaviour"
   }
 }

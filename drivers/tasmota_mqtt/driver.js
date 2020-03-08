@@ -111,7 +111,6 @@ class TasmotaDeviceDriver extends Homey.Driver {
 
     onMessage(topic, message) {
         let now = new Date();
-        // this.log('### Topic: ' + topic + " => " + JSON.stringify(message));
         let topicParts = topic.split('/');
         if (this.searchingDevices && ((topicParts[0] === 'stat') || (topicParts[1] === 'stat')))
         {
