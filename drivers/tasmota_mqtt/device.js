@@ -27,7 +27,7 @@ class TasmoitaDevice extends Homey.Device {
             this.socketsList.push({name: 'socket '+socketIndex.toString()});
         this.invalidateStatus(Homey.__('device.unavailable.startup'));
         if (this.powerMonitoring)
-            this.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '8');  // StatusSNS
+            this.sendMessage('cmnd/' + this.getMqttTopic() + '/Status', '10');  // StatusSNS
         let onOffList = this.getCapabilities().filter( cap => cap.startsWith('onoff.') );
         if (onOffList.length > 0)
             this.registerMultipleCapabilityListener(onOffList, ( valueObj, optsObj ) => {
