@@ -1,6 +1,6 @@
 {
     "id":"com.paveld.tasmota",
-    "version":"0.4.0",
+    "version":"0.4.6",
     "compatibility":">=2.0.0",
     "sdk":2,
     "brandColor":"#42A3E9",
@@ -42,6 +42,7 @@
     "bugs":{
         "url":"https://github.com/paveldn/homey-mqtt-tasmota/issues"
     },
+    "homeyCommunityTopicId":26164,
     "contributing":{
         "donate":{
             "paypal":{
@@ -111,6 +112,26 @@
                 "en":"kWh"
             },
             "icon":"assets/mobile/power_meter.svg"
+        },
+        "switch":{
+            "type":"boolean",
+            "title":{
+                "en":"Switch"
+            },
+            "getable":true,
+            "setable":true,
+            "uiComponent":"toggle",
+            "uiQuickAction":false
+        },
+        "onoff":{
+            "type":"boolean",
+            "title":{
+                "en":"Switch"
+            },
+            "getable":true,
+            "setable":true,
+            "uiComponent":null,
+            "uiQuickAction":true
         }
     },
     "drivers":[
@@ -173,6 +194,14 @@
                                     "units":{
                                         "en":"min"
                                     }
+                                },
+                                {
+                                    "id":"swap_prefix_topic",
+                                    "type":"checkbox",
+                                    "label":{
+                                        "en":"Swap prefix and topic"
+                                    },
+                                    "value":false
                                 }
                             ]
                         },

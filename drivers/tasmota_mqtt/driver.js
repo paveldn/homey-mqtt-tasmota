@@ -17,6 +17,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
                 this.updateDevices();
             } catch (error) { this.log(this.constructor.name + ' checkDevices error: ' + error); }
         }, 30000);
+        this.clientAvailable = false;
         MQTTClient
             .register()
             .on('install', () => this.register())
@@ -24,6 +25,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
             .on('realtime', (topic, message) => this.onMessage(topic, message));
         MQTTClient.getInstalled()
             .then(installed => {
+                this.clientAvailable = installed;
                 if (installed) {
                     this.register();
                 }
@@ -31,6 +33,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
             .catch(error => {
                 this.log(error)
             });
+        this.log('MQTT client status: ' + this.clientAvailable); 
         this.deviceConnectionTrigger = new Homey.FlowCardTrigger('device_connection_changed').register();
     }
 
@@ -53,16 +56,15 @@ class TasmotaDeviceDriver extends Homey.Driver {
 
     onPairListDevices( data, callback ) {
         this.log('onPairListDevices called');
-        this.searchingDevices = true;
+        if (!this.clientAvailable)
+            return callback(new Error(Homey.__('mqtt_client.unavailable')), null);
         this.devicesFound = {};
-        this.sendMessage('cmnd/sonoffs/Status', '');   // Status
-        this.sendMessage('cmnd/sonoffs/Status', '6');  // StatusMQT
-        this.sendMessage('cmnd/sonoffs/Status', '2');  // StatusFWR
-        this.sendMessage('cmnd/sonoffs/Status', '8');  // StatusSNS
-        this.sendMessage('cmnd/tasmotas/Status', '');  // Status
-        this.sendMessage('cmnd/tasmotas/Status', '6'); // StatusMQT
-        this.sendMessage('cmnd/tasmotas/Status', '2'); // StatusFWR 
-        this.sendMessage('cmnd/tasmotas/Status', '8'); // StatusSNS
+        this.messagesCounter = 0;
+        this.searchingDevices = true;
+        this.sendMessage('cmnd/sonoffs/Status', '0');
+        this.sendMessage('cmnd/tasmotas/Status', '0');
+        this.sendMessage('sonoffs/cmnd/Status', '0');
+        this.sendMessage('tasmotas/cmnd/Status', '0');
         setTimeout( drvObj => {
             drvObj.searchingDevices = false;
             let devices = [];
@@ -71,13 +73,13 @@ class TasmotaDeviceDriver extends Homey.Driver {
                 let capabilities = [];
                 let capabilitiesOptions = {};
                 let relaysCount = drvObj.devicesFound[key]['settings']['relays_number'];
-                for (let propIndex = 0; propIndex < relaysCount; propIndex++)
+                for (let propIndex = 1; propIndex <= relaysCount; propIndex++)
                 {
-                    let capId = 'onoff.' + (propIndex + 1).toString();
+                    let capId = 'switch.' + propIndex.toString();
                     capabilities.push(capId);
-                    capabilitiesOptions[capId] = {title: { en: 'switch ' + (propIndex + 1).toString() }};
-                    capabilitiesOptions[capId]['greyout'] = relaysCount === 1;
+                    capabilitiesOptions[capId] = {title: { en: 'switch ' + propIndex.toString() }};
                 }
+                capabilities.push('onoff');
                 capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
                 for (let capItem in drvObj.devicesFound[key]['settings']['pwr_monitor'])
                     capabilities.push(drvObj.devicesFound[key]['settings']['pwr_monitor'][capItem]);
@@ -91,10 +93,11 @@ class TasmotaDeviceDriver extends Homey.Driver {
                             store: {
                             },
                             settings:   {
-                                mqtt_topic:     drvObj.devicesFound[key]['settings']['mqtt_topic'],
-                                relays_number:  drvObj.devicesFound[key]['settings']['relays_number'].toString(),
-                                pwr_monitor:    drvObj.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
-                                chip_type:      drvObj.devicesFound[key]['settings']['chip_type'],
+                                mqtt_topic:         drvObj.devicesFound[key]['settings']['mqtt_topic'],
+                                swap_prefix_topic:  drvObj.devicesFound[key]['settings']['swap_prefix_topic'],
+                                relays_number:      drvObj.devicesFound[key]['settings']['relays_number'].toString(),
+                                pwr_monitor:        drvObj.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
+                                chip_type:          drvObj.devicesFound[key]['settings']['chip_type'],
                             },
                             capabilities,
                             capabilitiesOptions
@@ -104,9 +107,17 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     }
                 }
                 catch (error) {
+                    this.log('Error:', error);
                 }
             });
-            callback( null, devices);
+            if (devices.length == 0)
+            {
+                if (this.messagesCounter === 0)
+                    return callback(new Error(Homey.__('mqtt_client.no_messages')), null)
+                else
+                    return callback(new Error(Homey.__('mqtt_client.no_devices')), null)
+            }
+            return callback( null, devices);
         }, 10000, this);
 
     }
@@ -114,40 +125,46 @@ class TasmotaDeviceDriver extends Homey.Driver {
     onMessage(topic, message) {
         let now = new Date();
         let topicParts = topic.split('/');
-        if (this.searchingDevices && (topicParts[0] === 'stat'))
+        if (this.searchingDevices)
         {
-            if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS2')))
+            this.messagesCounter++;
+            if ((topicParts[0] === 'stat') || (topicParts[1] === 'stat'))
             {
-                try {
-                    let deviceTopic = topicParts[1];
-                    const msgObj = Object.values(message)[0];
-                    if (this.devicesFound[deviceTopic] === undefined)
-                        this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, relays_number: 1, pwr_monitor: [], chip_type: 'unknown'}};
-                    if (msgObj['FriendlyName'] !== undefined)
-                    {
-                        this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
-                        this.devicesFound[deviceTopic]['settings']['relays_number'] = msgObj['FriendlyName'].length;
+                let swapPrefixTopic = topicParts[1] === 'stat';
+                if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS2')))
+                {
+                    try {
+                        let deviceTopic = swapPrefixTopic ? topicParts[0] : topicParts[1];
+                        const msgObj = Object.values(message)[0];
+                        if (this.devicesFound[deviceTopic] === undefined)
+                            this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 1, pwr_monitor: [], chip_type: 'unknown'}};
+                        if (msgObj['FriendlyName'] !== undefined)
+                        {
+                            this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
+                            this.devicesFound[deviceTopic]['settings']['relays_number'] = msgObj['FriendlyName'].length;
+                        }   
+                        if (msgObj['ENERGY'] !== undefined)
+                        {
+                            let energyKeys = Object.keys(msgObj['ENERGY']);
+                            Object.keys(PowerMeterCapabilities).filter(value => energyKeys.includes(value)).forEach(key => this.devicesFound[deviceTopic]['settings']['pwr_monitor'].push(PowerMeterCapabilities[key]));
+                        }
+                        if (msgObj['MqttClient'] !== undefined)
+                            this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};
+                        if (msgObj['Hardware'] !== undefined)
+                            this.devicesFound[deviceTopic]['settings']['chip_type'] = msgObj['Hardware'];
                     }
-                    if (msgObj['ENERGY'] !== undefined)
-                    {
-                        let energyKeys = Object.keys(msgObj['ENERGY']);
-                        Object.keys(PowerMeterCapabilities).filter(value => energyKeys.includes(value)).forEach(key => this.devicesFound[deviceTopic]['settings']['pwr_monitor'].push(PowerMeterCapabilities[key]));
+                    catch (error) {
                     }
-                    if (msgObj['MqttClient'] !== undefined)
-                        this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};
-                    if (msgObj['Hardware'] !== undefined)
-                        this.devicesFound[deviceTopic]['settings']['chip_type'] = msgObj['Hardware'];
-                }
-                catch (error) {
                 }
             }
-
         }
-        if (this.topics.includes(topicParts[0]))
+        let prefixFirst = this.topics.includes(topicParts[0]);
+        if (prefixFirst || this.topics.includes(topicParts[1]))
         {
+            let topicIndex = prefixFirst ? 1 : 0;
             let devices = this.getDevices();
             for (let index = 0; index < devices.length; index++)
-                if (devices[index].getMqttTopic() === topicParts[1])
+                if (devices[index].getMqttTopic() === topicParts[topicIndex])
                 {
                     devices[index].processMqttMessage(topic, message);
                     break;
@@ -156,6 +173,8 @@ class TasmotaDeviceDriver extends Homey.Driver {
     }
 
     subscribeTopic(topicName) {
+        if (!this.clientAvailable)
+            return;
         return MQTTClient.post('subscribe', { topic: topicName }, error => {
             if (error) {
                     this.log(error);
@@ -167,6 +186,8 @@ class TasmotaDeviceDriver extends Homey.Driver {
 
     sendMessage(topic, payload)
     {
+        if (!this.clientAvailable)
+            return;
         try {
             MQTTClient.post('send', {
                 qos: 0,
@@ -180,11 +201,16 @@ class TasmotaDeviceDriver extends Homey.Driver {
     }
 
     register() {
+        this.clientAvailable = true;
         for  (let topic in this.topics)
+        {
             this.subscribeTopic(this.topics[topic] + "/#");
+            this.subscribeTopic("+/" + this.topics[topic] + "/#");
+        }
     }
 
     unregister() {
+        this.clientAvailable = false;
         this.log(this.constructor.name + " unregister called");
     }
 
