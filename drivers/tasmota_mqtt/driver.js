@@ -3,6 +3,7 @@
 const Homey = require('homey');
 const MQTTClient = new Homey.ApiApp('nl.scanno.mqtt');
 const PowerMeterCapabilities = require('./power')
+const TasmotaDevice = require('./device.js');
 
 class TasmotaDeviceDriver extends Homey.Driver {
     
@@ -26,6 +27,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
         MQTTClient.getInstalled()
             .then(installed => {
                 this.clientAvailable = installed;
+                this.log('MQTT client status: ' + this.clientAvailable); 
                 if (installed) {
                     this.register();
                 }
@@ -33,7 +35,6 @@ class TasmotaDeviceDriver extends Homey.Driver {
             .catch(error => {
                 this.log(error)
             });
-        this.log('MQTT client status: ' + this.clientAvailable); 
         this.deviceConnectionTrigger = new Homey.FlowCardTrigger('device_connection_changed').register();
     }
 
@@ -52,6 +53,19 @@ class TasmotaDeviceDriver extends Homey.Driver {
         {
             this.deviceConnectionTrigger.trigger({name: device.getName(), device_id: device.getData().id, status: false}); 
         }
+    }
+
+    onMapDeviceClass(device) {
+        // Sending SetOption59 to improve tele/* update behaviour for some HA implementation
+        let settings = device.getSettings();
+        let topic = settings.mqtt_topic;
+        let command = 'SetOption59';
+        if (settings.swap_prefix_topic)
+            topic = topic + '/cmnd/' + command;
+        else
+            topic = 'cmnd/' + topic + '/' + command;
+        this.sendMessage(topic, 1);
+        return TasmotaDevice; 
     }
 
     onPairListDevices( data, callback ) {
@@ -131,7 +145,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
             if ((topicParts[0] === 'stat') || (topicParts[1] === 'stat'))
             {
                 let swapPrefixTopic = topicParts[1] === 'stat';
-                if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS2')))
+                if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS10') || (topicParts[2] == 'STATUS2')))
                 {
                     try {
                         let deviceTopic = swapPrefixTopic ? topicParts[0] : topicParts[1];
