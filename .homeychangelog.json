@@ -22,9 +22,12 @@
   },
   "0.4.6": {
     "en": "MQTT client connection detection improved"
-  }
+  },
   "0.4.7": {
     "en": "Bug fixes"
+  },
+  "0.4.8": {
+    "en": "Sending Power0 command replaced by separate commands per socket"
   }
 }
 

@@ -55,7 +55,9 @@ class TasmotaDevice extends Homey.Device {
             }, 500);
             this.registerCapabilityListener('onoff', ( value, opts ) => {
                 //this.log('onoff cap: ' + JSON.stringify(value));
-                this.sendMessage('POWER0', value ? 'ON' : 'OFF'); 
+                let message = value ? 'ON' : 'OFF';
+                for (let itemIndex = 1; itemIndex <= this.relaysCount; itemIndex++)
+                    this.sendTasmotaPowerCommand(itemIndex.toString(), message);
                 return Promise.resolve();
             });
         }
