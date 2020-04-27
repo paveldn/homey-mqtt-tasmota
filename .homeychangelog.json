@@ -28,6 +28,9 @@
   },
   "0.4.8": {
     "en": "Sending Power0 command replaced by separate commands per socket"
+  },
+  "0.5.0": {
+    "en": "Dim support added"
   }
 }
 

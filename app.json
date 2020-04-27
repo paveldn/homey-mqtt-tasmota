@@ -1,6 +1,6 @@
 {
     "id":"com.paveld.tasmota",
-    "version":"0.4.8",
+    "version":"0.5.0",
     "compatibility":">=2.0.0",
     "sdk":2,
     "brandColor":"#42A3E9",
@@ -222,6 +222,14 @@
                                     "type":"label",
                                     "label":{
                                         "en":"Power monitoring"
+                                    },
+                                    "value":"No"
+                                },
+                                {
+                                    "id":"is_dimmable",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Is dimmable"
                                     },
                                     "value":"No"
                                 },
@@ -527,6 +535,50 @@
                         "name":"device",
                         "type":"device",
                         "filter":"driver_id=tasmota_mqtt&capabilities=singlesocket"
+                    }
+                ]
+            },
+            {
+                "id":"dim_level_greater",
+                "title":{
+                    "en":"Dim level is !{{greater|lower or equal}}"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=dim"
+                    },
+                    {
+                        "name": "value",
+                        "type": "range",
+                        "min": 0,
+                        "max": 100,
+                        "step": 1,
+                        "label": "%",
+                        "labelDecimals": 0 
+                    }
+                ]
+            },
+            {
+                "id":"dim_level_lower",
+                "title":{
+                    "en":"Dim level is !{{lower|greater or equal}}"
+                },
+                "args":[
+                    {
+                        "name":"device",
+                        "type":"device",
+                        "filter":"driver_id=tasmota_mqtt&capabilities=dim"
+                    },
+                    {
+                        "name": "value",
+                        "type": "range",
+                        "min": 0,
+                        "max": 100,
+                        "step": 1,
+                        "label": "%",
+                        "labelDecimals": 0 
                     }
                 ]
             }

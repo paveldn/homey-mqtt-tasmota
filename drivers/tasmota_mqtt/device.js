@@ -61,10 +61,32 @@ class TasmotaDevice extends Homey.Device {
                 return Promise.resolve();
             });
         }
+        this.isDimmable = false;
         if (this.hasCapability('multiplesockets'))
             this.registerMultipleSocketsFlows();
         else
+        {
             this.registerSingleSocketFlows();
+            if (this.hasCapability('dim'))
+            {
+                this.isDimmable = true;
+                this.sendMessage('Status', '11');
+                this.registerCapabilityListener('dim', ( value, opts ) => {
+                    //this.log('dim cap: ' + JSON.stringify(value));
+                    this.sendMessage('Dimmer', (value * 100).toString());
+                    return Promise.resolve();
+                });
+                this.dimCondition1 = new Homey.FlowCardCondition('dim_level_greater');
+                this.dimCondition1.register().registerRunListener((args, state) => {
+                        return Promise.resolve(state.value * 100 > args.value);
+                    });
+                this.dimCondition2 = new Homey.FlowCardCondition('dim_level_lower');
+                this.dimCondition2.register().registerRunListener((args, state) => {
+                        return Promise.resolve(state.value * 100 < args.value);
+                    });
+                            
+            }
+        }
     }
 
     sendMqttCommand(command, content) {
@@ -253,6 +275,45 @@ class TasmotaDevice extends Homey.Device {
         return result;
     }
 
+    powerReceived(topic, message) {
+        let capName = '';
+        let socketIndex = '';
+        if (topic === 'POWER')
+        {
+            capName = 'switch.1';
+            socketIndex = '1';
+        }
+        else
+        {
+            socketIndex = topic.slice(-1);
+            capName = 'switch.' + socketIndex;
+        }
+        let newState = message === 'ON';
+        this.setCapabilityValue(capName, newState, () => 
+            {
+                if (!this.shouldUpdateOnOff)
+                {
+                    this.shouldUpdateOnOff = true;
+                    setTimeout(() => {
+                        this.shouldUpdateOnOff = false;
+                        let newVal = this.calculateOnOffCapabilityValue();
+                        //this.log('onoff=>' + newVal);
+                        this.setCapabilityValue('onoff', newVal);
+                    }, 200);
+                }
+            }    
+        );
+        let newSt = {};
+        newSt['socket_id'] = {name: 'socket ' + socketIndex};
+        newSt['state'] =  newState ? 'state_on' : 'state_off';
+        this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
+        if (this.powerMonitoring)
+            setTimeout(() => {
+                this.sendMessage('Status', '10');  // StatusSNS
+            }, 3000);
+    }
+
+
     processMqttMessage(topic, message) {
         //this.log('processMqttMessage: ' + topic + '=>' + JSON.stringify(message));
         let topicParts = topic.split('/');
@@ -314,41 +375,32 @@ class TasmotaDevice extends Homey.Device {
         }
         if (topicParts[2].startsWith('POWER'))
         {
-            let capName = '';
-            let socketIndex = '';
-            if (topicParts[2] === 'POWER')
-            {
-                capName = 'switch.1';
-                socketIndex = '1';
-            }
-            else
-            {
-                socketIndex = topicParts[2].slice(-1);
-                capName = 'switch.' + socketIndex;
-            }
-            let newState = message === 'ON';
-            this.setCapabilityValue(capName, newState, () => 
+            this.powerReceived(topicParts[2], message);
+        }
+        if ((topicParts[2] === 'RESULT') || (topicParts[2] === 'STATE'))
+        {
+            let updateOnOff = false;
+            Object.keys(message).forEach(key => {
+                if ((key === 'Dimmer') && this.isDimmable)
                 {
-                    if (!this.shouldUpdateOnOff)
+                    let dimValue = message['Dimmer'] / 100;
+                    if (dimValue !== this.getCapabilityValue('dim'))
                     {
-                        this.shouldUpdateOnOff = true;
-                        setTimeout(() => {
-                            this.shouldUpdateOnOff = false;
-                            let newVal = this.calculateOnOffCapabilityValue();
-                            //this.log('onoff=>' + newVal);
-                            this.setCapabilityValue('onoff', newVal);
-                        }, 200);
+                        try
+                        {
+                            this.setCapabilityValue('dim', dimValue);
+                        }
+                        catch (error)
+                        {
+                            this.log('Error trying to set dim value. Error: ' + error);
+                        }
                     }
-                }    
-            );
-            let newSt = {};
-            newSt['socket_id'] = {name: 'socket ' + socketIndex};
-            newSt['state'] =  newState ? 'state_on' : 'state_off';
-            this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
-            if (this.powerMonitoring)
-                setTimeout(() => {
-                    this.sendMessage('Status', '10');  // StatusSNS
-                }, 3000);
+                }
+                else if (key.startsWith('POWER'))
+                {
+                    this.powerReceived(key, message[key]);
+                }
+            });
         }
         if (this.powerMonitoring)
         {
