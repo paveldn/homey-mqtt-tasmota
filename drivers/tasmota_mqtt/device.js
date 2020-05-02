@@ -67,10 +67,11 @@ class TasmotaDevice extends Homey.Device {
         else
         {
             this.registerSingleSocketFlows();
+            let needToSendStatus11 = false;
             if (this.hasCapability('dim'))
             {
                 this.isDimmable = true;
-                this.sendMessage('Status', '11');
+                needToSendStatus11 = true;
                 this.registerCapabilityListener('dim', ( value, opts ) => {
                     //this.log('dim cap: ' + JSON.stringify(value));
                     this.sendMessage('Dimmer', (value * 100).toString());
@@ -83,9 +84,20 @@ class TasmotaDevice extends Homey.Device {
                 this.dimCondition2 = new Homey.FlowCardCondition('dim_level_lower');
                 this.dimCondition2.register().registerRunListener((args, state) => {
                         return Promise.resolve(state.value * 100 < args.value);
-                    });
-                            
+                    });                            
             }
+            if (this.hasCapability('light_temperature'))
+            {
+                this.hasLightTemperature = true;
+                needToSendStatus11 = true;
+                this.registerCapabilityListener('light_temperature', ( value, opts ) => {
+                    this.log('light_temperature cap: ' + JSON.stringify(value));
+                    this.sendMessage('CT', Math.round(153 + 347 * value).toString());
+                    return Promise.resolve();
+                });
+            }
+            if (needToSendStatus11)
+                this.sendMessage('Status', '11');
         }
     }
 
@@ -389,6 +401,21 @@ class TasmotaDevice extends Homey.Device {
                         try
                         {
                             this.setCapabilityValue('dim', dimValue);
+                        }
+                        catch (error)
+                        {
+                            this.log('Error trying to set dim value. Error: ' + error);
+                        }
+                    }
+                }
+                else if ((key === 'CT') && this.hasLightTemperature)
+                {
+                    let ctValue = (message['CT'] - 153) / 347;
+                    if (ctValue !== this.getCapabilityValue('light_temperature'))
+                    {
+                        try
+                        {
+                            this.setCapabilityValue('light_temperature', ctValue);
                         }
                         catch (error)
                         {

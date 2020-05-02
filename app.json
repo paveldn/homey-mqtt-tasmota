@@ -1,6 +1,6 @@
 {
     "id":"com.paveld.tasmota",
-    "version":"0.5.0",
+    "version":"0.5.2",
     "compatibility":">=2.0.0",
     "sdk":2,
     "brandColor":"#42A3E9",
@@ -230,6 +230,22 @@
                                     "type":"label",
                                     "label":{
                                         "en":"Is dimmable"
+                                    },
+                                    "value":"No"
+                                },
+                                {
+                                    "id":"has_lighttemp",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Has light temperature"
+                                    },
+                                    "value":"No"
+                                },
+                                {
+                                    "id":"has_lightcolor",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Has light color control"
                                     },
                                     "value":"No"
                                 },

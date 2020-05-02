@@ -97,8 +97,18 @@ class TasmotaDeviceDriver extends Homey.Driver {
                 capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
                 for (let capItem in drvObj.devicesFound[key]['settings']['pwr_monitor'])
                     capabilities.push(drvObj.devicesFound[key]['settings']['pwr_monitor'][capItem]);
-                if ((relaysCount === 1) && (drvObj.devicesFound[key]['settings']['is_dimmable'] === 'Yes'))
-                    capabilities.push('dim');
+                if (relaysCount === 1)
+                {
+                    if (drvObj.devicesFound[key]['settings']['is_dimmable'] === 'Yes')
+                        capabilities.push('dim');
+                    if (drvObj.devicesFound[key]['settings']['has_lighttemp'] === 'Yes')
+                        capabilities.push('light_temperature');
+                    if (drvObj.devicesFound[key]['settings']['has_lightcolor'] === 'Yes')
+                    {
+                        capabilities.push('light_hue');
+                        capabilities.push('light_saturation');
+                    }
+                }
                 try {
                     if (drvObj.devicesFound[key]['data'] !== undefined)
                     {
@@ -114,6 +124,8 @@ class TasmotaDeviceDriver extends Homey.Driver {
                                 relays_number:      drvObj.devicesFound[key]['settings']['relays_number'].toString(),
                                 pwr_monitor:        drvObj.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
                                 is_dimmable:        relaysCount === 1 ? drvObj.devicesFound[key]['settings']['is_dimmable'] : 'No',
+                                has_lighttemp:      relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lighttemp'] : 'No',
+                                has_lightcolor:     relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lightcolor'] : 'No',
                                 chip_type:          drvObj.devicesFound[key]['settings']['chip_type'],
                             },
                             capabilities,
@@ -154,7 +166,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
                         let deviceTopic = swapPrefixTopic ? topicParts[0] : topicParts[1];
                         const msgObj = Object.values(message)[0];
                         if (this.devicesFound[deviceTopic] === undefined)
-                            this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 1, pwr_monitor: [], is_dimmable: 'No', chip_type: 'unknown'}};
+                            this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 1, pwr_monitor: [], is_dimmable: 'No', has_lighttemp: 'No', has_lightcolor: 'No', chip_type: 'unknown'}};
                         if (msgObj['FriendlyName'] !== undefined)
                         {
                             this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
@@ -171,6 +183,10 @@ class TasmotaDeviceDriver extends Homey.Driver {
                             this.devicesFound[deviceTopic]['settings']['chip_type'] = msgObj['Hardware'];
                         if (msgObj['Dimmer'] !== undefined)
                             this.devicesFound[deviceTopic]['settings']['is_dimmable'] = 'Yes';
+                        if (msgObj['CT'] !== undefined)
+                            this.devicesFound[deviceTopic]['settings']['has_lighttemp'] = 'Yes';
+                        if (msgObj['HSBColor'] !== undefined)
+                            this.devicesFound[deviceTopic]['settings']['has_lightcolor'] = 'Yes';
                     }
                     catch (error) {
                     }
