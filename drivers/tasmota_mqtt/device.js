@@ -74,7 +74,7 @@ class TasmotaDevice extends Homey.Device {
                 needToSendStatus11 = true;
                 this.registerCapabilityListener('dim', ( value, opts ) => {
                     //this.log('dim cap: ' + JSON.stringify(value));
-                    this.sendMessage('Dimmer', (value * 100).toString());
+                    this.sendMessage('Dimmer', Math.round(value * 100).toString());
                     return Promise.resolve();
                 });
                 this.dimCondition1 = new Homey.FlowCardCondition('dim_level_greater');
@@ -95,6 +95,22 @@ class TasmotaDevice extends Homey.Device {
                     this.sendMessage('CT', Math.round(153 + 347 * value).toString());
                     return Promise.resolve();
                 });
+            }
+            if (this.hasCapability('light_hue') && this.hasCapability('light_saturation'))
+            {
+                this.hasLightColor = true;
+                needToSendStatus11 = true;
+                this.registerMultipleCapabilityListener(['light_hue', 'light_saturation'], ( valueObj, optsObj ) => {
+                    let hueVal = valueObj['light_hue'];
+                    if (hueVal === undefined)
+                        hueVal = this.getCapabilityValue('light_hue');
+                    let saturationVal = valueObj['light_saturation'];
+                    if (saturationVal === undefined)
+                        saturationVal = this.getCapabilityValue('light_saturation');     
+                    let dimVal = this.hasCapability('dim') ? this.getCapabilityValue('dim') : 0.5;
+                    this.sendMessage('HSBColor', Math.round(hueVal * 359).toString() + ',' + Math.round(saturationVal * 100).toString() + ',' + Math.round(dimVal * 100).toString() );
+                    return Promise.resolve();
+                }, 500);
             }
             if (needToSendStatus11)
                 this.sendMessage('Status', '11');
@@ -301,20 +317,25 @@ class TasmotaDevice extends Homey.Device {
             capName = 'switch.' + socketIndex;
         }
         let newState = message === 'ON';
-        this.setCapabilityValue(capName, newState, () => 
-            {
-                if (!this.shouldUpdateOnOff)
+        let oldValue = this.getCapabilityValue(capName);
+        if (newState !== oldValue)
+        {
+            this.log('Set value ' + capName +': ' + oldValue + ' => ' + newState);
+            this.setCapabilityValue(capName, newState, () => 
                 {
-                    this.shouldUpdateOnOff = true;
-                    setTimeout(() => {
-                        this.shouldUpdateOnOff = false;
-                        let newVal = this.calculateOnOffCapabilityValue();
-                        //this.log('onoff=>' + newVal);
-                        this.setCapabilityValue('onoff', newVal);
-                    }, 200);
-                }
-            }    
-        );
+                    if (!this.shouldUpdateOnOff)
+                    {
+                        this.shouldUpdateOnOff = true;
+                        setTimeout(() => {
+                            this.shouldUpdateOnOff = false;
+                            let newVal = this.calculateOnOffCapabilityValue();
+                            //this.log('onoff=>' + newVal);
+                            this.setCapabilityValue('onoff', newVal);
+                        }, 200);
+                    }
+                }                    
+            );
+        }
         let newSt = {};
         newSt['socket_id'] = {name: 'socket ' + socketIndex};
         newSt['state'] =  newState ? 'state_on' : 'state_off';
@@ -325,6 +346,19 @@ class TasmotaDevice extends Homey.Device {
             }, 3000);
     }
 
+    updateCapabilityValue(cap, value) {
+        if (this.hasCapability(cap))
+        {
+            let oldValue = this.getCapabilityValue(cap);
+            if (oldValue !== value)
+            {
+                //this.log('Set value ' + cap +': ' + oldValue + ' => ' + value);
+                this.setCapabilityValue(cap, value);
+                return true;
+            }
+        }
+        return false;
+    }
 
     processMqttMessage(topic, message) {
         //this.log('processMqttMessage: ' + topic + '=>' + JSON.stringify(message));
@@ -395,32 +429,57 @@ class TasmotaDevice extends Homey.Device {
             Object.keys(message).forEach(key => {
                 if ((key === 'Dimmer') && this.isDimmable)
                 {
-                    let dimValue = message['Dimmer'] / 100;
-                    if (dimValue !== this.getCapabilityValue('dim'))
+                    try
                     {
-                        try
-                        {
-                            this.setCapabilityValue('dim', dimValue);
-                        }
-                        catch (error)
-                        {
-                            this.log('Error trying to set dim value. Error: ' + error);
-                        }
+                        let dimValue = message['Dimmer'] / 100;
+                        this.updateCapabilityValue('dim', dimValue);
+                    }
+                    catch (error)
+                    {
+                        this.log('Error trying to set dim value. Error: ' + error);
                     }
                 }
                 else if ((key === 'CT') && this.hasLightTemperature)
                 {
-                    let ctValue = (message['CT'] - 153) / 347;
-                    if (ctValue !== this.getCapabilityValue('light_temperature'))
+                    try
                     {
+                        let ctValue = Math.round((message['CT'] - 153) / 3.47) / 100;
+                        if (this.updateCapabilityValue('light_temperature', ctValue))
+                            this.updateCapabilityValue('light_mode', 'temperature');
+                    }
+                    catch (error)
+                    {
+                        this.log('Error trying to set light temperature value. Error: ' + error);
+                    }
+                }
+                else if ((key === 'HSBColor') && this.hasLightColor)
+                {
+                    let values = message['HSBColor'].split(',')
+                    if (values.length === 3)
+                    {
+                        let cCounter = 0;
                         try
                         {
-                            this.setCapabilityValue('light_temperature', ctValue);
+                            let hueValue = Math.round(parseInt(values[0], 10) / 3.59) / 100;
+                            if (this.updateCapabilityValue('light_hue', hueValue))
+                                cCounter++;
                         }
                         catch (error)
                         {
-                            this.log('Error trying to set dim value. Error: ' + error);
+                            this.log('Error trying to set hue value. Error: ' + error);
                         }
+                        try
+                        {
+                            let satValue = parseInt(values[1], 10) / 100;
+                            if (this.updateCapabilityValue('light_saturation', satValue))
+                                cCounter++;
+                        }
+                        catch (error)
+                        {
+                            this.log('Error trying to set saturation value. Error: ' + error);
+                        }
+                        if (cCounter > 0)
+                            this.updateCapabilityValue('light_mode', 'color');
                     }
                 }
                 else if (key.startsWith('POWER'))

@@ -101,13 +101,20 @@ class TasmotaDeviceDriver extends Homey.Driver {
                 {
                     if (drvObj.devicesFound[key]['settings']['is_dimmable'] === 'Yes')
                         capabilities.push('dim');
+                    let lmCounter = 0;
                     if (drvObj.devicesFound[key]['settings']['has_lighttemp'] === 'Yes')
+                    {
                         capabilities.push('light_temperature');
+                        lmCounter++;
+                    }
                     if (drvObj.devicesFound[key]['settings']['has_lightcolor'] === 'Yes')
                     {
                         capabilities.push('light_hue');
                         capabilities.push('light_saturation');
+                        lmCounter++;
                     }
+                    if (lmCounter === 2)
+                        capabilities.push('light_mode'); 
                 }
                 try {
                     if (drvObj.devicesFound[key]['data'] !== undefined)
