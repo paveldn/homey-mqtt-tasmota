@@ -10,6 +10,10 @@ class TasmotaDeviceDriver extends Homey.Driver {
     onInit() {
         this.log(this.constructor.name + ' has been initiated');
         this.log('Manifest: ' + JSON.stringify(this.getManifest()));
+        this.log('Devices:');
+        this.getDevices().forEach(item => {
+            this.log('    ', item);
+        });
         this.topics = ["stat", "tele"];
         this.devicesFound = {};
         this.searchingDevices = false;
@@ -116,13 +120,40 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     if (lmCounter === 2)
                         capabilities.push('light_mode'); 
                 }
+                if (drvObj.devicesFound[key]['settings']['has_fan'] === 'Yes')
+                    capabilities.push('fan_speed'); 
                 try {
                     if (drvObj.devicesFound[key]['data'] !== undefined)
                     {
+                        let dev_class = 'other';
+                        let dev_icon = 'single.svg';
+                        if (drvObj.devicesFound[key]['settings']['has_fan'] === 'Yes')
+                        {
+                            dev_icon = 'fan.svg';
+                            dev_class = 'fan';
+                        }
+                        else if (relaysCount === 1)
+                        {
+                            if (drvObj.devicesFound[key]['settings']['is_dimmable'] == 'Yes')
+                            {
+                                dev_class = 'light';
+                                dev_icon = 'lamp.svg';
+                            }
+                            else
+                            {
+                                dev_class = 'socket';
+                                dev_icon = 'single.svg';
+                            }
+                        }
+                        else
+                        {
+                            dev_icon = 'multiple.svg';
+                            dev_class = 'other';
+                        }
                         let devItem = {
                             name:   (drvObj.devicesFound[key]['name'] === undefined) ? key :  drvObj.devicesFound[key]['name'],
                             data:   drvObj.devicesFound[key]['data'],
-                            class:  relaysCount == 1 ? 'socket' : 'other',
+                            class:  dev_class,
                             store: {
                             },
                             settings:   {
@@ -133,8 +164,10 @@ class TasmotaDeviceDriver extends Homey.Driver {
                                 is_dimmable:        relaysCount === 1 ? drvObj.devicesFound[key]['settings']['is_dimmable'] : 'No',
                                 has_lighttemp:      relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lighttemp'] : 'No',
                                 has_lightcolor:     relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lightcolor'] : 'No',
+                                has_fan:            drvObj.devicesFound[key]['settings']['has_fan'],
                                 chip_type:          drvObj.devicesFound[key]['settings']['chip_type'],
                             },
+                            icon:   dev_icon,
                             capabilities,
                             capabilitiesOptions
                         };
@@ -173,12 +206,14 @@ class TasmotaDeviceDriver extends Homey.Driver {
                         let deviceTopic = swapPrefixTopic ? topicParts[0] : topicParts[1];
                         const msgObj = Object.values(message)[0];
                         if (this.devicesFound[deviceTopic] === undefined)
-                            this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 1, pwr_monitor: [], is_dimmable: 'No', has_lighttemp: 'No', has_lightcolor: 'No', chip_type: 'unknown'}};
+                            this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 1, pwr_monitor: [], is_dimmable: 'No', has_lighttemp: 'No', has_lightcolor: 'No', has_fan: 'No', chip_type: 'unknown'}};
                         if (msgObj['FriendlyName'] !== undefined)
                         {
                             this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
                             this.devicesFound[deviceTopic]['settings']['relays_number'] = msgObj['FriendlyName'].length;
-                        }   
+                        }
+                        if (msgObj['FanSpeed'] !== undefined)
+                            this.devicesFound[deviceTopic]['settings']['has_fan'] = 'Yes';                          
                         if (msgObj['ENERGY'] !== undefined)
                         {
                             let energyKeys = Object.keys(msgObj['ENERGY']);

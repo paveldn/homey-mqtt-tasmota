@@ -1,7 +1,7 @@
 {
     "id":"com.paveld.tasmota",
-    "version":"0.6.2",
-    "compatibility":">=2.0.0",
+    "version":"0.7.0",
+    "compatibility":">=3.0.0",
     "sdk":2,
     "brandColor":"#42A3E9",
     "name":{
@@ -132,6 +132,42 @@
             "setable":true,
             "uiComponent":null,
             "uiQuickAction":true
+        },
+        "fan_speed":{
+            "type":"enum",
+            "values": [
+                {
+                    "id": "0",
+                    "title": {
+                        "en": "Off"
+                    }
+                },
+                {
+                    "id": "1",
+                    "title": {
+                        "en": "1"
+                    }
+                },
+                {
+                    "id": "2",
+                    "title": {
+                        "en": "2"
+                    }
+                },
+                {
+                    "id": "3",
+                    "title": {
+                        "en": "3"
+                    }
+                }
+            ],
+            "title":{
+                "en":"Fan speed"
+            },
+            "uiComponent": "picker",
+            "getable":true,
+            "setable":true,
+            "uiQuickAction":true
         }
     },
     "drivers":[
@@ -246,6 +282,14 @@
                                     "type":"label",
                                     "label":{
                                         "en":"Has light color control"
+                                    },
+                                    "value":"No"
+                                },
+                                {
+                                    "id":"has_fan",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Fan control"
                                     },
                                     "value":"No"
                                 },

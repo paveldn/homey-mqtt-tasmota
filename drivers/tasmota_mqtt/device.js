@@ -66,12 +66,24 @@ class TasmotaDevice extends Homey.Device {
             });
         }
         this.isDimmable = false;
+        let needToSendStatus11 = false;
+        if (this.hasCapability('fan_speed'))
+        {
+            this.hasFan = true;
+            needToSendStatus11 = true;
+            this.registerCapabilityListener('fan_speed', ( value, opts ) => {
+                this.log('fan_speed cap: ' + JSON.stringify(value));
+                this.sendMessage('FanSpeed', value);
+                return Promise.resolve();
+            });
+        }
+        else
+            this.hasFan = false;
         if (this.hasCapability('multiplesockets'))
             this.registerMultipleSocketsFlows();
         else
         {
             this.registerSingleSocketFlows();
-            let needToSendStatus11 = false;
             if (this.hasCapability('dim'))
             {
                 this.isDimmable = true;
@@ -116,9 +128,9 @@ class TasmotaDevice extends Homey.Device {
                     return Promise.resolve();
                 }, 500);
             }
-            if (needToSendStatus11)
-                this.sendMessage('Status', '11');
         }
+        if (needToSendStatus11)
+            this.sendMessage('Status', '11');
     }
 
     sendMqttCommand(command, content) {
