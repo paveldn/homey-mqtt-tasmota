@@ -34,6 +34,12 @@
   },
   "0.6.0": {
     "en": "Added support for white temperature and light color control"
+  },
+  "0.6.1": {
+    "en": "Fixed bug with wrong device tile state"
+  },
+  "0.6.2": {
+    "en": "Fixed bug with multiple triggers when switch device from web"
   }
 }
 
