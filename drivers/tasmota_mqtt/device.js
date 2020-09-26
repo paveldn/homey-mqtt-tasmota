@@ -72,10 +72,12 @@ class TasmotaDevice extends Homey.Device {
             this.hasFan = true;
             needToSendStatus11 = true;
             this.registerCapabilityListener('fan_speed', ( value, opts ) => {
-                this.log('fan_speed cap: ' + JSON.stringify(value));
+                // this.log('fan_speed cap: ' + JSON.stringify(value));
+                this.fanTrigger.trigger(this, {fan_speed: parseInt(value)}, value);
                 this.sendMessage('FanSpeed', value);
                 return Promise.resolve();
             });
+            this.registerFanFlows();
         }
         else
             this.hasFan = false;
@@ -213,6 +215,25 @@ class TasmotaDevice extends Homey.Device {
             });
     }
     
+    registerFanFlows() {
+        this.fanTrigger = new Homey.FlowCardTriggerDevice('fan_speed_changed');
+        this.fanTrigger.register();
+        this.fanCondition1 = new Homey.FlowCardCondition('fan_speed_greater');
+        this.fanCondition1.register().registerRunListener((args, state) => {
+                return Promise.resolve(parseInt(state.value) > args.value);
+            });
+        this.fanCondition2 = new Homey.FlowCardCondition('fan_speed_lower');
+        this.fanCondition2.register().registerRunListener((args, state) => {
+                return Promise.resolve(parseInt(state.value) < args.value);
+            });                            
+        this.fanAction = new Homey.FlowCardAction('fan_speed_action');         
+        this.fanAction.register().registerRunListener((args, state) => {
+                args.device.sendMessage('FanSpeed', args.value.toString());
+                return Promise.resolve(true);
+            });
+    }
+
+    
     registerSingleSocketFlows() {
         this.socketTrigger = new Homey.FlowCardTriggerDevice('singlesocket_relay_state_changed');
         this.socketTrigger.register().registerRunListener((args, state) => {
@@ -321,7 +342,7 @@ class TasmotaDevice extends Homey.Device {
     }
 
     powerReceived(topic, message) {
-        this.log('powerReceived: ' + topic + ' => ' + message);
+        // this.log('powerReceived: ' + topic + ' => ' + message);
         let capName = '';
         let socketIndex = '';
         if (topic === 'POWER')
@@ -515,8 +536,10 @@ class TasmotaDevice extends Homey.Device {
                 {
                     try
                     {
-                        let fanSpeedVal = message['FanSpeed'].toString();
-                        this.updateCapabilityValue('fan_speed', fanSpeedVal);                    }
+                        let fanSpeedVal = message['FanSpeed'];
+                        if (this.updateCapabilityValue('fan_speed', fanSpeedVal.toString()))
+                            this.fanTrigger.trigger(this, {fan_speed: fanSpeedVal}, {value: fanSpeedVal});
+                    }
                     catch (error)
                     {
                         this.log('Error trying to set fan speed. Error: ' + error);

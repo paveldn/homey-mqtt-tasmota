@@ -10,10 +10,6 @@ class TasmotaDeviceDriver extends Homey.Driver {
     onInit() {
         this.log(this.constructor.name + ' has been initiated');
         this.log('Manifest: ' + JSON.stringify(this.getManifest()));
-        this.log('Devices:');
-        this.getDevices().forEach(item => {
-            this.log('    ', item);
-        });
         this.topics = ["stat", "tele"];
         this.devicesFound = {};
         this.searchingDevices = false;
@@ -126,10 +122,10 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     if (drvObj.devicesFound[key]['data'] !== undefined)
                     {
                         let dev_class = 'other';
-                        let dev_icon = 'single.svg';
+                        let dev_icon = 'iucons/power_socket.svg';
                         if (drvObj.devicesFound[key]['settings']['has_fan'] === 'Yes')
                         {
-                            dev_icon = 'fan.svg';
+                            dev_icon = 'icons/table_fan.svg';
                             dev_class = 'fan';
                         }
                         else if (relaysCount === 1)
@@ -137,17 +133,17 @@ class TasmotaDeviceDriver extends Homey.Driver {
                             if (drvObj.devicesFound[key]['settings']['is_dimmable'] == 'Yes')
                             {
                                 dev_class = 'light';
-                                dev_icon = 'lamp.svg';
+                                dev_icon = 'icons/lamp_bulb.svg';
                             }
                             else
                             {
                                 dev_class = 'socket';
-                                dev_icon = 'single.svg';
+                                dev_icon = 'icons/power_socket.svg';
                             }
                         }
                         else
                         {
-                            dev_icon = 'multiple.svg';
+                            dev_icon = 'icons/power_strip.svg';
                             dev_class = 'other';
                         }
                         let devItem = {
