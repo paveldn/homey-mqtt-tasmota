@@ -424,6 +424,11 @@ class TasmotaDevice extends Homey.Device {
                     onoffValue = onoffValue || bValue;
                 }
                 this.setCapabilityValue('onoff', onoffValue);
+                if (this.hasFan)
+                {
+                    let fanSpeedVal = status['FanSpeed'].toString();
+                    this.setCapabilityValue('fan_speed', fanSpeedVal); 
+                }
                 if (check === this.relaysCount)
                 {
                     this.setDeviceStatus('available');
@@ -506,6 +511,19 @@ class TasmotaDevice extends Homey.Device {
                             this.updateCapabilityValue('light_mode', 'color');
                     }
                 }
+                else if ((key === 'FanSpeed') && this.hasFan)
+                {
+                    try
+                    {
+                        let fanSpeedVal = message['FanSpeed'].toString();
+                        this.updateCapabilityValue('fan_speed', fanSpeedVal);                    }
+                    catch (error)
+                    {
+                        this.log('Error trying to set fan speed. Error: ' + error);
+                    }
+ 
+                }
+
                 else if (key.startsWith('POWER'))
                 {
                     this.powerReceived(key, message[key]);
