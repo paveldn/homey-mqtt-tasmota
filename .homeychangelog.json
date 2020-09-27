@@ -43,6 +43,9 @@
   },
   "0.7.0": {
     "en": "Added support for devices with fan (Sonoff iFan02 and iFan03). Added new icons based on device type (only for newly added devices)"
+  },
+  "0.7.1": {
+    "en": "Icons name fixed"
   }
 }
 
