@@ -133,7 +133,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
                             if (drvObj.devicesFound[key]['settings']['is_dimmable'] == 'Yes')
                             {
                                 dev_class = 'light';
-                                dev_icon = 'icons/lamp_bulb.svg';
+                                dev_icon = 'icons/light_bulb.svg';
                             }
                             else
                             {
