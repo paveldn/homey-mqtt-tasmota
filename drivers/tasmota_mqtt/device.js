@@ -1,22 +1,23 @@
 'use strict';
 
 const Homey = require('homey');
-const PowerMeterCapabilities = require('./power')
+const Sensor = require('./sensor.js')
 
 class TasmotaDevice extends Homey.Device {
 
     async onInit() {
         this.log('Device init');
-        this.log('Name:', this.getName());
-        this.log('Class:', this.getClass());
+        this.log(`Name: ${this.getName()}`);
+        this.log(`Class: ${this.getClass()}`);
         let settings = this.getSettings();
-        this.log('Setting: ' + JSON.stringify(settings));
+        this.log(`Setting: ${JSON.stringify(settings)}`);
         this.driver = await this.getReadyDriver();
         this.relaysCount = parseInt(settings.relays_number);
-        this.powerMonitoring = settings.pwr_monitor === 'Yes';
+        this.additionalSensors = (settings.additional_sensors !== '') || (settings.pwr_monitor === 'Yes');
         this.swap_prefix_topic = settings.swap_prefix_topic;
         this.shouldUpdateOnOff = false;
         this.sockets = [];
+		// Legacy devices conversion
         for (let i=1; i <= this.relaysCount; i++)
         {
             this.sockets.push(false);
@@ -30,7 +31,7 @@ class TasmotaDevice extends Homey.Device {
                 this.setCapabilityOptions(capname, {title: { en: 'switch ' + i.toString() }});
             }
         };
-        if (!this.hasCapability('onoff'))
+        if (!this.hasCapability('onoff') && (this.relaysCount > 0))
             this.addCapability('onoff');
         let now = Date.now();
         this.update = {
@@ -43,9 +44,13 @@ class TasmotaDevice extends Homey.Device {
         this.socketsList = [];
         for (let socketIndex=1; socketIndex <= this.relaysCount; socketIndex++)
             this.socketsList.push({name: 'socket '+socketIndex.toString()});
-        this.invalidateStatus(Homey.__('device.unavailable.startup'));
-        if (this.powerMonitoring)
-            this.sendMessage('Status', '10');  // StatusSNS
+		this.invalidateStatus(Homey.__('device.unavailable.startup'));
+        if (this.additionalSensors)
+		{
+			if (!this.hasCapability('additional_sensors'))
+				this.addCapability('additional_sensors');
+			this.sensorTrigger = new Homey.FlowCardTriggerDevice('sensor_value_changed').register();
+		}
         this.onOffList = this.getCapabilities().filter( cap => cap.startsWith('switch.') );
         if (this.onOffList.length > 0)
         {
@@ -58,7 +63,7 @@ class TasmotaDevice extends Homey.Device {
                 return Promise.resolve();
             }, 500);
             this.registerCapabilityListener('onoff', ( value, opts ) => {
-                // this.log('onoff cap: ' + JSON.stringify(value));
+                // this.log(`onoff cap: ${JSON.stringify(value)}`);
                 let message = value ? 'ON' : 'OFF';
                 for (let itemIndex = 1; itemIndex <= this.relaysCount; itemIndex++)
                     this.sendTasmotaPowerCommand(itemIndex.toString(), message);
@@ -66,13 +71,11 @@ class TasmotaDevice extends Homey.Device {
             });
         }
         this.isDimmable = false;
-        let needToSendStatus11 = false;
         if (this.hasCapability('fan_speed'))
         {
             this.hasFan = true;
-            needToSendStatus11 = true;
             this.registerCapabilityListener('fan_speed', ( value, opts ) => {
-                // this.log('fan_speed cap: ' + JSON.stringify(value));
+                // this.log(`fan_speed cap: ${JSON.stringify(value)}`);
                 this.fanTrigger.trigger(this, {fan_speed: parseInt(value)}, value);
                 this.sendMessage('FanSpeed', value);
                 return Promise.resolve();
@@ -83,15 +86,14 @@ class TasmotaDevice extends Homey.Device {
             this.hasFan = false;
         if (this.hasCapability('multiplesockets'))
             this.registerMultipleSocketsFlows();
-        else
+        else if (this.hasCapability('singlesocket'))
         {
             this.registerSingleSocketFlows();
             if (this.hasCapability('dim'))
             {
                 this.isDimmable = true;
-                needToSendStatus11 = true;
                 this.registerCapabilityListener('dim', ( value, opts ) => {
-                    //this.log('dim cap: ' + JSON.stringify(value));
+                    //this.log(`dim cap: ${JSON.stringify(value)}`);
                     this.sendMessage('Dimmer', Math.round(value * 100).toString());
                     return Promise.resolve();
                 });
@@ -107,9 +109,8 @@ class TasmotaDevice extends Homey.Device {
             if (this.hasCapability('light_temperature'))
             {
                 this.hasLightTemperature = true;
-                needToSendStatus11 = true;
                 this.registerCapabilityListener('light_temperature', ( value, opts ) => {
-                    // this.log('light_temperature cap: ' + JSON.stringify(value));
+                    // this.log(`light_temperature cap: ${JSON.stringify(value)}`);
                     this.sendMessage('CT', Math.round(153 + 347 * value).toString());
                     return Promise.resolve();
                 });
@@ -117,7 +118,6 @@ class TasmotaDevice extends Homey.Device {
             if (this.hasCapability('light_hue') && this.hasCapability('light_saturation'))
             {
                 this.hasLightColor = true;
-                needToSendStatus11 = true;
                 this.registerMultipleCapabilityListener(['light_hue', 'light_saturation'], ( valueObj, optsObj ) => {
                     let hueVal = valueObj['light_hue'];
                     if (hueVal === undefined)
@@ -131,8 +131,8 @@ class TasmotaDevice extends Homey.Device {
                 }, 500);
             }
         }
-        if (needToSendStatus11)
-            this.sendMessage('Status', '11');
+		if (this.driver.clientAvailable)
+			this.updateDevice();
     }
 
     sendMqttCommand(command, content) {
@@ -141,7 +141,7 @@ class TasmotaDevice extends Homey.Device {
             topic = topic + '/cmnd/' + command;
         else
             topic = 'cmnd/' + topic + '/' + command;
-        // this.log('Sending command: ' + topic + ' => ' + content);
+        // this.log(`Sending command: ${topic} => ${content}`);
         this.driver.sendMessage(topic, content);
     }
 
@@ -151,6 +151,13 @@ class TasmotaDevice extends Homey.Device {
         if ((this.update.answerTimeout == undefined) || (updateTm < this.update.answerTimeout)) 
             this.update.answerTimeout = updateTm;
     }
+	
+	updateDevice() {
+		if (this.relaysCount > 0)
+			this.sendMessage('Status', '11');	// StatusSTS
+		if (this.additionalSensors)
+			this.sendMessage('Status', '10');  // StatusSNS
+	}
 
     registerMultipleSocketsFlows() {
         this.socketTrigger = new Homey.FlowCardTriggerDevice('multiplesockets_relay_state_changed');
@@ -233,7 +240,6 @@ class TasmotaDevice extends Homey.Device {
             });
     }
 
-    
     registerSingleSocketFlows() {
         this.socketTrigger = new Homey.FlowCardTriggerDevice('singlesocket_relay_state_changed');
         this.socketTrigger.register().registerRunListener((args, state) => {
@@ -273,7 +279,6 @@ class TasmotaDevice extends Homey.Device {
         }
     }
 
-
     checkDeviceStatus() {
         let now = Date.now();
         if ((this.update.status === 'available') && (this.update.answerTimeout != undefined) && (now >= this.update.answerTimeout))
@@ -300,7 +305,7 @@ class TasmotaDevice extends Homey.Device {
            ((status === 'OFF') && currentVal))
            {
                 let topic = 'POWER'+socketId;
-                // this.log('Sending: ' + topic + ' => ' + status);
+                // this.log(`Sending: ${topic} => ${status}`);
                 this.sendMessage(topic, status);
            }
     }
@@ -331,18 +336,20 @@ class TasmotaDevice extends Homey.Device {
     calculateOnOffCapabilityValue() {
         let result = false;
         let switchCapNumber = this.onOffList.length;
-        for (var itemIndex = 0; !result && (itemIndex < switchCapNumber); itemIndex++)
+        for (let itemIndex = 0; !result && (itemIndex < switchCapNumber); itemIndex++)
         {
             let capValue = this.getCapabilityValue(this.onOffList[itemIndex]);
-            //this.log('calculateOnOffCapabilityValue: ' +  this.onOffList[itemIndex] + '=>' + capValue);
+            // this.log(`calculateOnOffCapabilityValue: ${this.onOffList[itemIndex]}=>${capValue}`);
             result = result || capValue;
         }                                             
-        //this.log('calculateOnOffCapabilityValue: result=>' + result);
+        //this.log(`calculateOnOffCapabilityValue: result=>${result}`);
         return result;
     }
 
     powerReceived(topic, message) {
-        // this.log('powerReceived: ' + topic + ' => ' + message);
+		if (!topic.startsWith('POWER'))
+			return;
+        //this.log(`powerReceived: ${topic}  => ${message}`);
         let capName = '';
         let socketIndex = '';
         if (topic === 'POWER')
@@ -361,208 +368,253 @@ class TasmotaDevice extends Homey.Device {
         let oldVal = this.sockets[intIndex];
         let newState = message === 'ON';
         this.sockets[intIndex] = newState;
-        // this.log('Old val = ' + oldVal); 
-        if (oldVal === newState)
+        if ((this.update.status === 'available') && (oldVal === newState))
             return;
         this.setCapabilityValue(capName, newState, () => 
             {
-                // this.log('Setting value ' + capName + ' => ' + newState);
+                // this.log(`Setting value ${capName}  => ${newState}`);
                 if (!this.shouldUpdateOnOff)
                 {
                     this.shouldUpdateOnOff = true;
                     setTimeout(() => {
                         this.shouldUpdateOnOff = false;
-                        let newVal = this.calculateOnOffCapabilityValue();
-                        // this.log('onoff =>' + newVal);
-                        this.setCapabilityValue('onoff', newVal);
+                        if (this.hasCapability('onoff'))
+                        {
+                            let newVal = this.calculateOnOffCapabilityValue();
+                            //this.log(`onoff =>${newVal}`);
+                            this.setCapabilityValue('onoff', newVal);
+                        }
                     }, 500);
                 }
             }                    
         );
-        let newSt = {};
-        newSt['socket_id'] = {name: 'socket ' + socketIndex};
-        newSt['state'] =  newState ? 'state_on' : 'state_off';
-        this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
-        if (this.powerMonitoring)
-            setTimeout(() => {
-                this.sendMessage('Status', '10');  // StatusSNS
-            }, 3000);
+		if (this.update.status === 'available')
+		{
+			let newSt = {};
+			newSt['socket_id'] = {name: 'socket ' + socketIndex};
+			newSt['state'] =  newState ? 'state_on' : 'state_off';
+			this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
+			if (this.additionalSensors)
+				setTimeout(() => {
+					this.sendMessage('Status', '10');  // StatusSNS
+				}, 3000);
+		}
     }
 
     updateCapabilityValue(cap, value) {
         if (this.hasCapability(cap))
         {
             let oldValue = this.getCapabilityValue(cap);
-            if (oldValue !== value)
-            {
-                // this.log('Set value ' + cap +': ' + oldValue + ' => ' + value);
-                this.setCapabilityValue(cap, value);
-                return true;
-            }
+			this.setCapabilityValue(cap, value);
+			return oldValue !== value;
         }
         return false;
     }
 
     processMqttMessage(topic, message) {
-        this.log('processMqttMessage: ' + topic + '=>' + JSON.stringify(message));
+        this.log(`processMqttMessage: ${topic} => ${JSON.stringify(message)}`);
         let topicParts = topic.split('/');
         if (topicParts.length != 3)
             return;
-        let now = Date.now();
-        if ((topicParts[2] === 'LWT') && (message === 'Offline'))
-        {
-            this.setDeviceStatus('unavailable');
-            this.invalidateStatus(Homey.__('device.unavailable.offline'));
-            this.update.nextRequest = now + this.update.updateInterval;
-            return;
-        }
-        if (this.update.status === 'init')
-        {
-            if (topicParts[2] === 'STATUS11')
-            {                                  
-                const status = Object.values(message)[0];
-                let check = 0;
-                let onoffValue = false;
-                for (let i=0; i < this.relaysCount; i++)
-                {
-                    let bValue = false;
-                    if ((i == 0) && (status['POWER'] !== undefined))
-                    {
-                        bValue = status['POWER'] === 'ON';
-                        let capName = 'switch.1';
-                        this.setCapabilityValue(capName, bValue);
-                        check++;
-                        this.sockets[0] = bValue;
-                    }
-                    else if (status['POWER'+(i+1).toString()] !== undefined)
-                    {
-                        bValue = status['POWER'+(i+1).toString()] === 'ON';
-                        let capName = 'switch.'+(i+1).toString();
-                        this.setCapabilityValue(capName, bValue);
-                        check++;
-                        this.sockets[i] = bValue;
-                    }
-                    onoffValue = onoffValue || bValue;
-                }
-                this.setCapabilityValue('onoff', onoffValue);
-                if (this.hasFan)
-                {
-                    let fanSpeedVal = status['FanSpeed'].toString();
-                    this.setCapabilityValue('fan_speed', fanSpeedVal); 
-                }
-                if (check === this.relaysCount)
-                {
-                    this.setDeviceStatus('available');
-                    this.setAvailable();
-                }
-            }
-            else
-                this.update.nextRequest = now;
-        }
-        if (this.update.status === 'unavailable')
-        {
-            this.setDeviceStatus('available');
-            this.setAvailable();
-        }
-        if (this.update.status === 'available')
-        {
-            this.update.nextRequest = now + this.update.updateInterval;
-            this.update.answerTimeout = undefined;
-        }
-        if (topicParts[2].startsWith('POWER'))
-        {
-            this.powerReceived(topicParts[2], message);
-        }
-        if ((topicParts[2] === 'RESULT') || (topicParts[2] === 'STATE'))
-        {
-            let updateOnOff = false;
-            Object.keys(message).forEach(key => {
-                if ((key === 'Dimmer') && this.isDimmable)
-                {
-                    try
-                    {
-                        let dimValue = message['Dimmer'] / 100;
-                        this.updateCapabilityValue('dim', dimValue);
-                    }
-                    catch (error)
-                    {
-                        this.log('Error trying to set dim value. Error: ' + error);
-                    }
-                }
-                else if ((key === 'CT') && this.hasLightTemperature)
-                {
-                    try
-                    {
-                        let ctValue = Math.round((message['CT'] - 153) / 3.47) / 100;
-                        if (this.updateCapabilityValue('light_temperature', ctValue))
-                            this.updateCapabilityValue('light_mode', 'temperature');
-                    }
-                    catch (error)
-                    {
-                        this.log('Error trying to set light temperature value. Error: ' + error);
-                    }
-                }
-                else if ((key === 'HSBColor') && this.hasLightColor)
-                {
-                    let values = message['HSBColor'].split(',')
-                    if (values.length === 3)
-                    {
-                        let cCounter = 0;
-                        try
-                        {
-                            let hueValue = Math.round(parseInt(values[0], 10) / 3.59) / 100;
-                            if (this.updateCapabilityValue('light_hue', hueValue))
-                                cCounter++;
-                        }
-                        catch (error)
-                        {
-                            this.log('Error trying to set hue value. Error: ' + error);
-                        }
-                        try
-                        {
-                            let satValue = parseInt(values[1], 10) / 100;
-                            if (this.updateCapabilityValue('light_saturation', satValue))
-                                cCounter++;
-                        }
-                        catch (error)
-                        {
-                            this.log('Error trying to set saturation value. Error: ' + error);
-                        }
-                        if (cCounter > 0)
-                            this.updateCapabilityValue('light_mode', 'color');
-                    }
-                }
-                else if ((key === 'FanSpeed') && this.hasFan)
-                {
-                    try
-                    {
-                        let fanSpeedVal = message['FanSpeed'];
-                        if (this.updateCapabilityValue('fan_speed', fanSpeedVal.toString()))
-                            this.fanTrigger.trigger(this, {fan_speed: fanSpeedVal}, {value: fanSpeedVal});
-                    }
-                    catch (error)
-                    {
-                        this.log('Error trying to set fan speed. Error: ' + error);
-                    }
- 
-                }
-
-                else if (key.startsWith('POWER'))
-                {
-                    this.powerReceived(key, message[key]);
-                }
-            });
-        }
-        if (this.powerMonitoring)
-        {
-            let powValues = message;
-            if (powValues['StatusSNS'] !== undefined)
-                powValues = powValues['StatusSNS'];
-            powValues = powValues['ENERGY'];
-            for (let key in powValues)
-                if (PowerMeterCapabilities[key] !== undefined)
-                    this.setCapabilityValue(PowerMeterCapabilities[key], powValues[key]); 
-        }
+		try
+		{
+			let now = Date.now();
+			if ((topicParts[2] === 'LWT') && (message === 'Offline'))
+			{
+				this.setDeviceStatus('unavailable');
+				this.invalidateStatus(Homey.__('device.unavailable.offline'));
+				this.update.nextRequest = now + this.update.updateInterval;
+				return;
+			}
+			if (this.update.status === 'unavailable')
+			{
+				this.setDeviceStatus('available');
+				this.setAvailable();
+			}
+			if (this.update.status === 'available')
+			{
+				this.update.nextRequest = now + this.update.updateInterval;
+				this.update.answerTimeout = undefined;
+			}
+			let messageType = undefined;
+			let root_topic = this.swap_prefix_topic ? topicParts[1] : topicParts[0];
+			if (root_topic === 'tele')
+			{
+				if (topicParts[2] === 'STATE')
+					messageType = 'StatusSTS';
+				else if (topicParts[2] === 'SENSOR')
+					messageType = 'StatusSNS';
+			}
+			else if (root_topic === 'stat')
+			{
+				if (topicParts[2].startsWith('STATUS'))
+				{
+					messageType = Object.keys(message)[0];
+					if (messageType !== undefined)
+						message = message[messageType];
+				}
+			}
+			if ((messageType === undefined) && (topicParts[2] === 'RESULT'))
+				messageType = 'Result'; 			
+			if (messageType === undefined)
+				return;
+			switch (messageType)
+			{
+				case 'Result':
+				case 'StatusSTS':
+					for (let valueKey in message)
+					{
+						let value = message[valueKey];
+						switch (valueKey)
+						{
+							case 'FanSpeed':
+								if (this.hasFan)
+								{
+									try
+									{
+										if (this.updateCapabilityValue('fan_speed', value.toString()))
+											this.fanTrigger.trigger(this, {fan_speed: value}, {value: value});
+									}
+									catch (error)
+									{
+										this.log(`Error trying to set fan speed. Error: ${error}`);
+									}									
+								}
+								break;
+							case 'Dimmer':
+								if (this.isDimmable)
+								{
+									try
+									{
+										let dimValue = value / 100;
+										this.updateCapabilityValue('dim', dimValue);
+									}
+									catch (error)
+									{
+										this.log(`Error trying to set dim value. Error: ${error}`);
+									}
+								}
+								break;
+							case 'CT':	// Color temperature
+								if (this.hasLightTemperature)
+								{
+									try
+									{
+										let ctValue = Math.round((value - 153) / 3.47) / 100;
+										if (this.updateCapabilityValue('light_temperature', ctValue))
+											this.updateCapabilityValue('light_mode', 'temperature');
+									}
+									catch (error)
+									{
+										this.log(`Error trying to set light temperature value. Error: ${error}`);
+									}
+								}
+								break;
+							case 'HSBColor':
+								if (this.hasLightColor)
+								{
+									try
+									{
+										let values = value.split(',')
+										if (values.length === 3)
+										{
+											let cCounter = 0;
+											try
+											{
+												let hueValue = Math.round(parseInt(values[0], 10) / 3.59) / 100;
+												if (this.updateCapabilityValue('light_hue', hueValue))
+													cCounter++;
+											}
+											catch (error)
+											{
+												this.log('Error trying to set hue value. Error: ' + error);
+											}
+											try
+											{
+												let satValue = parseInt(values[1], 10) / 100;
+												if (this.updateCapabilityValue('light_saturation', satValue))
+													cCounter++;
+											}
+											catch (error)
+											{
+												this.log('Error trying to set saturation value. Error: ' + error);
+											}
+											if (cCounter > 0)
+												this.updateCapabilityValue('light_mode', 'color');
+										}
+									}
+									catch (error)
+									{
+										this.log(`Error trying to set light color value. Error: ${error}`);
+									}
+								}
+								break;
+							default:
+								if (valueKey.startsWith('POWER') && (this.relaysCount > 0))
+								{
+									this.powerReceived(valueKey, value);
+								}
+								break;
+						}
+					}
+					if ((this.relaysCount > 0) && (this.update.message !== 'available'))
+					{
+						this.setDeviceStatus('available');
+						this.setAvailable();
+					}
+					break;
+				case 'StatusSNS':
+					for (const sensor in message)
+					{
+						const snsObj = message[sensor];
+						if ((typeof snsObj === 'object') && (snsObj !== null))
+						{
+							for (const snsField in snsObj)
+							{
+								if (snsField in Sensor.SensorsCapabilities)
+								{
+									let capName = Sensor.SensorsCapabilities[snsField].capability.replace('{sensor}', sensor);
+									let newValue = snsObj[snsField];
+									if (!this.hasCapability(capName))
+									{
+										if (sensor === 'ENERGY')
+										{
+											capName = Sensor.SensorsCapabilities[snsField].capability.replace('.{sensor}', '');
+											if (!this.hasCapability(capName))
+												capName = undefined;
+										}
+										else
+											capName = undefined;
+									}
+									if (capName !== undefined)
+									{
+										let oldValue = this.getCapabilityValue(capName);
+										this.setCapabilityValue(capName, newValue);
+										if (oldValue != newValue)
+											
+											this.sensorTrigger.trigger(this, {
+													sensor_name: sensor,
+													sensor_value_kind: snsField,
+													sensor_value_new: newValue,
+													sensor_value_old: oldValue
+												}, newValue);
+									}
+								}
+							}
+						}
+					}	
+					if ((this.relaysCount == 0) && (this.update.message !== 'available'))
+					{
+						this.setDeviceStatus('available');
+						this.setAvailable();
+					}
+					break;
+			}
+		}
+		catch(error)
+		{
+			this.log(`processMqttMessage error: ${error}`); 
+		}
     }
 }
 
