@@ -1,6 +1,6 @@
 {
     "id":"com.paveld.tasmota",
-    "version":"0.8.0",
+    "version":"0.8.3",
     "compatibility":">=3.0.0",
     "sdk":2,
     "brandColor":"#42A3E9",
@@ -133,6 +133,26 @@
             "setable":false,
             "icon":"assets/mobile/frequency.svg"
         },
+        "measure_tvoc":{
+            "type":"number",
+            "title":{
+                "en":"TVOC"
+            },
+            "uiComponent":"sensor",
+            "getable":true,
+            "setable":false,
+            "icon":"assets/mobile/air_pollution.svg"
+        },
+        "sensor_switch":{
+            "type":"boolean",
+            "title":{
+                "en":"Switch"
+            },
+            "uiComponent":"sensor",
+            "getable":true,
+            "setable":false,
+            "icon":"assets/mobile/switch.svg"
+        },      
         "switch":{
             "type":"boolean",
             "title":{
@@ -645,8 +665,8 @@
                     {
                         "name":"device",
                         "type":"device",
-						"filter":"driver_id=tasmota_mqtt&capabilities=additional_sensors"
-					}
+                        "filter":"driver_id=tasmota_mqtt&capabilities=additional_sensors"
+                    }
                 ],
                 "tokens":[
                     {

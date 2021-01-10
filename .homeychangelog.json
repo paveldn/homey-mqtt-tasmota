@@ -52,5 +52,14 @@
   },
   "0.8.0": {
     "en": "Added sensors support"
+  },
+  "0.8.1": {
+    "en": "Added support for switches as sensors"
+  },
+  "0.8.2": {
+    "en": "Added support for switches TVOC and eCO2 sensor values"
+  },
+  "0.8.3": {
+    "en": "Added support for switches TVOC and eCO2 sensor values (fixed)"
   }
 }

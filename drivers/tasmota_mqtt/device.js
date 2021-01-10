@@ -588,20 +588,19 @@ class TasmotaDevice extends Homey.Device {
 									}
 									if (capName !== undefined)
 									{
-										let oldValue = this.getCapabilityValue(capName);
-										this.setCapabilityValue(capName, newValue);
-										if (oldValue != newValue)
-											
-											this.sensorTrigger.trigger(this, {
-													sensor_name: sensor,
-													sensor_value_kind: snsField,
-													sensor_value_new: newValue,
-													sensor_value_old: oldValue
-												}, newValue);
+										this.checkSensorCapability(capName, newValue, sensor, snsField);
 									}
 								}
 							}
 						}
+						else if (sensor.startsWith('Switch'))
+						{
+							let newValue = snsObj === 'ON';
+							let capId = sensor.slice(-1);
+							let capName = 'sensor_switch.' + capId;
+							this.checkSensorCapability(capName, newValue, sensor, 'Switch');
+						}
+							
 					}	
 					if ((this.relaysCount == 0) && (this.update.message !== 'available'))
 					{
@@ -616,6 +615,18 @@ class TasmotaDevice extends Homey.Device {
 			this.log(`processMqttMessage error: ${error}`); 
 		}
     }
+	
+	checkSensorCapability(capName, newValue, sensorName, valueKind) {
+		let oldValue = this.getCapabilityValue(capName);
+		this.setCapabilityValue(capName, newValue);
+		if (oldValue != newValue)
+			this.sensorTrigger.trigger(this, {
+					sensor_name: sensorName,
+					sensor_value_kind: valueKind,
+					sensor_value_new: newValue,
+					sensor_value_old: oldValue
+				}, newValue);
+	}
 }
 
 module.exports = TasmotaDevice;

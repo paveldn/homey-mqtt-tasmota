@@ -28,6 +28,9 @@
         'Total':            { caption: 'Power meter',           capability: 'meter_power.{sensor}',                         units: { default: 'kWh',        units_field: null,                  units_template: '{value}' } },
         'Today':            { caption: 'Power meter today',     capability: 'meter_energy_today.{sensor}',                  units: { default: 'kWh',        units_field: null,                  units_template: '{value}' } },
         'Yesterday':        { caption: 'Power meter yesterday', capability: 'meter_energy_yesterday.{sensor}',              units: { default: 'kWh',        units_field: null,                  units_template: '{value}' } },
+        'SeaPressure':      { caption: 'Sea level pressure',    capability: 'measure_pressure.see_level.{sensor}',          units: { default: 'hPa',        units_field: 'PressureUnit',        units_template: '{value}' } },
+        'TVOC':             { caption: 'TVOC',                  capability: 'measure_tvoc.{sensor}',                        units: { default: 'ppb',        units_field: null,                  units_template: '{value}' } },
+        'eCO2':             { caption: 'Equivalent CO\u2082',   capability: 'measure_co2.eco2.{sensor}',                    units: { default: 'ppm',        units_field: null,                  units_template: '{value}' } },          
     };
 
 module.exports.SensorsCapabilities = SensorsCapabilities;

@@ -125,17 +125,26 @@ class TasmotaDeviceDriver extends Homey.Driver {
 				for (const sensorindex in drvObj.devicesFound[key]['sensors'])
 				{
 					let sensorPair = drvObj.devicesFound[key]['sensors'][sensorindex];
-					let capId = Sensor.SensorsCapabilities[sensorPair.value].capability.replace('{sensor}', sensorPair.sensor);
-					let units = Sensor.SensorsCapabilities[sensorPair.value].units.default;
-					const units_field = Sensor.SensorsCapabilities[sensorPair.value].units.units_field;
-					if ((units_field !== null) && (units_field in drvObj.devicesFound[key]['sensors_attr']))
-						units = drvObj.devicesFound[key]['sensors_attr'][units_field];
-					units = Sensor.SensorsCapabilities[sensorPair.value].units.units_template.replace('{value}', units);
-					let caption = Sensor.SensorsCapabilities[sensorPair.value].caption;
-					if (sensorPair.sensor !== 'ENERGY')
-						caption = caption + ' (' + sensorPair.sensor + ')';
-                    capabilities.push(capId);
-					capabilitiesOptions[capId] = {title: { en:  caption }, units:{ en: units } };
+					if (sensorPair.sensor === 'Switch')
+					{
+						let capId = 'sensor_switch.' + sensorPair.value;
+						capabilities.push(capId);
+						capabilitiesOptions[capId] = {title: { en:  'Switch ' + sensorPair.value } };						
+					}
+					else
+					{
+						let capId = Sensor.SensorsCapabilities[sensorPair.value].capability.replace('{sensor}', sensorPair.sensor);
+						let units = Sensor.SensorsCapabilities[sensorPair.value].units.default;
+						const units_field = Sensor.SensorsCapabilities[sensorPair.value].units.units_field;
+						if ((units_field !== null) && (units_field in drvObj.devicesFound[key]['sensors_attr']))
+							units = drvObj.devicesFound[key]['sensors_attr'][units_field];
+						units = Sensor.SensorsCapabilities[sensorPair.value].units.units_template.replace('{value}', units);
+						let caption = Sensor.SensorsCapabilities[sensorPair.value].caption;
+						if (sensorPair.sensor !== 'ENERGY')
+							caption = caption + ' (' + sensorPair.sensor + ')';
+						capabilities.push(capId);
+						capabilitiesOptions[capId] = {title: { en:  caption }, units:{ en: units } };
+					}
 				}
                 try {
 					if (drvObj.devicesFound[key]['settings']['additional_sensors'])
@@ -270,6 +279,11 @@ class TasmotaDeviceDriver extends Homey.Driver {
 														sensorsAttr[u.units_field] = msgObj[u.units_field];
 												}
 											}
+										}
+										else if (snsKey.startsWith('Switch'))
+										{
+											let switchIndex = snsKey.slice(-1);
+											sensors.push({ sensor: 'Switch', value: switchIndex });
 										}
 									}
 									this.devicesFound[deviceTopic]['sensors'] = sensors;	
