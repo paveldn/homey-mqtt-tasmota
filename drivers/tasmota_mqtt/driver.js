@@ -86,7 +86,8 @@ class TasmotaDeviceDriver extends Homey.Driver {
             {
                 let capabilities = [];
                 let capabilitiesOptions = {};
-                let relaysCount = drvObj.devicesFound[key]['settings']['relays_number'];
+                let shuttersCount = drvObj.devicesFound[key]['shutters'].length;
+                let relaysCount = shuttersCount === 0 ? drvObj.devicesFound[key]['settings']['relays_number'] : 0;
                 for (let propIndex = 1; propIndex <= relaysCount; propIndex++)
                 {
                     let capId = 'switch.' + propIndex.toString();
@@ -119,36 +120,56 @@ class TasmotaDeviceDriver extends Homey.Driver {
                     if (lmCounter === 2)
                         capabilities.push('light_mode'); 
                 }
+                if (shuttersCount > 0)
+                {
+                    const shutterCapNames = ['windowcoverings_state', 'windowcoverings_set'];
+                    const shuterCapTitles = ['Window Coverings Control', 'Window Coverings Position'];
+                    let counter = 1;
+                    for (const shutterindex in drvObj.devicesFound[key]['shutters'])
+                    {
+                        const shutterName = drvObj.devicesFound[key]['shutters'][shutterindex];
+                        for (const capindex in shutterCapNames)
+                        {
+                            let capId = shutterCapNames[capindex] + '.' + shutterName;
+                            capabilities.push(capId);
+                            let capTitle = shuterCapTitles[capindex];
+                            if (shuttersCount > 1)
+                                capTitle += ' ' + counter.toString();
+                            capabilitiesOptions[capId] = {title: { en:  capTitle } }; 
+                        }     
+                        counter++;
+                    }
+                }
                 if (drvObj.devicesFound[key]['settings']['has_fan'] === 'Yes')
                     capabilities.push('fan_speed'); 
-				// Sensors
-				for (const sensorindex in drvObj.devicesFound[key]['sensors'])
-				{
-					let sensorPair = drvObj.devicesFound[key]['sensors'][sensorindex];
-					if (sensorPair.sensor === 'Switch')
-					{
-						let capId = 'sensor_switch.' + sensorPair.value;
-						capabilities.push(capId);
-						capabilitiesOptions[capId] = {title: { en:  'Switch ' + sensorPair.value } };						
-					}
-					else
-					{
-						let capId = Sensor.SensorsCapabilities[sensorPair.value].capability.replace('{sensor}', sensorPair.sensor);
-						let units = Sensor.SensorsCapabilities[sensorPair.value].units.default;
-						const units_field = Sensor.SensorsCapabilities[sensorPair.value].units.units_field;
-						if ((units_field !== null) && (units_field in drvObj.devicesFound[key]['sensors_attr']))
-							units = drvObj.devicesFound[key]['sensors_attr'][units_field];
-						units = Sensor.SensorsCapabilities[sensorPair.value].units.units_template.replace('{value}', units);
-						let caption = Sensor.SensorsCapabilities[sensorPair.value].caption;
-						if (sensorPair.sensor !== 'ENERGY')
-							caption = caption + ' (' + sensorPair.sensor + ')';
-						capabilities.push(capId);
-						capabilitiesOptions[capId] = {title: { en:  caption }, units:{ en: units } };
-					}
-				}
+                // Sensors
+                for (const sensorindex in drvObj.devicesFound[key]['sensors'])
+                {
+                    let sensorPair = drvObj.devicesFound[key]['sensors'][sensorindex];
+                    if (sensorPair.sensor === 'Switch')
+                    {
+                        let capId = 'sensor_switch.' + sensorPair.value;
+                        capabilities.push(capId);
+                        capabilitiesOptions[capId] = {title: { en:  'Switch ' + sensorPair.value } };
+                    }
+                    else
+                    {
+                        let capId = Sensor.SensorsCapabilities[sensorPair.value].capability.replace('{sensor}', sensorPair.sensor);
+                        let units = Sensor.SensorsCapabilities[sensorPair.value].units.default;
+                        const units_field = Sensor.SensorsCapabilities[sensorPair.value].units.units_field;
+                        if ((units_field !== null) && (units_field in drvObj.devicesFound[key]['sensors_attr']))
+                            units = drvObj.devicesFound[key]['sensors_attr'][units_field];
+                        units = Sensor.SensorsCapabilities[sensorPair.value].units.units_template.replace('{value}', units);
+                        let caption = Sensor.SensorsCapabilities[sensorPair.value].caption;
+                        if (sensorPair.sensor !== 'ENERGY')
+                            caption = caption + ' (' + sensorPair.sensor + ')';
+                        capabilities.push(capId);
+                        capabilitiesOptions[capId] = {title: { en:  caption }, units:{ en: units } };
+                    }
+                }
                 try {
-					if (drvObj.devicesFound[key]['settings']['additional_sensors'])
-						capabilities.push('additional_sensors');
+                    if (drvObj.devicesFound[key]['settings']['additional_sensors'])
+                        capabilities.push('additional_sensors');
                     if (drvObj.devicesFound[key]['data'] !== undefined)
                     {
                         let dev_class = 'other';
@@ -171,6 +192,11 @@ class TasmotaDeviceDriver extends Homey.Driver {
                                 dev_icon = 'icons/power_socket.svg';
                             }
                         }
+                        else if (shuttersCount > 0)
+                        {
+                            dev_class = 'blinds';
+                            dev_icon = 'icons/curtains.svg';
+                        }
                         else if (relaysCount === 0)
                         {
                             dev_icon = 'icons/sensor.svg';
@@ -190,14 +216,15 @@ class TasmotaDeviceDriver extends Homey.Driver {
                             settings:   {
                                 mqtt_topic:         drvObj.devicesFound[key]['settings']['mqtt_topic'],
                                 swap_prefix_topic:  drvObj.devicesFound[key]['settings']['swap_prefix_topic'],
-                                relays_number:      drvObj.devicesFound[key]['settings']['relays_number'].toString(),
+                                relays_number:      relaysCount.toString(),
                                 pwr_monitor:        drvObj.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
                                 is_dimmable:        relaysCount === 1 ? drvObj.devicesFound[key]['settings']['is_dimmable'] : 'No',
                                 has_lighttemp:      relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lighttemp'] : 'No',
                                 has_lightcolor:     relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lightcolor'] : 'No',
                                 has_fan:            drvObj.devicesFound[key]['settings']['has_fan'],
+                                shutters_number:    shuttersCount.toString(),
                                 chip_type:          drvObj.devicesFound[key]['settings']['chip_type'],
-								additional_sensors: drvObj.devicesFound[key]['settings']['additional_sensors'],
+                                additional_sensors: drvObj.devicesFound[key]['settings']['additional_sensors'],
                             },
                             icon:   dev_icon,
                             capabilities,
@@ -242,11 +269,13 @@ class TasmotaDeviceDriver extends Homey.Driver {
                             this.log(`${msgKey} => ${JSON.stringify(message[msgKey])}`);
                             const msgObj = message[msgKey];
                             if (this.devicesFound[deviceTopic] === undefined)
-                                this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 0, pwr_monitor: [], is_dimmable: 'No', has_lighttemp: 'No', has_lightcolor: 'No', has_fan: 'No', chip_type: 'unknown'}};
+                                this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 0, pwr_monitor: [], is_dimmable: 'No', has_lighttemp: 'No', has_lightcolor: 'No', has_fan: 'No', shutters_number: 0, chip_type: 'unknown'}};
                             switch (msgKey)
                             {
                                 case 'Status':          // STATUS
-                                    if (msgObj['FriendlyName'] !== undefined)
+                                    if (msgObj['DeviceName'] !== undefined)
+                                        this.devicesFound[deviceTopic]['name'] = msgObj['DeviceName'];
+                                    else if (msgObj['FriendlyName'] !== undefined)
                                         this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
                                     break;
                                 case 'StatusFWR':       // STATUS2
@@ -258,43 +287,50 @@ class TasmotaDeviceDriver extends Homey.Driver {
                                         this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};                               
                                     break;
                                 case 'StatusSNS':       // STATUS8 and STATUS10
-									let sensors = [];
-									let sensorsAttr = {};
-									let sensors_settings = {};
-									for (const snsKey in msgObj)
-									{
-										if ((typeof msgObj[snsKey] === 'object') && (msgObj[snsKey] !== null))
-										{
-											for (const valKey in msgObj[snsKey])
-											{
-												if (valKey in Sensor.SensorsCapabilities)
-												{
-													sensors.push({ sensor: snsKey, value: valKey });
-													if (valKey in sensors_settings)
-														sensors_settings[valKey] = sensors_settings[valKey] + 1;
-													else
-														sensors_settings[valKey] = 1;
-													let u = Sensor.SensorsCapabilities[valKey].units;
-													if ((u !== null) && (u.units_field !== null) && !(u.units_field in sensorsAttr) && (u.units_field in msgObj))
-														sensorsAttr[u.units_field] = msgObj[u.units_field];
-												}
-											}
-										}
-										else if (snsKey.startsWith('Switch'))
-										{
-											let switchIndex = snsKey.slice(-1);
-											sensors.push({ sensor: 'Switch', value: switchIndex });
-										}
-									}
-									this.devicesFound[deviceTopic]['sensors'] = sensors;	
-									this.devicesFound[deviceTopic]['sensors_attr'] = sensorsAttr;
-									let sens_string = [];
-									for (const sitem in sensors_settings)
-										if (sensors_settings[sitem] > 1)
-											sens_string.push(sitem + ' (x' + sensors_settings[sitem] + ')');
-										else
-											sens_string.push(sitem);
-									this.devicesFound[deviceTopic]['settings']['additional_sensors'] = sens_string.join(', ');
+                                    let sensors = [];
+                                    let sensorsAttr = {};
+                                    let sensors_settings = {};
+                                    let shutters = [];
+                                    for (const snsKey in msgObj)
+                                    {
+                                        if ((typeof msgObj[snsKey] === 'object') && (msgObj[snsKey] !== null))
+                                        {
+                                            if (snsKey.startsWith('Shutter'))
+                                                shutters.push(snsKey);
+                                            else
+                                            {
+                                                for (const valKey in msgObj[snsKey])
+                                                {
+                                                    if (valKey in Sensor.SensorsCapabilities)
+                                                    {
+                                                        sensors.push({ sensor: snsKey, value: valKey });
+                                                        if (valKey in sensors_settings)
+                                                            sensors_settings[valKey] = sensors_settings[valKey] + 1;
+                                                        else
+                                                            sensors_settings[valKey] = 1;
+                                                        let u = Sensor.SensorsCapabilities[valKey].units;
+                                                        if ((u !== null) && (u.units_field !== null) && !(u.units_field in sensorsAttr) && (u.units_field in msgObj))
+                                                            sensorsAttr[u.units_field] = msgObj[u.units_field];
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else if (snsKey.startsWith('Switch'))
+                                        {
+                                            let switchIndex = snsKey.slice(-1);
+                                            sensors.push({ sensor: 'Switch', value: switchIndex });
+                                        }
+                                    }
+                                    this.devicesFound[deviceTopic]['sensors'] = sensors;    
+                                    this.devicesFound[deviceTopic]['sensors_attr'] = sensorsAttr;
+                                    let sens_string = [];
+                                    for (const sitem in sensors_settings)
+                                        if (sensors_settings[sitem] > 1)
+                                            sens_string.push(sitem + ' (x' + sensors_settings[sitem] + ')');
+                                        else
+                                            sens_string.push(sitem);
+                                    this.devicesFound[deviceTopic]['settings']['additional_sensors'] = sens_string.join(', ');
+                                    this.devicesFound[deviceTopic]['shutters'] = shutters;
                                     break;                                  
                                 case 'StatusSTS':       // STATUS11
                                     let switchNum = 0;
@@ -317,8 +353,8 @@ class TasmotaDeviceDriver extends Homey.Driver {
                                             default:
                                                 if (objKey.match(/^POWER\d*$/))
                                                     switchNum++;
-												else
-													
+                                                else
+                                                    
                                                 break;
                                         }
                                     };
@@ -381,7 +417,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
             this.subscribeTopic(this.topics[topic] + "/#");
             this.subscribeTopic("+/" + this.topics[topic] + "/#");
         }
-		this.getDevices().forEach( device => {
+        this.getDevices().forEach( device => {
             device.updateDevice();
         });
     }

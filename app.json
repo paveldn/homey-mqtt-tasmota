@@ -1,6 +1,6 @@
 {
     "id":"com.paveld.tasmota",
-    "version":"0.8.3",
+    "version":"0.8.4",
     "compatibility":">=3.0.0",
     "sdk":2,
     "brandColor":"#42A3E9",
@@ -324,6 +324,14 @@
                                         "en":"Fan control"
                                     },
                                     "value":"No"
+                                },
+                                {
+                                    "id":"shutters_number",
+                                    "type":"label",
+                                    "label":{
+                                        "en":"Number of shutters"
+                                    },
+                                    "value":"0"
                                 },
                                 {
                                     "id":"additional_sensors",
