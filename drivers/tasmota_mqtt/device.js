@@ -11,11 +11,13 @@ class TasmotaDevice extends Homey.Device {
         this.log(`Class: ${this.getClass()}`);
         let settings = this.getSettings();
         this.log(`Setting: ${JSON.stringify(settings)}`);
+		this.log(`Capabilities: ${JSON.stringify(this.getCapabilities())}`);
         this.driver = await this.getReadyDriver();
         this.relaysCount = parseInt(settings.relays_number);
         this.additionalSensors = (settings.additional_sensors !== '') || (settings.pwr_monitor === 'Yes');
         this.swap_prefix_topic = settings.swap_prefix_topic;
         this.shouldUpdateOnOff = false;
+		this.shuttersNubmber = parseInt(settings.shutters_number);
         this.sockets = [];
 		// Legacy devices conversion
         for (let i=1; i <= this.relaysCount; i++)
@@ -131,6 +133,10 @@ class TasmotaDevice extends Homey.Device {
                 }, 500);
             }
         }
+		if (this.shuttersNubmber > 0)
+		{
+			this.registerShuttersCapListeners();
+		}
 		if (this.driver.clientAvailable)
 			this.updateDevice();
     }
@@ -141,7 +147,7 @@ class TasmotaDevice extends Homey.Device {
             topic = topic + '/cmnd/' + command;
         else
             topic = 'cmnd/' + topic + '/' + command;
-        // this.log(`Sending command: ${topic} => ${content}`);
+		// this.log(`Sending command: ${topic} => ${content}`);
         this.driver.sendMessage(topic, content);
     }
 
@@ -155,7 +161,7 @@ class TasmotaDevice extends Homey.Device {
 	updateDevice() {
 		if (this.relaysCount > 0)
 			this.sendMessage('Status', '11');	// StatusSTS
-		if (this.additionalSensors)
+		if ((this.additionalSensors) || (this.shuttersNubmber > 0))
 			this.sendMessage('Status', '10');  // StatusSNS
 	}
 
@@ -239,7 +245,44 @@ class TasmotaDevice extends Homey.Device {
                 return Promise.resolve(true);
             });
     }
-
+	
+	registerShuttersCapListeners() {
+		this.registerCapabilityListener('windowcoverings_state', ( value, opts ) => {
+			// this.log(`windowcoverings_state cap: ${JSON.stringify(value)}`);
+			try {
+				switch (value) 
+				{
+					case "idle":
+						this.sendMessage('ShutterPosition', 'STOP');
+						break;
+					case "up":
+						this.sendMessage('ShutterPosition', 'UP');
+						break;
+					case "down":
+						this.sendMessage('ShutterPosition', 'DOWN');
+						break;
+					default:
+						throw new Error('unknown value');
+						break;						
+				};
+			}
+			catch (error) {
+				this.log(`Error happened while processing capability "windowcoverings_state" value "${value}", error ${error}`);
+			}
+			return Promise.resolve();
+		});
+		this.registerCapabilityListener('windowcoverings_set', ( value, opts ) => {
+			// this.log(`windowcoverings_set cap: ${JSON.stringify(value)}`);
+			try {
+				this.sendMessage('ShutterPosition', value * 100);
+			}
+			catch (error) {
+				this.log(`Error happened while processing capability "windowcoverings_set" value "${value}", error ${error}`);
+			}
+			return Promise.resolve();
+		});	
+	}
+	
     registerSingleSocketFlows() {
         this.socketTrigger = new Homey.FlowCardTriggerDevice('singlesocket_relay_state_changed');
         this.socketTrigger.register().registerRunListener((args, state) => {
@@ -458,115 +501,164 @@ class TasmotaDevice extends Homey.Device {
 				messageType = 'Result'; 			
 			if (messageType === undefined)
 				return;
-			switch (messageType)
+			if ((messageType === 'Result') || (messageType === 'StatusSTS'))
 			{
-				case 'Result':
-				case 'StatusSTS':
-					for (let valueKey in message)
+				for (let valueKey in message)
+				{
+					let value = message[valueKey];
+					switch (valueKey)
 					{
-						let value = message[valueKey];
-						switch (valueKey)
-						{
-							case 'FanSpeed':
-								if (this.hasFan)
+						case 'FanSpeed':
+							if (this.hasFan)
+							{
+								try
 								{
-									try
-									{
-										if (this.updateCapabilityValue('fan_speed', value.toString()))
-											this.fanTrigger.trigger(this, {fan_speed: value}, {value: value});
-									}
-									catch (error)
-									{
-										this.log(`Error trying to set fan speed. Error: ${error}`);
-									}									
+									if (this.updateCapabilityValue('fan_speed', value.toString()))
+										this.fanTrigger.trigger(this, {fan_speed: value}, {value: value});
 								}
-								break;
-							case 'Dimmer':
-								if (this.isDimmable)
+								catch (error)
 								{
-									try
-									{
-										let dimValue = value / 100;
-										this.updateCapabilityValue('dim', dimValue);
-									}
-									catch (error)
-									{
-										this.log(`Error trying to set dim value. Error: ${error}`);
-									}
+									this.log(`Error trying to set fan speed. Error: ${error}`);
+								}									
+							}
+							break;
+						case 'Dimmer':
+							if (this.isDimmable)
+							{
+								try
+								{
+									let dimValue = value / 100;
+									this.updateCapabilityValue('dim', dimValue);
 								}
-								break;
-							case 'CT':	// Color temperature
-								if (this.hasLightTemperature)
+								catch (error)
 								{
-									try
-									{
-										let ctValue = Math.round((value - 153) / 3.47) / 100;
-										if (this.updateCapabilityValue('light_temperature', ctValue))
-											this.updateCapabilityValue('light_mode', 'temperature');
-									}
-									catch (error)
-									{
-										this.log(`Error trying to set light temperature value. Error: ${error}`);
-									}
+									this.log(`Error trying to set dim value. Error: ${error}`);
 								}
-								break;
-							case 'HSBColor':
-								if (this.hasLightColor)
+							}
+							break;
+						case 'CT':	// Color temperature
+							if (this.hasLightTemperature)
+							{
+								try
 								{
-									try
+									let ctValue = Math.round((value - 153) / 3.47) / 100;
+									if (this.updateCapabilityValue('light_temperature', ctValue))
+										this.updateCapabilityValue('light_mode', 'temperature');
+								}
+								catch (error)
+								{
+									this.log(`Error trying to set light temperature value. Error: ${error}`);
+								}
+							}
+							break;
+						case 'HSBColor':
+							if (this.hasLightColor)
+							{
+								try
+								{
+									let values = value.split(',')
+									if (values.length === 3)
 									{
-										let values = value.split(',')
-										if (values.length === 3)
+										let cCounter = 0;
+										try
 										{
-											let cCounter = 0;
-											try
-											{
-												let hueValue = Math.round(parseInt(values[0], 10) / 3.59) / 100;
-												if (this.updateCapabilityValue('light_hue', hueValue))
-													cCounter++;
-											}
-											catch (error)
-											{
-												this.log('Error trying to set hue value. Error: ' + error);
-											}
-											try
-											{
-												let satValue = parseInt(values[1], 10) / 100;
-												if (this.updateCapabilityValue('light_saturation', satValue))
-													cCounter++;
-											}
-											catch (error)
-											{
-												this.log('Error trying to set saturation value. Error: ' + error);
-											}
-											if (cCounter > 0)
-												this.updateCapabilityValue('light_mode', 'color');
+											let hueValue = Math.round(parseInt(values[0], 10) / 3.59) / 100;
+											if (this.updateCapabilityValue('light_hue', hueValue))
+												cCounter++;
 										}
-									}
-									catch (error)
-									{
-										this.log(`Error trying to set light color value. Error: ${error}`);
+										catch (error)
+										{
+											this.log('Error trying to set hue value. Error: ' + error);
+										}
+										try
+										{
+											let satValue = parseInt(values[1], 10) / 100;
+											if (this.updateCapabilityValue('light_saturation', satValue))
+												cCounter++;
+										}
+										catch (error)
+										{
+											this.log('Error trying to set saturation value. Error: ' + error);
+										}
+										if (cCounter > 0)
+											this.updateCapabilityValue('light_mode', 'color');
 									}
 								}
-								break;
-							default:
-								if (valueKey.startsWith('POWER') && (this.relaysCount > 0))
+								catch (error)
 								{
-									this.powerReceived(valueKey, value);
+									this.log(`Error trying to set light color value. Error: ${error}`);
 								}
-								break;
+							}
+							break;
+						default:
+							if (valueKey.startsWith('POWER') && (this.relaysCount > 0))
+							{
+								this.powerReceived(valueKey, value);
+							}
+							break;
+					}
+				}
+				if ((this.relaysCount > 0) && (this.update.status !== 'available'))
+				{
+					this.setDeviceStatus('available');
+					this.setAvailable();
+				}				
+			}
+			if ((messageType === 'Result') || (messageType === 'StatusSNS'))
+			{
+				for (const sensor in message)
+				{
+					const snsObj = message[sensor];
+					if (sensor.startsWith('Switch'))
+					{
+						let newValue = snsObj === 'ON';
+						let capId = sensor.slice(-1);
+						let capName = 'sensor_switch.' + capId;
+						this.checkSensorCapability(capName, newValue, sensor, 'Switch');
+					}
+					else if (sensor === 'Shutter1')
+					{
+						if ((this.shuttersNubmber > 0) && (typeof snsObj === 'object') && (snsObj !== null))
+						{
+							if (snsObj['Direction'] !== undefined)
+							{
+								try {
+									if (this.hasCapability('windowcoverings_state'))
+									{
+										const directionNum = parseInt(snsObj['Direction']);
+										var direction = "idle";
+										if (directionNum > 0)
+											direction = "up";
+										else if (directionNum < 0)
+											direction = "down";
+										let oldCap = this.getCapabilityValue('windowcoverings_state');
+										this.setCapabilityValue('windowcoverings_state', direction);
+									}
+								}
+								catch(error)
+								{
+									this.log(`While processing ${messageType}.${sensor}.Direction error happened: ${error}`); 
+								}
+							}
+							if (snsObj['Position'] !== undefined)
+							{
+								try {
+									if (this.hasCapability('windowcoverings_set'))
+									{
+										const positionNum = parseInt(snsObj['Position']);
+										this.setCapabilityValue('windowcoverings_set', positionNum / 100);
+									}
+								}
+								catch(error)
+								{
+									this.log(`While processing ${messageType}.${sensor}.Position error happened: ${error}`); 
+								}
+							}
+							
 						}
 					}
-					if ((this.relaysCount > 0) && (this.update.message !== 'available'))
+					else
 					{
-						this.setDeviceStatus('available');
-						this.setAvailable();
-					}
-					break;
-				case 'StatusSNS':
-					for (const sensor in message)
-					{
-						const snsObj = message[sensor];
 						if ((typeof snsObj === 'object') && (snsObj !== null))
 						{
 							for (const snsField in snsObj)
@@ -593,21 +685,13 @@ class TasmotaDevice extends Homey.Device {
 								}
 							}
 						}
-						else if (sensor.startsWith('Switch'))
-						{
-							let newValue = snsObj === 'ON';
-							let capId = sensor.slice(-1);
-							let capName = 'sensor_switch.' + capId;
-							this.checkSensorCapability(capName, newValue, sensor, 'Switch');
-						}
-							
-					}	
-					if ((this.relaysCount == 0) && (this.update.message !== 'available'))
-					{
-						this.setDeviceStatus('available');
-						this.setAvailable();
-					}
-					break;
+					}						
+				}	
+				if ((this.relaysCount == 0) && (this.update.status !== 'available'))
+				{
+					this.setDeviceStatus('available');
+					this.setAvailable();
+				}
 			}
 		}
 		catch(error)

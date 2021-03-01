@@ -11,6 +11,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
         this.log(`${this.constructor.name} has been initiated`);
         this.log(`Manifest: ${JSON.stringify(this.getManifest())}`);
         this.topics = ["stat", "tele"];
+        this.ignoreTopicsWhenPairing = [];
         this.devicesFound = {};
         this.searchingDevices = false;
         this.checkDevices = setInterval(() => {
@@ -24,17 +25,19 @@ class TasmotaDeviceDriver extends Homey.Driver {
             .on('install', () => this.register())
             .on('uninstall', () => this.unregister())
             .on('realtime', (topic, message) => this.onMessage(topic, message));
-        MQTTClient.getInstalled()
-            .then(installed => {
-                this.clientAvailable = installed;
-                this.log(`MQTT client status: ${this.clientAvailable}`); 
-                if (installed) {
-                    this.register();
-                }
-            })
-            .catch(error => {
-                this.log(error)
-            });
+		try {
+			MQTTClient.getInstalled()
+				.then(installed => {
+					this.clientAvailable = installed;
+					this.log(`MQTT client status: ${this.clientAvailable}`); 
+					if (installed) {
+						this.register();
+					}
+				});
+		}
+		catch(error) {
+			this.log(`MQTT client app error: ${error}`);
+		};
         this.deviceConnectionTrigger = new Homey.FlowCardTrigger('device_connection_changed').register();
     }
 
@@ -56,6 +59,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
     }
 
     onMapDeviceClass(device) {
+        this.log(`Mapping device "${device.getName()}"`);
         // Sending SetOption59 to improve tele/* update behaviour for some HA implementation
         let settings = device.getSettings();
         let topic = settings.mqtt_topic;
@@ -67,319 +71,362 @@ class TasmotaDeviceDriver extends Homey.Driver {
         this.sendMessage(topic, 1);
         return TasmotaDevice; 
     }
-
-    onPairListDevices( data, callback ) {
-        this.log('onPairListDevices called');
+    
+    onPair( socket ) {
+        this.log(`onPair called`);
+        var driver = this;
+		var devices = {};
+        socket.on('list_devices', ( data, callback ) => {
+			if (devices.length === 0)
+			{
+				if (driver.messagesCounter === 0)
+					return callback(new Error(Homey.__('mqtt_client.no_messages')), null)
+				else
+					return callback(new Error(Homey.__('mqtt_client.no_devices')), null)
+			}
+			driver.log(`New devices found 2: ${JSON.stringify(devices)}`);
+			return callback( null, devices);
+        });
+        socket.on('showView', ( viewId, callback ) => {
+            driver.log(`onPair current phase: "${viewId}"`);
+            callback();
+            if (viewId === 'loading')
+            {
+                driver.pairingStarted();
+				let interval = setInterval( ( drvArg, socketArg ) => {
+					if (drvArg.checkDeviceSearchStatus())
+					{
+						clearInterval(interval);
+						devices = drvArg.pairingFinished();
+						driver.log(`New devices found 1: ${JSON.stringify(devices)}`);
+						socketArg.emit('list_devices', devices, function(error, result) {
+							if (result) {
+								socketArg.nextView()
+							} else {
+									socketArg.alert('Can not show devices list', null, function() {
+									socketArg.done()
+								});
+							}
+						});
+						socketArg.nextView();
+					}
+				}, 2000, driver, socket);
+            }
+        });
+    }
+	
+	checkDeviceSearchStatus() {
+		if ( this.checkDeviceSearchStatus.devicesCounter === undefined )
+			this.checkDeviceSearchStatus.devicesCounter = 0;
+		let devCount = Object.keys(this.devicesFound).length;
+		if (devCount === this.checkDeviceSearchStatus.devicesCounter)
+		{
+			this.checkDeviceSearchStatus.devicesCounter = undefined;
+			return true;
+		}
+		this.checkDeviceSearchStatus.devicesCounter = devCount;
+		return false;
+    }
+    
+    pairingStarted() {
+        this.log('pairingStarted called');
         if (!this.clientAvailable)
             return callback(new Error(Homey.__('mqtt_client.unavailable')), null);
         this.devicesFound = {};
         this.messagesCounter = 0;
         this.searchingDevices = true;
+        this.ignoreTopicsWhenPairing = [];
+        this.getDevices().forEach(device => {
+            this.ignoreTopicsWhenPairing.push(device.getMqttTopic());
+        });
+        this.log(`Topics to ignore during pairing: ${JSON.stringify(this.ignoreTopicsWhenPairing)}`);
         this.sendMessage('cmnd/sonoffs/Status', '0');
         this.sendMessage('cmnd/tasmotas/Status', '0');
         this.sendMessage('sonoffs/cmnd/Status', '0');
         this.sendMessage('tasmotas/cmnd/Status', '0');
-        setTimeout( drvObj => {
-            drvObj.searchingDevices = false;
-            let devices = [];
-            Object.keys(drvObj.devicesFound).sort().forEach( key => 
+    }
+
+    pairingFinished( ) {
+        this.log('pairingFinished called');
+        this.searchingDevices = false;
+        let devices = [];
+        Object.keys(this.devicesFound).sort().forEach( key => 
+        {
+            let capabilities = [];
+            let capabilitiesOptions = {};
+            let shuttersCount = this.devicesFound[key]['shutters'].length;
+            let relaysCount = shuttersCount === 0 ? this.devicesFound[key]['settings']['relays_number'] : 0;
+            for (let propIndex = 1; propIndex <= relaysCount; propIndex++)
             {
-                let capabilities = [];
-                let capabilitiesOptions = {};
-                let shuttersCount = drvObj.devicesFound[key]['shutters'].length;
-                let relaysCount = shuttersCount === 0 ? drvObj.devicesFound[key]['settings']['relays_number'] : 0;
-                for (let propIndex = 1; propIndex <= relaysCount; propIndex++)
+                let capId = 'switch.' + propIndex.toString();
+                capabilities.push(capId);
+                capabilitiesOptions[capId] = {title: { en: 'switch ' + propIndex.toString() }};
+            }
+            if (relaysCount > 0)
+            {
+                capabilities.push('onoff');
+                capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
+            }
+            for (const capItem in this.devicesFound[key]['settings']['pwr_monitor'])
+                capabilities.push(this.devicesFound[key]['settings']['pwr_monitor'][capItem]);
+            if (relaysCount === 1)
+            {
+                if (this.devicesFound[key]['settings']['is_dimmable'] === 'Yes')
+                    capabilities.push('dim');
+                let lmCounter = 0;
+                if (this.devicesFound[key]['settings']['has_lighttemp'] === 'Yes')
                 {
-                    let capId = 'switch.' + propIndex.toString();
+                    capabilities.push('light_temperature');
+                    lmCounter++;
+                }
+                if (this.devicesFound[key]['settings']['has_lightcolor'] === 'Yes')
+                {
+                    capabilities.push('light_hue');
+                    capabilities.push('light_saturation');
+                    lmCounter++;
+                }
+                if (lmCounter === 2)
+                    capabilities.push('light_mode'); 
+            }
+            if (shuttersCount > 0)
+            {
+				capabilities.push('windowcoverings_state');
+				capabilities.push('windowcoverings_set');
+            }
+            if (this.devicesFound[key]['settings']['has_fan'] === 'Yes')
+                capabilities.push('fan_speed'); 
+            // Sensors
+            for (const sensorindex in this.devicesFound[key]['sensors'])
+            {
+                let sensorPair = this.devicesFound[key]['sensors'][sensorindex];
+                if (sensorPair.sensor === 'Switch')
+                {
+                    let capId = 'sensor_switch.' + sensorPair.value;
                     capabilities.push(capId);
-                    capabilitiesOptions[capId] = {title: { en: 'switch ' + propIndex.toString() }};
+                    capabilitiesOptions[capId] = {title: { en:  'Switch ' + sensorPair.value } };
                 }
-                if (relaysCount > 0)
+                else
                 {
-                    capabilities.push('onoff');
-                    capabilities.push(relaysCount > 1 ? 'multiplesockets' : 'singlesocket');
+                    let capId = Sensor.SensorsCapabilities[sensorPair.value].capability.replace('{sensor}', sensorPair.sensor);
+                    let units = Sensor.SensorsCapabilities[sensorPair.value].units.default;
+                    const units_field = Sensor.SensorsCapabilities[sensorPair.value].units.units_field;
+                    if ((units_field !== null) && (units_field in this.devicesFound[key]['sensors_attr']))
+                        units = this.devicesFound[key]['sensors_attr'][units_field];
+                    units = Sensor.SensorsCapabilities[sensorPair.value].units.units_template.replace('{value}', units);
+                    let caption = Sensor.SensorsCapabilities[sensorPair.value].caption;
+                    if (sensorPair.sensor !== 'ENERGY')
+                        caption = caption + ' (' + sensorPair.sensor + ')';
+                    capabilities.push(capId);
+                    capabilitiesOptions[capId] = {title: { en:  caption }, units:{ en: units } };
                 }
-                for (const capItem in drvObj.devicesFound[key]['settings']['pwr_monitor'])
-                    capabilities.push(drvObj.devicesFound[key]['settings']['pwr_monitor'][capItem]);
-                if (relaysCount === 1)
+            }
+            try {
+                if (this.devicesFound[key]['settings']['additional_sensors'])
+                    capabilities.push('additional_sensors');
+                if (this.devicesFound[key]['data'] !== undefined)
                 {
-                    if (drvObj.devicesFound[key]['settings']['is_dimmable'] === 'Yes')
-                        capabilities.push('dim');
-                    let lmCounter = 0;
-                    if (drvObj.devicesFound[key]['settings']['has_lighttemp'] === 'Yes')
+                    let dev_class = 'other';
+                    let dev_icon = 'icons/power_socket.svg';
+                    if (this.devicesFound[key]['settings']['has_fan'] === 'Yes')
                     {
-                        capabilities.push('light_temperature');
-                        lmCounter++;
+                        dev_icon = 'icons/table_fan.svg';
+                        dev_class = 'fan';
                     }
-                    if (drvObj.devicesFound[key]['settings']['has_lightcolor'] === 'Yes')
+                    else if (relaysCount === 1)
                     {
-                        capabilities.push('light_hue');
-                        capabilities.push('light_saturation');
-                        lmCounter++;
-                    }
-                    if (lmCounter === 2)
-                        capabilities.push('light_mode'); 
-                }
-                if (shuttersCount > 0)
-                {
-                    const shutterCapNames = ['windowcoverings_state', 'windowcoverings_set'];
-                    const shuterCapTitles = ['Window Coverings Control', 'Window Coverings Position'];
-                    let counter = 1;
-                    for (const shutterindex in drvObj.devicesFound[key]['shutters'])
-                    {
-                        const shutterName = drvObj.devicesFound[key]['shutters'][shutterindex];
-                        for (const capindex in shutterCapNames)
+                        if (this.devicesFound[key]['settings']['is_dimmable'] == 'Yes')
                         {
-                            let capId = shutterCapNames[capindex] + '.' + shutterName;
-                            capabilities.push(capId);
-                            let capTitle = shuterCapTitles[capindex];
-                            if (shuttersCount > 1)
-                                capTitle += ' ' + counter.toString();
-                            capabilitiesOptions[capId] = {title: { en:  capTitle } }; 
-                        }     
-                        counter++;
-                    }
-                }
-                if (drvObj.devicesFound[key]['settings']['has_fan'] === 'Yes')
-                    capabilities.push('fan_speed'); 
-                // Sensors
-                for (const sensorindex in drvObj.devicesFound[key]['sensors'])
-                {
-                    let sensorPair = drvObj.devicesFound[key]['sensors'][sensorindex];
-                    if (sensorPair.sensor === 'Switch')
-                    {
-                        let capId = 'sensor_switch.' + sensorPair.value;
-                        capabilities.push(capId);
-                        capabilitiesOptions[capId] = {title: { en:  'Switch ' + sensorPair.value } };
-                    }
-                    else
-                    {
-                        let capId = Sensor.SensorsCapabilities[sensorPair.value].capability.replace('{sensor}', sensorPair.sensor);
-                        let units = Sensor.SensorsCapabilities[sensorPair.value].units.default;
-                        const units_field = Sensor.SensorsCapabilities[sensorPair.value].units.units_field;
-                        if ((units_field !== null) && (units_field in drvObj.devicesFound[key]['sensors_attr']))
-                            units = drvObj.devicesFound[key]['sensors_attr'][units_field];
-                        units = Sensor.SensorsCapabilities[sensorPair.value].units.units_template.replace('{value}', units);
-                        let caption = Sensor.SensorsCapabilities[sensorPair.value].caption;
-                        if (sensorPair.sensor !== 'ENERGY')
-                            caption = caption + ' (' + sensorPair.sensor + ')';
-                        capabilities.push(capId);
-                        capabilitiesOptions[capId] = {title: { en:  caption }, units:{ en: units } };
-                    }
-                }
-                try {
-                    if (drvObj.devicesFound[key]['settings']['additional_sensors'])
-                        capabilities.push('additional_sensors');
-                    if (drvObj.devicesFound[key]['data'] !== undefined)
-                    {
-                        let dev_class = 'other';
-                        let dev_icon = 'icons/power_socket.svg';
-                        if (drvObj.devicesFound[key]['settings']['has_fan'] === 'Yes')
-                        {
-                            dev_icon = 'icons/table_fan.svg';
-                            dev_class = 'fan';
-                        }
-                        else if (relaysCount === 1)
-                        {
-                            if (drvObj.devicesFound[key]['settings']['is_dimmable'] == 'Yes')
-                            {
-                                dev_class = 'light';
-                                dev_icon = 'icons/light_bulb.svg';
-                            }
-                            else
-                            {
-                                dev_class = 'socket';
-                                dev_icon = 'icons/power_socket.svg';
-                            }
-                        }
-                        else if (shuttersCount > 0)
-                        {
-                            dev_class = 'blinds';
-                            dev_icon = 'icons/curtains.svg';
-                        }
-                        else if (relaysCount === 0)
-                        {
-                            dev_icon = 'icons/sensor.svg';
-                            dev_class = 'other';
+                            dev_class = 'light';
+                            dev_icon = 'icons/light_bulb.svg';
                         }
                         else
                         {
-                            dev_icon = 'icons/power_strip.svg';
-                            dev_class = 'other';
+                            dev_class = 'socket';
+                            dev_icon = 'icons/power_socket.svg';
                         }
-                        let devItem = {
-                            name:   (drvObj.devicesFound[key]['name'] === undefined) ? key :  drvObj.devicesFound[key]['name'],
-                            data:   drvObj.devicesFound[key]['data'],
-                            class:  dev_class,
-                            store: {
-                            },
-                            settings:   {
-                                mqtt_topic:         drvObj.devicesFound[key]['settings']['mqtt_topic'],
-                                swap_prefix_topic:  drvObj.devicesFound[key]['settings']['swap_prefix_topic'],
-                                relays_number:      relaysCount.toString(),
-                                pwr_monitor:        drvObj.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
-                                is_dimmable:        relaysCount === 1 ? drvObj.devicesFound[key]['settings']['is_dimmable'] : 'No',
-                                has_lighttemp:      relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lighttemp'] : 'No',
-                                has_lightcolor:     relaysCount === 1 ? drvObj.devicesFound[key]['settings']['has_lightcolor'] : 'No',
-                                has_fan:            drvObj.devicesFound[key]['settings']['has_fan'],
-                                shutters_number:    shuttersCount.toString(),
-                                chip_type:          drvObj.devicesFound[key]['settings']['chip_type'],
-                                additional_sensors: drvObj.devicesFound[key]['settings']['additional_sensors'],
-                            },
-                            icon:   dev_icon,
-                            capabilities,
-                            capabilitiesOptions
-                        };
-                        drvObj.log(`Device: ${JSON.stringify(devItem)}`);
-                        devices.push(devItem);
                     }
+                    else if (shuttersCount > 0)
+                    {
+                        dev_class = 'blinds';
+                        dev_icon = 'icons/curtains.svg';
+                    }
+                    else if (relaysCount === 0)
+                    {
+                        dev_icon = 'icons/sensor.svg';
+                        dev_class = 'other';
+                    }
+                    else
+                    {
+                        dev_icon = 'icons/power_strip.svg';
+                        dev_class = 'other';
+                    }
+                    let devItem = {
+                        name:   (this.devicesFound[key]['name'] === undefined) ? key :  this.devicesFound[key]['name'],
+                        data:   this.devicesFound[key]['data'],
+                        class:  dev_class,
+                        store: {
+                        },
+                        settings:   {
+                            mqtt_topic:         this.devicesFound[key]['settings']['mqtt_topic'],
+                            swap_prefix_topic:  this.devicesFound[key]['settings']['swap_prefix_topic'],
+                            relays_number:      relaysCount.toString(),
+                            pwr_monitor:        this.devicesFound[key]['settings']['pwr_monitor'].length > 0 ? 'Yes' : 'No',
+                            is_dimmable:        relaysCount === 1 ? this.devicesFound[key]['settings']['is_dimmable'] : 'No',
+                            has_lighttemp:      relaysCount === 1 ? this.devicesFound[key]['settings']['has_lighttemp'] : 'No',
+                            has_lightcolor:     relaysCount === 1 ? this.devicesFound[key]['settings']['has_lightcolor'] : 'No',
+                            has_fan:            this.devicesFound[key]['settings']['has_fan'],
+                            shutters_number:    shuttersCount.toString(),
+                            chip_type:          this.devicesFound[key]['settings']['chip_type'],
+                            additional_sensors: this.devicesFound[key]['settings']['additional_sensors'],
+                        },
+                        icon:   dev_icon,
+                        capabilities,
+                        capabilitiesOptions
+                    };
+                    this.log(`Device found: "${devItem.settings.mqtt_topic}"`);
+                    devices.push(devItem);
                 }
-                catch (error) {
-                    this.log(`Error: ${error}`);
-                }
-            });
-            if (devices.length == 0)
-            {
-                if (this.messagesCounter === 0)
-                    return callback(new Error(Homey.__('mqtt_client.no_messages')), null)
-                else
-                    return callback(new Error(Homey.__('mqtt_client.no_devices')), null)
             }
-            return callback( null, devices);
-        }, 10000, this);
-
+            catch (error) {
+                this.log(`Error: ${error}`);
+            }
+        });
+		return devices;
     }
-
+    
     onMessage(topic, message) {
-        let now = new Date();
-        let topicParts = topic.split('/');
-        if (this.searchingDevices)
-        {
-            this.messagesCounter++;
-            if ((topicParts[0] === 'stat') || (topicParts[1] === 'stat'))
-            {
-                let swapPrefixTopic = topicParts[1] === 'stat';
-                if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS10') || (topicParts[2] == 'STATUS11') || (topicParts[2] == 'STATUS2')))
-                {
-                    try {
-                        let deviceTopic = swapPrefixTopic ? topicParts[0] : topicParts[1];
-                        this.log(`entries ${JSON.stringify(Object.entries(message))}`);
-                        for (const msgKey of Object.keys(message))
-                        {
-                            this.log(`${msgKey} => ${JSON.stringify(message[msgKey])}`);
-                            const msgObj = message[msgKey];
-                            if (this.devicesFound[deviceTopic] === undefined)
-                                this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 0, pwr_monitor: [], is_dimmable: 'No', has_lighttemp: 'No', has_lightcolor: 'No', has_fan: 'No', shutters_number: 0, chip_type: 'unknown'}};
-                            switch (msgKey)
-                            {
-                                case 'Status':          // STATUS
-                                    if (msgObj['DeviceName'] !== undefined)
-                                        this.devicesFound[deviceTopic]['name'] = msgObj['DeviceName'];
-                                    else if (msgObj['FriendlyName'] !== undefined)
-                                        this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
-                                    break;
-                                case 'StatusFWR':       // STATUS2
-                                    if (msgObj['Hardware'] !== undefined)
-                                        this.devicesFound[deviceTopic]['settings']['chip_type'] = msgObj['Hardware'];
-                                    break;
-                                case 'StatusMQT':       // STATUS6
-                                    if (msgObj['MqttClient'] !== undefined)
-                                        this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};                               
-                                    break;
-                                case 'StatusSNS':       // STATUS8 and STATUS10
-                                    let sensors = [];
-                                    let sensorsAttr = {};
-                                    let sensors_settings = {};
-                                    let shutters = [];
-                                    for (const snsKey in msgObj)
-                                    {
-                                        if ((typeof msgObj[snsKey] === 'object') && (msgObj[snsKey] !== null))
-                                        {
-                                            if (snsKey.startsWith('Shutter'))
-                                                shutters.push(snsKey);
-                                            else
-                                            {
-                                                for (const valKey in msgObj[snsKey])
-                                                {
-                                                    if (valKey in Sensor.SensorsCapabilities)
-                                                    {
-                                                        sensors.push({ sensor: snsKey, value: valKey });
-                                                        if (valKey in sensors_settings)
-                                                            sensors_settings[valKey] = sensors_settings[valKey] + 1;
-                                                        else
-                                                            sensors_settings[valKey] = 1;
-                                                        let u = Sensor.SensorsCapabilities[valKey].units;
-                                                        if ((u !== null) && (u.units_field !== null) && !(u.units_field in sensorsAttr) && (u.units_field in msgObj))
-                                                            sensorsAttr[u.units_field] = msgObj[u.units_field];
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        else if (snsKey.startsWith('Switch'))
-                                        {
-                                            let switchIndex = snsKey.slice(-1);
-                                            sensors.push({ sensor: 'Switch', value: switchIndex });
-                                        }
-                                    }
-                                    this.devicesFound[deviceTopic]['sensors'] = sensors;    
-                                    this.devicesFound[deviceTopic]['sensors_attr'] = sensorsAttr;
-                                    let sens_string = [];
-                                    for (const sitem in sensors_settings)
-                                        if (sensors_settings[sitem] > 1)
-                                            sens_string.push(sitem + ' (x' + sensors_settings[sitem] + ')');
-                                        else
-                                            sens_string.push(sitem);
-                                    this.devicesFound[deviceTopic]['settings']['additional_sensors'] = sens_string.join(', ');
-                                    this.devicesFound[deviceTopic]['shutters'] = shutters;
-                                    break;                                  
-                                case 'StatusSTS':       // STATUS11
-                                    let switchNum = 0;
-                                    for (const objKey in msgObj)
-                                    {
-                                        switch (objKey)
-                                        {
-                                            case 'FanSpeed':
-                                                this.devicesFound[deviceTopic]['settings']['has_fan'] = 'Yes';
-                                                break;
-                                            case 'Dimmer':
-                                                this.devicesFound[deviceTopic]['settings']['is_dimmable'] = 'Yes';
-                                                break;
-                                            case 'CT':
-                                                this.devicesFound[deviceTopic]['settings']['has_lighttemp'] = 'Yes';
-                                                break;
-                                            case 'HSBColor':
-                                                this.devicesFound[deviceTopic]['settings']['has_lightcolor'] = 'Yes';
-                                                break;
-                                            default:
-                                                if (objKey.match(/^POWER\d*$/))
-                                                    switchNum++;
-                                                else
-                                                    
-                                                break;
-                                        }
-                                    };
-                                    this.devicesFound[deviceTopic]['settings']['relays_number'] = switchNum;
-                                    break;
-                            }
-                        }
-                    }
-                    catch (error) {
-                    }
-                }
-            }
-        }
-        let prefixFirst = this.topics.includes(topicParts[0]);
-        if (prefixFirst || this.topics.includes(topicParts[1]))
-        {
-            let topicIndex = prefixFirst ? 1 : 0;
-            let devices = this.getDevices();
-            for (let index = 0; index < devices.length; index++)
-                if (devices[index].getMqttTopic() === topicParts[topicIndex])
-                {
-                    devices[index].processMqttMessage(topic, message);
-                    break;
-                }
-        }
+		try {
+			let now = new Date();
+			let topicParts = topic.split('/');
+			if (this.searchingDevices)
+			{
+				this.messagesCounter++;
+				if ((topicParts[0] === 'stat') || (topicParts[1] === 'stat'))
+				{
+					let swapPrefixTopic = topicParts[1] === 'stat';
+					if ((topicParts.length == 3) && ((topicParts[2] == 'STATUS') || (topicParts[2] == 'STATUS6') || (topicParts[2] == 'STATUS8') || (topicParts[2] == 'STATUS10') || (topicParts[2] == 'STATUS11') || (topicParts[2] == 'STATUS2')))
+					{
+						let deviceTopic = swapPrefixTopic ? topicParts[0] : topicParts[1];
+						if (!this.ignoreTopicsWhenPairing.includes(deviceTopic))
+						{
+							for (const msgKey of Object.keys(message))
+							{
+								this.log(`${deviceTopic}.${msgKey} => ${JSON.stringify(message[msgKey])}`);
+								const msgObj = message[msgKey];
+								if (this.devicesFound[deviceTopic] === undefined)
+									this.devicesFound[deviceTopic] = {settings: {mqtt_topic: deviceTopic, swap_prefix_topic: swapPrefixTopic, relays_number: 0, pwr_monitor: [], is_dimmable: 'No', has_lighttemp: 'No', has_lightcolor: 'No', has_fan: 'No', shutters_number: 0, chip_type: 'unknown'}};
+								switch (msgKey)
+								{
+									case 'Status':          // STATUS
+										if (msgObj['DeviceName'] !== undefined)
+											this.devicesFound[deviceTopic]['name'] = msgObj['DeviceName'];
+										else if (msgObj['FriendlyName'] !== undefined)
+											this.devicesFound[deviceTopic]['name'] = msgObj['FriendlyName'][0];
+										break;
+									case 'StatusFWR':       // STATUS2
+										if (msgObj['Hardware'] !== undefined)
+											this.devicesFound[deviceTopic]['settings']['chip_type'] = msgObj['Hardware'];
+										break;
+									case 'StatusMQT':       // STATUS6
+										if (msgObj['MqttClient'] !== undefined)
+											this.devicesFound[deviceTopic]['data'] = { id: msgObj['MqttClient']};                               
+										break;
+									case 'StatusSNS':       // STATUS8 and STATUS10
+										let sensors = [];
+										let sensorsAttr = {};
+										let sensors_settings = {};
+										let shutters = [];
+										for (const snsKey in msgObj)
+										{
+											if ((typeof msgObj[snsKey] === 'object') && (msgObj[snsKey] !== null))
+											{
+												if (snsKey.startsWith('Shutter'))
+													shutters.push(snsKey);
+												else
+												{
+													for (const valKey in msgObj[snsKey])
+													{
+														if (valKey in Sensor.SensorsCapabilities)
+														{
+															sensors.push({ sensor: snsKey, value: valKey });
+															if (valKey in sensors_settings)
+																sensors_settings[valKey] = sensors_settings[valKey] + 1;
+															else
+																sensors_settings[valKey] = 1;
+															let u = Sensor.SensorsCapabilities[valKey].units;
+															if ((u !== null) && (u.units_field !== null) && !(u.units_field in sensorsAttr) && (u.units_field in msgObj))
+																sensorsAttr[u.units_field] = msgObj[u.units_field];
+														}
+													}
+												}
+											}
+											else if (snsKey.startsWith('Switch'))
+											{
+												let switchIndex = snsKey.slice(-1);
+												sensors.push({ sensor: 'Switch', value: switchIndex });
+											}
+										}
+										this.devicesFound[deviceTopic]['sensors'] = sensors;    
+										this.devicesFound[deviceTopic]['sensors_attr'] = sensorsAttr;
+										let sens_string = [];
+										for (const sitem in sensors_settings)
+											if (sensors_settings[sitem] > 1)
+												sens_string.push(sitem + ' (x' + sensors_settings[sitem] + ')');
+											else
+												sens_string.push(sitem);
+										this.devicesFound[deviceTopic]['settings']['additional_sensors'] = sens_string.join(', ');
+										this.devicesFound[deviceTopic]['shutters'] = shutters;
+										break;                                  
+									case 'StatusSTS':       // STATUS11
+										let switchNum = 0;
+										for (const objKey in msgObj)
+										{
+											switch (objKey)
+											{
+												case 'FanSpeed':
+													this.devicesFound[deviceTopic]['settings']['has_fan'] = 'Yes';
+													break;
+												case 'Dimmer':
+													this.devicesFound[deviceTopic]['settings']['is_dimmable'] = 'Yes';
+													break;
+												case 'CT':
+													this.devicesFound[deviceTopic]['settings']['has_lighttemp'] = 'Yes';
+													break;
+												case 'HSBColor':
+													this.devicesFound[deviceTopic]['settings']['has_lightcolor'] = 'Yes';
+													break;
+												default:
+													if (objKey.match(/^POWER\d*$/))
+														switchNum++;
+													else
+														
+													break;
+											}
+										};
+										this.devicesFound[deviceTopic]['settings']['relays_number'] = switchNum;
+										break;
+								}
+							}
+						}
+					}
+				}
+			}
+			let prefixFirst = this.topics.includes(topicParts[0]);
+			if (prefixFirst || this.topics.includes(topicParts[1]))
+			{
+				let topicIndex = prefixFirst ? 1 : 0;
+				let devices = this.getDevices();
+				for (let index = 0; index < devices.length; index++)
+					if (devices[index].getMqttTopic() === topicParts[topicIndex])
+					{
+						devices[index].processMqttMessage(topic, message);
+						break;
+					}
+			}
+		}
+		catch (error) {
+			this.log(`onMessage error: ${error}`);
+		}			
     }
 
     subscribeTopic(topicName) {
@@ -387,7 +434,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
             return;
         return MQTTClient.post('subscribe', { topic: topicName }, error => {
             if (error) {
-                    this.log(error);
+                    this.log(`Can not subscrive to topic ${topicName}, error: ${error}`)
             } else {
                 this.log(`sucessfully subscribed to topic: ${topicName}`);
             }
@@ -398,16 +445,14 @@ class TasmotaDeviceDriver extends Homey.Driver {
     {
         if (!this.clientAvailable)
             return;
-        try {
             MQTTClient.post('send', {
                 qos: 0,
                 retain: false,
                 mqttTopic: topic,
                 mqttMessage: payload
-           });
-        } catch (error) {
-            this.log(error);
-        }
+           }).catch ( error => {
+            this.log(`Error while sending ${topic} <= "${payload}". ${error}`);
+        });
     }
 
     register() {

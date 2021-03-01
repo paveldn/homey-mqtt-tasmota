@@ -61,5 +61,8 @@
   },
   "0.8.3": {
     "en": "Added support for switches TVOC and eCO2 sensor values (fixed)"
+  },
+  "0.8.5": {
+    "en": "Shutters support (only one shutters device supported). Improved device detection."
   }
 }

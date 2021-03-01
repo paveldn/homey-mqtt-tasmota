@@ -1,0 +1,1 @@
+﻿powershell "homey app run 2>&1 | tee log.txt"
