@@ -153,6 +153,26 @@
             "setable": false,
             "icon": "assets/mobile/switch.svg"
         },
+		"measure_analog": {
+            "type": "number",
+            "title": {
+                "en": "Analog"
+            },
+            "uiComponent": "sensor",
+            "getable": true,
+            "setable": false,
+            "icon": "assets/mobile/analog.svg"
+        },
+		"sensor_counter": {
+            "type": "number",
+            "title": {
+                "en": "Counter"
+            },
+            "uiComponent": "sensor",
+            "getable": true,
+            "setable": false,
+            "icon": "assets/mobile/counter.svg"
+        },
         "switch": {
             "type": "boolean",
             "title": {

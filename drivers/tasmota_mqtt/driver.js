@@ -84,7 +84,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
 				else
 					return callback(new Error(Homey.__('mqtt_client.no_devices')), null)
 			}
-			driver.log(`New devices found 2: ${JSON.stringify(devices)}`);
+			driver.log(`list_devices: New devices found: ${JSON.stringify(devices)}`);
 			return callback( null, devices);
         });
         socket.on('showView', ( viewId, callback ) => {
@@ -98,7 +98,6 @@ class TasmotaDeviceDriver extends Homey.Driver {
 					{
 						clearInterval(interval);
 						devices = drvArg.pairingFinished();
-						driver.log(`New devices found 1: ${JSON.stringify(devices)}`);
 						socketArg.emit('list_devices', devices, function(error, result) {
 							if (result) {
 								socketArg.nextView()
@@ -154,7 +153,7 @@ class TasmotaDeviceDriver extends Homey.Driver {
         {
             let capabilities = [];
             let capabilitiesOptions = {};
-            let shuttersCount = this.devicesFound[key]['shutters'].length;
+            let shuttersCount = this.devicesFound[key]['shutters'] ? this.devicesFound[key]['shutters'].length : 0;
             let relaysCount = shuttersCount === 0 ? this.devicesFound[key]['settings']['relays_number'] : 0;
             for (let propIndex = 1; propIndex <= relaysCount; propIndex++)
             {
@@ -198,27 +197,14 @@ class TasmotaDeviceDriver extends Homey.Driver {
             // Sensors
             for (const sensorindex in this.devicesFound[key]['sensors'])
             {
-                let sensorPair = this.devicesFound[key]['sensors'][sensorindex];
-                if (sensorPair.sensor === 'Switch')
-                {
-                    let capId = 'sensor_switch.' + sensorPair.value;
-                    capabilities.push(capId);
-                    capabilitiesOptions[capId] = {title: { en:  'Switch ' + sensorPair.value } };
-                }
-                else
-                {
-                    let capId = Sensor.SensorsCapabilities[sensorPair.value].capability.replace('{sensor}', sensorPair.sensor);
-                    let units = Sensor.SensorsCapabilities[sensorPair.value].units.default;
-                    const units_field = Sensor.SensorsCapabilities[sensorPair.value].units.units_field;
-                    if ((units_field !== null) && (units_field in this.devicesFound[key]['sensors_attr']))
-                        units = this.devicesFound[key]['sensors_attr'][units_field];
-                    units = Sensor.SensorsCapabilities[sensorPair.value].units.units_template.replace('{value}', units);
-                    let caption = Sensor.SensorsCapabilities[sensorPair.value].caption;
-                    if (sensorPair.sensor !== 'ENERGY')
-                        caption = caption + ' (' + sensorPair.sensor + ')';
-                    capabilities.push(capId);
-                    capabilitiesOptions[capId] = {title: { en:  caption }, units:{ en: units } };
-                }
+                let sensorCapObj = this.devicesFound[key]['sensors'][sensorindex];
+				let units = sensorCapObj.units.default;
+				const units_field = sensorCapObj.units.units_field;
+				if ((units_field !== null) && (units_field in this.devicesFound[key]['sensors_attr']))
+					units = this.devicesFound[key]['sensors_attr'][units_field];
+				units = sensorCapObj.units.units_template.replace('{value}', units);
+				capabilities.push(sensorCapObj.capability);
+				capabilitiesOptions[sensorCapObj.capability] = {title: { en:  sensorCapObj.caption }, units:{ en: units } };
             }
             try {
                 if (this.devicesFound[key]['settings']['additional_sensors'])
@@ -336,36 +322,26 @@ class TasmotaDeviceDriver extends Homey.Driver {
 										let sensorsAttr = {};
 										let sensors_settings = {};
 										let shutters = [];
-										for (const snsKey in msgObj)
-										{
-											if ((typeof msgObj[snsKey] === 'object') && (msgObj[snsKey] !== null))
-											{
-												if (snsKey.startsWith('Shutter'))
-													shutters.push(snsKey);
-												else
-												{
-													for (const valKey in msgObj[snsKey])
-													{
-														if (valKey in Sensor.SensorsCapabilities)
-														{
-															sensors.push({ sensor: snsKey, value: valKey });
-															if (valKey in sensors_settings)
-																sensors_settings[valKey] = sensors_settings[valKey] + 1;
-															else
-																sensors_settings[valKey] = 1;
-															let u = Sensor.SensorsCapabilities[valKey].units;
-															if ((u !== null) && (u.units_field !== null) && !(u.units_field in sensorsAttr) && (u.units_field in msgObj))
-																sensorsAttr[u.units_field] = msgObj[u.units_field];
-														}
-													}
-												}
+										Sensor.forEachSensorValue(msgObj, (path, value) => {
+											let capObj = Sensor.getPropertyObjectForSensorField(path, false);
+											let sensorField = path[path.length - 1];
+											let sensor = "";
+											if (path.length > 1)
+												sensor = path[path.length - 2];	
+											if (capObj !== null) {
+												sensors.push(capObj);
+												if (sensorField in sensors_settings)
+														sensors_settings[sensorField] = sensors_settings[sensorField] + 1;
+													else
+														sensors_settings[sensorField] = 1;
+													let u = capObj.units;
+													if ((capObj.units !== null) && (capObj.units.units_field !== null) && !(capObj.units.units_field in sensorsAttr) && (capObj.units.units_field in msgObj))
+														sensorsAttr[capObj.units.units_field] = msgObj[capObj.units.units_field];												
 											}
-											else if (snsKey.startsWith('Switch'))
-											{
-												let switchIndex = snsKey.slice(-1);
-												sensors.push({ sensor: 'Switch', value: switchIndex });
+											else if (sensor.startsWith('Shutter')) {
+												shutters.push(sensorField);
 											}
-										}
+										});
 										this.devicesFound[deviceTopic]['sensors'] = sensors;    
 										this.devicesFound[deviceTopic]['sensors_attr'] = sensorsAttr;
 										let sens_string = [];

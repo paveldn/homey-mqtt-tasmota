@@ -64,5 +64,8 @@
   },
   "0.8.5": {
     "en": "Shutters support (only one shutters device supported). Improved device detection."
+  },
+  "0.8.6": {
+    "en": "Added support for counters and analog inputs. Minor fixes."
   }
 }

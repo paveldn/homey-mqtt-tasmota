@@ -453,7 +453,19 @@ class TasmotaDevice extends Homey.Device {
         }
         return false;
     }
-
+	
+	parseSensorValueName(stringName) {
+		if (sensorNameRegExp === undefined)
+			var sensorNameRegExp = new RegExp('^(?<name>.+)(?<index>[0-9]+)$');
+		let regExpRes = sensorNameRegExp.exec(stringName);
+		if (regExpRes !== null)
+		{
+			return { name: regExpRes.groups.name, index: regExpRes.groups.index };
+		}
+		else
+			return null;
+	}
+	
     processMqttMessage(topic, message) {
         this.log(`processMqttMessage: ${topic} => ${JSON.stringify(message)}`);
         let topicParts = topic.split('/');
@@ -606,87 +618,62 @@ class TasmotaDevice extends Homey.Device {
 			}
 			if ((messageType === 'Result') || (messageType === 'StatusSNS'))
 			{
-				for (const sensor in message)
-				{
-					const snsObj = message[sensor];
-					if (sensor.startsWith('Switch'))
-					{
-						let newValue = snsObj === 'ON';
-						let capId = sensor.slice(-1);
-						let capName = 'sensor_switch.' + capId;
-						this.checkSensorCapability(capName, newValue, sensor, 'Switch');
-					}
-					else if (sensor === 'Shutter1')
-					{
-						if ((this.shuttersNubmber > 0) && (typeof snsObj === 'object') && (snsObj !== null))
+				Sensor.forEachSensorValue(message, (path, value) => {
+					let capObj = Sensor.getPropertyObjectForSensorField(path, true);
+					// this.log(`Sensor status: ${JSON.stringify(path)} => ${capObj ? JSON.stringify(capObj) : 'none'}`);
+					let sensorField = path[path.length - 1];
+					let sensor = "";
+					if (path.length > 1)
+						sensor = path[path.length - 2];					
+					if (capObj !== null) {
+						// Proper sensor value found
+						if (this.hasCapability(capObj.capability) && (value !== null) && (value !== undefined))
 						{
-							if (snsObj['Direction'] !== undefined)
-							{
-								try {
-									if (this.hasCapability('windowcoverings_state'))
-									{
-										const directionNum = parseInt(snsObj['Direction']);
-										var direction = "idle";
-										if (directionNum > 0)
-											direction = "up";
-										else if (directionNum < 0)
-											direction = "down";
-										let oldCap = this.getCapabilityValue('windowcoverings_state');
-										this.setCapabilityValue('windowcoverings_state', direction);
-									}
-								}
-								catch(error)
-								{
-									this.log(`While processing ${messageType}.${sensor}.Direction error happened: ${error}`); 
-								}
+							try {
+								let sensorFieldValue = capObj.value_converter != null ? capObj.value_converter(value) : value;
+								this.checkSensorCapability(capObj.capability, sensorFieldValue, sensor, sensorField);
 							}
-							if (snsObj['Position'] !== undefined)
-							{
-								try {
-									if (this.hasCapability('windowcoverings_set'))
-									{
-										const positionNum = parseInt(snsObj['Position']);
-										this.setCapabilityValue('windowcoverings_set', positionNum / 100);
-									}
-								}
-								catch(error)
-								{
-									this.log(`While processing ${messageType}.${sensor}.Position error happened: ${error}`); 
-								}
+							catch(error) {
+								this.log(`While processing ${messageType}.${sensor}.${sensorField} error happened: ${error}`);
 							}
-							
 						}
 					}
-					else
-					{
-						if ((typeof snsObj === 'object') && (snsObj !== null))
+					else {
+						// Special cases
+						if ((sensor === 'Shutter1') && (this.shuttersNubmber > 0) && (value != null) && (value !== 'null'))
 						{
-							for (const snsField in snsObj)
-							{
-								if (snsField in Sensor.SensorsCapabilities)
+							// Only Shutter1 is supported
+							try {
+								switch (sensorField)
 								{
-									let capName = Sensor.SensorsCapabilities[snsField].capability.replace('{sensor}', sensor);
-									let newValue = snsObj[snsField];
-									if (!this.hasCapability(capName))
-									{
-										if (sensor === 'ENERGY')
+									case 'Direction':
+										if (this.hasCapability('windowcoverings_state'))
 										{
-											capName = Sensor.SensorsCapabilities[snsField].capability.replace('.{sensor}', '');
-											if (!this.hasCapability(capName))
-												capName = undefined;
+											const directionNum = parseInt(value);
+											var direction = "idle";
+											if (directionNum > 0)
+												direction = "up";
+											else if (directionNum < 0)
+												direction = "down";
+											this.setCapabilityValue('windowcoverings_state', direction);
+										}							
+										break;
+									case 'Position':
+										if (this.hasCapability('windowcoverings_set'))
+										{
+											const positionNum = parseInt(value);
+											this.setCapabilityValue('windowcoverings_set', positionNum / 100);
 										}
-										else
-											capName = undefined;
-									}
-									if (capName !== undefined)
-									{
-										this.checkSensorCapability(capName, newValue, sensor, snsField);
-									}
+										break;
 								}
 							}
+							catch(error)
+							{
+								this.log(`While processing ${messageType}.${sensor}.${sensorField} error happened: ${error}`);
+							}
 						}
-					}						
-				}	
+					}
+				});
 				if ((this.relaysCount == 0) && (this.update.status !== 'available'))
 				{
 					this.setDeviceStatus('available');
@@ -701,15 +688,22 @@ class TasmotaDevice extends Homey.Device {
     }
 	
 	checkSensorCapability(capName, newValue, sensorName, valueKind) {
+		// this.log(`checkSensorCapability: ${sensorName}.${valueKind} => ${newValue}`); 
 		let oldValue = this.getCapabilityValue(capName);
 		this.setCapabilityValue(capName, newValue);
 		if (oldValue != newValue)
+		{
+			if (typeof oldValue === "boolean")
+				oldValue = oldValue ? 1 : 0;
+			if (typeof newValue === "boolean")
+				newValue = newValue ? 1 : 0;
 			this.sensorTrigger.trigger(this, {
 					sensor_name: sensorName,
 					sensor_value_kind: valueKind,
 					sensor_value_new: newValue,
 					sensor_value_old: oldValue
 				}, newValue);
+		}
 	}
 }
 
