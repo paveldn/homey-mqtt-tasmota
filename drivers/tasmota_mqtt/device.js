@@ -6,19 +6,25 @@ const Sensor = require('./sensor.js')
 class TasmotaDevice extends Homey.Device {
 
     async onInit() {
-        this.log('Device init');
+		this.debug = process.env.DEBUG == 1;
+        this.log(`Device init, debug=${this.debug}`);
         this.log(`Name: ${this.getName()}`);
         this.log(`Class: ${this.getClass()}`);
         let settings = this.getSettings();
         this.log(`Setting: ${JSON.stringify(settings)}`);
 		this.log(`Capabilities: ${JSON.stringify(this.getCapabilities())}`);
-        this.driver = await this.getReadyDriver();
         this.relaysCount = parseInt(settings.relays_number);
         this.additionalSensors = (settings.additional_sensors !== '') || (settings.pwr_monitor === 'Yes');
         this.swap_prefix_topic = settings.swap_prefix_topic;
         this.shouldUpdateOnOff = false;
 		this.shuttersNubmber = parseInt(settings.shutters_number);
         this.sockets = [];
+        this.stage = 'init';
+		this.answerTimeout = undefined;
+		this.nextRequest = Date.now();
+		this.updateInterval = settings.update_interval * 60 * 1000;
+		this.timeoutInterval = 40 * 1000;
+        this.socketsList = [];
 		// Legacy devices conversion
         for (let i=1; i <= this.relaysCount; i++)
         {
@@ -35,23 +41,15 @@ class TasmotaDevice extends Homey.Device {
         };
         if (!this.hasCapability('onoff') && (this.relaysCount > 0))
             this.addCapability('onoff');
-        let now = Date.now();
-        this.update = {
-            status: 'init',
-            answerTimeout: undefined,
-            nextRequest: now,
-            updateInterval: settings.update_interval * 60 * 1000,
-            timeoutInterval: 40 * 1000 
-        };
-        this.socketsList = [];
+
         for (let socketIndex=1; socketIndex <= this.relaysCount; socketIndex++)
             this.socketsList.push({name: 'socket '+socketIndex.toString()});
-		this.invalidateStatus(Homey.__('device.unavailable.startup'));
+		this.invalidateStatus(this.homey.__('device.unavailable.startup'));
         if (this.additionalSensors)
 		{
 			if (!this.hasCapability('additional_sensors'))
 				this.addCapability('additional_sensors');
-			this.sensorTrigger = new Homey.FlowCardTriggerDevice('sensor_value_changed').register();
+			this.sensorTrigger = this.homey.flow.getDeviceTriggerCard('sensor_value_changed')
 		}
         this.onOffList = this.getCapabilities().filter( cap => cap.startsWith('switch.') );
         if (this.onOffList.length > 0)
@@ -99,12 +97,12 @@ class TasmotaDevice extends Homey.Device {
                     this.sendMessage('Dimmer', Math.round(value * 100).toString());
                     return Promise.resolve();
                 });
-                this.dimCondition1 = new Homey.FlowCardCondition('dim_level_greater');
-                this.dimCondition1.register().registerRunListener((args, state) => {
+                this.dimCondition1 = this.homey.flow.getConditionCard('dim_level_greater')
+                this.dimCondition1.registerRunListener((args, state) => {
                         return Promise.resolve(state.value * 100 > args.value);
                     });
-                this.dimCondition2 = new Homey.FlowCardCondition('dim_level_lower');
-                this.dimCondition2.register().registerRunListener((args, state) => {
+                this.dimCondition2 = this.homey.flow.getConditionCard('dim_level_lower');
+                this.dimCondition2.registerRunListener((args, state) => {
                         return Promise.resolve(state.value * 100 < args.value);
                     });                            
             }
@@ -153,9 +151,9 @@ class TasmotaDevice extends Homey.Device {
 
     sendMessage(topic, message) {
         this.sendMqttCommand(topic, message);
-        let updateTm = Date.now() + this.update.timeoutInterval;
-        if ((this.update.answerTimeout == undefined) || (updateTm < this.update.answerTimeout)) 
-            this.update.answerTimeout = updateTm;
+        let updateTm = Date.now() + this.timeoutInterval;
+        if ((this.answerTimeout == undefined) || (updateTm < this.answerTimeout)) 
+            this.answerTimeout = updateTm;
     }
 	
 	updateDevice() {
@@ -166,23 +164,23 @@ class TasmotaDevice extends Homey.Device {
 	}
 
     registerMultipleSocketsFlows() {
-        this.socketTrigger = new Homey.FlowCardTriggerDevice('multiplesockets_relay_state_changed');
-        this.socketTrigger.register().registerRunListener((args, state) => {
+        this.socketTrigger = this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed');
+        this.socketTrigger.registerRunListener((args, state) => {
                 return Promise.resolve(((args.socket_id.name === 'any socket') || (args.socket_id.name === state.socket_id.name)) &&
                                        ((args.state === 'state_any') || (args.state === state.state)));
             });
         this.socketTrigger.getArgument('socket_id').registerAutocompleteListener((query, args) => {
                 return Promise.resolve([{name: 'any socket'}].concat(args.device.socketsList));
             });
-        this.socketCondition = new Homey.FlowCardCondition('multiplesockets_switch_turned_on');
-        this.socketCondition.register().registerRunListener((args, state) => {
+        this.socketCondition = this.homey.flow.getConditionCard('multiplesockets_switch_turned_on');
+        this.socketCondition.registerRunListener((args, state) => {
                 return Promise.resolve(args.device.getCapabilityValue('switch.'+args.socket_id.name.slice(-1)) === true);
             });
         this.socketCondition.getArgument('socket_id').registerAutocompleteListener((query, args) => {
                 return Promise.resolve(args.device.socketsList);
             });
-        this.socketConditionAll = new Homey.FlowCardCondition('multiplesockets_all_switches_turned_on'); 
-        this.socketConditionAll.register().registerRunListener((args, state) => {
+        this.socketConditionAll = this.homey.flow.getConditionCard('multiplesockets_all_switches_turned_on'); 
+        this.socketConditionAll.registerRunListener((args, state) => {
                 for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
                 {
                     if (!args.device.getCapabilityValue('switch.'+socketIndex.toString()))
@@ -190,8 +188,8 @@ class TasmotaDevice extends Homey.Device {
                 }
                 return Promise.resolve(true);
             });
-        this.socketConditionAny = new Homey.FlowCardCondition('multiplesockets_some_switches_turned_on'); 
-        this.socketConditionAny.register().registerRunListener((args, state) => {
+        this.socketConditionAny = this.homey.flow.getConditionCard('multiplesockets_some_switches_turned_on'); 
+        this.socketConditionAny.registerRunListener((args, state) => {
                 for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
                 {
                     if (args.device.getCapabilityValue('switch.'+socketIndex.toString()))
@@ -199,8 +197,8 @@ class TasmotaDevice extends Homey.Device {
                 }
                 return Promise.resolve(false);
             });
-        this.socketAction = new Homey.FlowCardAction('multiplesockets_switch_action');         
-        this.socketAction.register().registerRunListener((args, state) => {
+        this.socketAction = this.homey.flow.getActionCard('multiplesockets_switch_action');         
+        this.socketAction.registerRunListener((args, state) => {
                 let valueToSend;
                 switch(args.state) {
                     case 'state_toggle':
@@ -229,18 +227,17 @@ class TasmotaDevice extends Homey.Device {
     }
     
     registerFanFlows() {
-        this.fanTrigger = new Homey.FlowCardTriggerDevice('fan_speed_changed');
-        this.fanTrigger.register();
-        this.fanCondition1 = new Homey.FlowCardCondition('fan_speed_greater');
-        this.fanCondition1.register().registerRunListener((args, state) => {
+        this.fanTrigger = this.homey.flow.getDeviceTriggerCard('fan_speed_changed');
+        this.fanCondition1 = this.homey.flow.getConditionCard('fan_speed_greater');
+        this.fanCondition1.registerRunListener((args, state) => {
                 return Promise.resolve(parseInt(state.value) > args.value);
             });
-        this.fanCondition2 = new Homey.FlowCardCondition('fan_speed_lower');
-        this.fanCondition2.register().registerRunListener((args, state) => {
+        this.fanCondition2 = this.homey.flow.getConditionCard('fan_speed_lower');
+        this.fanCondition2.registerRunListener((args, state) => {
                 return Promise.resolve(parseInt(state.value) < args.value);
             });                            
-        this.fanAction = new Homey.FlowCardAction('fan_speed_action');         
-        this.fanAction.register().registerRunListener((args, state) => {
+        this.fanAction = this.homey.flow.getActionCard('fan_speed_action');         
+        this.fanAction.registerRunListener((args, state) => {
                 args.device.sendMessage('FanSpeed', args.value.toString());
                 return Promise.resolve(true);
             });
@@ -267,33 +264,40 @@ class TasmotaDevice extends Homey.Device {
 				};
 			}
 			catch (error) {
-				this.log(`Error happened while processing capability "windowcoverings_state" value "${value}", error ${error}`);
+				if (this.debug)
+					throw(error);
+				else
+					this.log(`Error happened while processing capability "windowcoverings_state" value "${value}", error ${error}`);
 			}
 			return Promise.resolve();
 		});
 		this.registerCapabilityListener('windowcoverings_set', ( value, opts ) => {
-			// this.log(`windowcoverings_set cap: ${JSON.stringify(value)}`);
+			//this.log(`windowcoverings_set cap: ${JSON.stringify(value)}`);
 			try {
-				this.sendMessage('ShutterPosition', value * 100);
+				
+				this.sendMessage('ShutterPosition', (value * 100).toString());
 			}
 			catch (error) {
-				this.log(`Error happened while processing capability "windowcoverings_set" value "${value}", error ${error}`);
+				if (this.debug)
+					throw(error);
+				else
+					this.log(`Error happened while processing capability "windowcoverings_set" value "${value}", error ${error}`);
 			}
 			return Promise.resolve();
 		});	
 	}
 	
     registerSingleSocketFlows() {
-        this.socketTrigger = new Homey.FlowCardTriggerDevice('singlesocket_relay_state_changed');
-        this.socketTrigger.register().registerRunListener((args, state) => {
+        this.socketTrigger = this.homey.flow.getDeviceTriggerCard('singlesocket_relay_state_changed');
+        this.socketTrigger.registerRunListener((args, state) => {
                 return Promise.resolve((args.state === 'state_any') || (args.state === state.state));
             })
-        this.socketCondition = new Homey.FlowCardCondition('singlesocket_switch_turned_on');
-        this.socketCondition.register().registerRunListener((args, state) => {
+        this.socketCondition = this.homey.flow.getConditionCard('singlesocket_switch_turned_on');
+        this.socketCondition.registerRunListener((args, state) => {
                 return Promise.resolve(args.device.getCapabilityValue('switch.1') === true);
             });
-        this.socketAction = new Homey.FlowCardAction('singlesocket_switch_action');         
-        this.socketAction.register().registerRunListener((args, state) => {
+        this.socketAction = this.homey.flow.getActionCard('singlesocket_switch_action');         
+        this.socketAction.registerRunListener((args, state) => {
                 let valueToSend;
                 switch(args.state) {
                     case 'state_toggle':
@@ -314,31 +318,35 @@ class TasmotaDevice extends Homey.Device {
     }
 
     setDeviceStatus(newStatus) {
-        if (this.update.status !== newStatus)
+        if (this.stage !== newStatus)
         {
-            let oldStatus = this.update.status;
-            this.update.status = newStatus;
+            let oldStatus = this.stage;
+            this.stage = newStatus;
             this.driver.onDeviceStatusChange(this, newStatus, oldStatus);
         }
     }
 
     checkDeviceStatus() {
         let now = Date.now();
-        if ((this.update.status === 'available') && (this.update.answerTimeout != undefined) && (now >= this.update.answerTimeout))
+        if ((this.stage === 'available') && (this.answerTimeout != undefined) && (now >= this.answerTimeout))
         {
             this.setDeviceStatus('unavailable');
-            this.invalidateStatus(Homey.__('device.unavailable.timeout'));
+            this.invalidateStatus(this.homey.__('device.unavailable.timeout'));
         }
-        if (now >= this.update.nextRequest)
+        if (now >= this.nextRequest)
         {
-            this.update.nextRequest = now + this.update.updateInterval;
-            this.sendMessage('Status', '11');  // StatusSTS
+            this.nextRequest = now + this.updateInterval;
+            this.sendMessage('Status', '11');  		// StatusSTS
+			if (this.additionalSensors)
+				this.sendMessage('Status', '10');	// StatusSNS
         }
     }
 
     invalidateStatus(message) {
         this.setUnavailable(message);
-        this.sendMessage('Status', '11');  // StatusSTS
+        this.sendMessage('Status', '11');  		// StatusSTS
+		if (this.additionalSensors)
+			this.sendMessage('Status', '10');	// StatusSNS
     }
 
     sendTasmotaPowerCommand(socketId, status) {
@@ -352,28 +360,21 @@ class TasmotaDevice extends Homey.Device {
                 this.sendMessage(topic, status);
            }
     }
-
-    getReadyDriver() {
-        return new Promise(resolve => {
-            let driver = this.getDriver();
-            driver.ready(() => resolve(driver));
-        });
-    }
     
     getMqttTopic() { 
         return this.getSettings()['mqtt_topic'];
     }
 
-    onSettings(oldSettings, newSettings, changedKeysArr, callback) {
-        if (changedKeysArr.includes('mqtt_topic') || changedKeysArr.includes('swap_prefix_topic'))
+    async onSettings(event) {
+        if (event.changedKeys.includes('mqtt_topic') || event.changedKeys.includes('swap_prefix_topic'))
         {
-            this.swap_prefix_topic = newSettings.swap_prefix_topic;
+            this.swap_prefix_topic = event.newSettings.swap_prefix_topic;
             setTimeout(() => {
                 this.setDeviceStatus('init');
-                this.invalidateStatus(Homey.__('device.unavailable.update'));
+				this.nextRequest = Date.now();
+                this.invalidateStatus(this.homey.__('device.unavailable.update'));
             }, 3000);
         }
-        return callback(null, true);
     }
 
     calculateOnOffCapabilityValue() {
@@ -392,7 +393,7 @@ class TasmotaDevice extends Homey.Device {
     powerReceived(topic, message) {
 		if (!topic.startsWith('POWER'))
 			return;
-        //this.log(`powerReceived: ${topic}  => ${message}`);
+        this.log(`powerReceived: ${topic}  => ${message}`);
         let capName = '';
         let socketIndex = '';
         if (topic === 'POWER')
@@ -411,9 +412,9 @@ class TasmotaDevice extends Homey.Device {
         let oldVal = this.sockets[intIndex];
         let newState = message === 'ON';
         this.sockets[intIndex] = newState;
-        if ((this.update.status === 'available') && (oldVal === newState))
+        if ((this.stage === 'available') && (oldVal === newState))
             return;
-        this.setCapabilityValue(capName, newState, () => 
+        this.setCapabilityValue(capName, newState).then( () => 
             {
                 // this.log(`Setting value ${capName}  => ${newState}`);
                 if (!this.shouldUpdateOnOff)
@@ -429,9 +430,8 @@ class TasmotaDevice extends Homey.Device {
                         }
                     }, 500);
                 }
-            }                    
-        );
-		if (this.update.status === 'available')
+            });
+		if (this.stage === 'available')
 		{
 			let newSt = {};
 			newSt['socket_id'] = {name: 'socket ' + socketIndex};
@@ -477,19 +477,19 @@ class TasmotaDevice extends Homey.Device {
 			if ((topicParts[2] === 'LWT') && (message === 'Offline'))
 			{
 				this.setDeviceStatus('unavailable');
-				this.invalidateStatus(Homey.__('device.unavailable.offline'));
-				this.update.nextRequest = now + this.update.updateInterval;
+				this.invalidateStatus(this.homey.__('device.unavailable.offline'));
+				this.nextRequest = now + this.updateInterval;
 				return;
 			}
-			if (this.update.status === 'unavailable')
+			if (this.stage === 'unavailable')
 			{
 				this.setDeviceStatus('available');
 				this.setAvailable();
 			}
-			if (this.update.status === 'available')
+			if (this.stage === 'available')
 			{
-				this.update.nextRequest = now + this.update.updateInterval;
-				this.update.answerTimeout = undefined;
+				this.nextRequest = now + this.updateInterval;
+				this.answerTimeout = undefined;
 			}
 			let messageType = undefined;
 			let root_topic = this.swap_prefix_topic ? topicParts[1] : topicParts[0];
@@ -510,7 +510,7 @@ class TasmotaDevice extends Homey.Device {
 				}
 			}
 			if ((messageType === undefined) && (topicParts[2] === 'RESULT'))
-				messageType = 'Result'; 			
+				messageType = 'Result'; 	
 			if (messageType === undefined)
 				return;
 			if ((messageType === 'Result') || (messageType === 'StatusSTS'))
@@ -530,7 +530,10 @@ class TasmotaDevice extends Homey.Device {
 								}
 								catch (error)
 								{
-									this.log(`Error trying to set fan speed. Error: ${error}`);
+									if (this.debug)
+										throw(error);
+									else
+										this.log(`Error trying to set fan speed. Error: ${error}`);
 								}									
 							}
 							break;
@@ -544,7 +547,10 @@ class TasmotaDevice extends Homey.Device {
 								}
 								catch (error)
 								{
-									this.log(`Error trying to set dim value. Error: ${error}`);
+									if (this.debug)
+										throw(error);
+									else
+										this.log(`Error trying to set dim value. Error: ${error}`);
 								}
 							}
 							break;
@@ -559,7 +565,10 @@ class TasmotaDevice extends Homey.Device {
 								}
 								catch (error)
 								{
-									this.log(`Error trying to set light temperature value. Error: ${error}`);
+									if (this.debug) 
+										throw(error);
+									else
+										this.log(`Error trying to set light temperature value. Error: ${error}`);
 								}
 							}
 							break;
@@ -580,7 +589,10 @@ class TasmotaDevice extends Homey.Device {
 										}
 										catch (error)
 										{
-											this.log('Error trying to set hue value. Error: ' + error);
+											if (this.debug) 
+												throw(error);
+											else
+												this.log('Error trying to set hue value. Error: ' + error);
 										}
 										try
 										{
@@ -590,7 +602,10 @@ class TasmotaDevice extends Homey.Device {
 										}
 										catch (error)
 										{
-											this.log('Error trying to set saturation value. Error: ' + error);
+											if (this.debug) 
+												throw(error);
+											else
+												this.log('Error trying to set saturation value. Error: ' + error);
 										}
 										if (cCounter > 0)
 											this.updateCapabilityValue('light_mode', 'color');
@@ -598,7 +613,10 @@ class TasmotaDevice extends Homey.Device {
 								}
 								catch (error)
 								{
-									this.log(`Error trying to set light color value. Error: ${error}`);
+									if (this.debug) 
+										throw(error);
+									else
+										this.log(`Error trying to set light color value. Error: ${error}`);
 								}
 							}
 							break;
@@ -610,7 +628,7 @@ class TasmotaDevice extends Homey.Device {
 							break;
 					}
 				}
-				if ((this.relaysCount > 0) && (this.update.status !== 'available'))
+				if ((this.relaysCount > 0) && (this.stage !== 'available'))
 				{
 					this.setDeviceStatus('available');
 					this.setAvailable();
@@ -634,7 +652,10 @@ class TasmotaDevice extends Homey.Device {
 								this.checkSensorCapability(capObj.capability, sensorFieldValue, sensor, sensorField);
 							}
 							catch(error) {
-								this.log(`While processing ${messageType}.${sensor}.${sensorField} error happened: ${error}`);
+								if (this.debug) 
+									throw(error);
+								else
+									this.log(`While processing ${messageType}.${sensor}.${sensorField} error happened: ${error}`);
 							}
 						}
 					}
@@ -669,12 +690,15 @@ class TasmotaDevice extends Homey.Device {
 							}
 							catch(error)
 							{
-								this.log(`While processing ${messageType}.${sensor}.${sensorField} error happened: ${error}`);
+								if (this.debug) 
+									throw(error);
+								else 
+									this.log(`While processing ${messageType}.${sensor}.${sensorField} error happened: ${error}`);
 							}
 						}
 					}
 				});
-				if ((this.relaysCount == 0) && (this.update.status !== 'available'))
+				if ((this.relaysCount == 0) && (this.stage !== 'available'))
 				{
 					this.setDeviceStatus('available');
 					this.setAvailable();
@@ -683,7 +707,10 @@ class TasmotaDevice extends Homey.Device {
 		}
 		catch(error)
 		{
-			this.log(`processMqttMessage error: ${error}`); 
+			if (this.debug) 
+				throw(error);
+			else
+				this.log(`processMqttMessage error: ${error}`); 
 		}
     }
 	

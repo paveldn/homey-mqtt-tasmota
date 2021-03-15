@@ -156,7 +156,7 @@ class TasmotaMqttApp extends Homey.App {
 		}
         this.log(`${this.applicationName} is running. Version: ${this.applicationVersion}, debug: ${this.debug}`);
         this.lastTasmotaVersion = this.loadTasmotaVersion();
-        this.tasmotaUpdateTrigger = new Homey.FlowCardTrigger('new_tasmota_version').register();
+        this.tasmotaUpdateTrigger = this.homey.flow.getTriggerCard('new_tasmota_version');
         setTimeout(() => {
                 this.checkTasmotaReleases();
                 setInterval(() => {

@@ -1,8 +1,8 @@
 {
     "id": "com.paveld.tasmota",
-    "version": "0.8.6",
-    "compatibility": ">=3.0.0",
-    "sdk": 2,
+    "version": "0.8.7",
+    "compatibility": ">=5.0.0",
+    "sdk": 3,
     "brandColor": "#42A3E9",
     "name": {
         "en": "Tasmota MQTT"
@@ -153,7 +153,7 @@
             "setable": false,
             "icon": "assets/mobile/switch.svg"
         },
-		"measure_analog": {
+        "measure_analog": {
             "type": "number",
             "title": {
                 "en": "Analog"
@@ -163,7 +163,7 @@
             "setable": false,
             "icon": "assets/mobile/analog.svg"
         },
-		"sensor_counter": {
+        "sensor_counter": {
             "type": "number",
             "title": {
                 "en": "Counter"

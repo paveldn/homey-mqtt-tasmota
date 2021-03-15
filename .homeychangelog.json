@@ -67,5 +67,8 @@
   },
   "0.8.6": {
     "en": "Added support for counters and analog inputs. Minor fixes."
+  },
+  "0.8.7": {
+    "en": "Homey SDK 3 support added. Minor fixes and improvements."
   }
 }
