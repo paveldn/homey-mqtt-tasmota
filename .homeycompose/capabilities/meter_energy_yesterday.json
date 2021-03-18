@@ -1,0 +1,13 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Power Meter Yesterday"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "units": {
+        "en": "kWh"
+    },
+    "icon": "assets/mobile/power_meter.svg"
+}

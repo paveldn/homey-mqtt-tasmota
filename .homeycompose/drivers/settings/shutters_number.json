@@ -1,0 +1,8 @@
+{
+    "id": "shutters_number",
+    "type": "label",
+    "label": {
+        "en": "Number of shutters"
+    },
+    "value": "0"
+}

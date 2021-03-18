@@ -1,0 +1,23 @@
+{
+    "id": "fan_speed_changed",
+    "title": {
+        "en": "Fan speed changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "fan_speed",
+            "type": "number",
+            "title": {
+                "en": "Fan speed"
+            },
+            "example": 2
+        }
+    ]
+}

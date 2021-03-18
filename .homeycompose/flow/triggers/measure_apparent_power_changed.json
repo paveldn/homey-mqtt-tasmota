@@ -1,0 +1,22 @@
+{
+    "id": "measure_apparent_power_changed",
+    "title": {
+        "en": "Apparent power changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=measure_apparent_power"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "value",
+            "type": "number",
+            "title": {
+                "en": "Apparent power"
+            }
+        }
+    ]
+}

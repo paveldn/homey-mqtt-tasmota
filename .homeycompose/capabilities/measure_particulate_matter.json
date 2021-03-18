@@ -1,0 +1,10 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Air quality"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "icon": "assets/mobile/air_pollution.svg"
+}

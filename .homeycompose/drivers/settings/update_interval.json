@@ -1,0 +1,13 @@
+{
+    "id": "update_interval",
+    "type": "number",
+    "label": {
+        "en": "Update interval"
+    },
+    "value": 5,
+    "min": 3,
+    "max": 20,
+    "units": {
+        "en": "min"
+    }
+}

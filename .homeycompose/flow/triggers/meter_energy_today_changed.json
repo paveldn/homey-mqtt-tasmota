@@ -1,0 +1,22 @@
+{
+    "id": "meter_energy_today_changed",
+    "title": {
+        "en": "Today's power meter changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=meter_energy_today"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "value",
+            "type": "number",
+            "title": {
+                "en": "Today's power meter"
+            }
+        }
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Frequency"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "icon": "assets/mobile/frequency.svg"
+}

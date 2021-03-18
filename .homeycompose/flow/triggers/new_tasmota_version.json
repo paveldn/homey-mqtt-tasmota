@@ -1,0 +1,56 @@
+{
+    "id": "new_tasmota_version",
+    "title": {
+        "en": "New tasmota version released"
+    },
+    "tokens": [
+        {
+            "name": "new_major",
+            "type": "number",
+            "title": {
+                "en": "New version major"
+            },
+            "example": 9
+        },
+        {
+            "name": "new_minor",
+            "type": "number",
+            "title": {
+                "en": "New version minor"
+            },
+            "example": 1
+        },
+        {
+            "name": "new_revision",
+            "type": "number",
+            "title": {
+                "en": "New version revision"
+            },
+            "example": 0
+        },
+        {
+            "name": "old_major",
+            "type": "number",
+            "title": {
+                "en": "Previous version major"
+            },
+            "example": 8
+        },
+        {
+            "name": "old_minor",
+            "type": "number",
+            "title": {
+                "en": "Previous version minor"
+            },
+            "example": 5
+        },
+        {
+            "name": "old_revision",
+            "type": "number",
+            "title": {
+                "en": "Previous version revision"
+            },
+            "example": 1
+        }
+    ]
+}

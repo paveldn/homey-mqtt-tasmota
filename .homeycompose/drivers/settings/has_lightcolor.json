@@ -1,0 +1,8 @@
+{
+    "id": "has_lightcolor",
+    "type": "label",
+    "label": {
+        "en": "Has light color control"
+    },
+    "value": "No"
+}

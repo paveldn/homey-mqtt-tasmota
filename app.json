@@ -1,989 +1,992 @@
 {
-    "id": "com.paveld.tasmota",
-    "version": "0.8.7",
-    "compatibility": ">=5.0.0",
-    "sdk": 3,
-    "brandColor": "#42A3E9",
-    "name": {
-        "en": "Tasmota MQTT"
-    },
-    "description": {
-        "en": "Adding support for tasmota devices through MQTT"
-    },
-    "category": [
-        "appliances"
-    ],
-    "tags": {
-        "en": [
-            "tasmota",
-            "sonoff"
-        ]
-    },
-    "permissions": [
-        "homey:app:nl.scanno.mqtt"
-    ],
-    "images": {
-        "large": "/assets/images/large.png",
-        "small": "/assets/images/small.png"
-    },
-    "author": {
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.paveld.tasmota",
+  "version": "0.8.8",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "brandColor": "#42A3E9",
+  "name": {
+    "en": "Tasmota MQTT"
+  },
+  "description": {
+    "en": "Adding support for tasmota devices through MQTT"
+  },
+  "category": [
+    "appliances"
+  ],
+  "tags": {
+    "en": [
+      "tasmota",
+      "sonoff"
+    ]
+  },
+  "permissions": [
+    "homey:app:nl.scanno.mqtt"
+  ],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Pavlo Dudnytskyi",
+    "email": "paveldudn@gmail.com"
+  },
+  "contributors": {
+    "developers": [
+      {
         "name": "Pavlo Dudnytskyi",
         "email": "paveldudn@gmail.com"
-    },
-    "contributors": {
-        "developers": [
-            {
-                "name": "Pavlo Dudnytskyi",
-                "email": "paveldudn@gmail.com"
-            }
-        ]
-    },
-    "source": "https://github.com/paveldn/homey-mqtt-tasmota",
-    "bugs": {
-        "url": "https://github.com/paveldn/homey-mqtt-tasmota/issues"
-    },
-    "homeyCommunityTopicId": 26164,
-    "contributing": {
-        "donate": {
-            "paypal": {
-                "username": "truemark"
-            }
-        }
-    },
-    "capabilities": {
-        "measure_power_factor": {
-            "type": "number",
-            "title": {
-                "en": "Power factor"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "icon": "assets/mobile/power_factor.svg"
-        },
-        "measure_power_reactive": {
-            "type": "number",
-            "title": {
-                "en": "Reactive Power"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "units": {
-                "en": "VAr"
-            },
-            "icon": "assets/mobile/power_power.svg"
-        },
-        "measure_apparent_power": {
-            "type": "number",
-            "title": {
-                "en": "Apparent Power"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "units": {
-                "en": "VA"
-            },
-            "icon": "assets/mobile/power_power.svg"
-        },
-        "meter_energy_today": {
-            "type": "number",
-            "title": {
-                "en": "Power Meter Today"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "units": {
-                "en": "kWh"
-            },
-            "icon": "assets/mobile/power_meter.svg"
-        },
-        "meter_energy_yesterday": {
-            "type": "number",
-            "title": {
-                "en": "Power Meter Yesterday"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "units": {
-                "en": "kWh"
-            },
-            "icon": "assets/mobile/power_meter.svg"
-        },
-        "measure_particulate_matter": {
-            "type": "number",
-            "title": {
-                "en": "Air quality"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "icon": "assets/mobile/air_pollution.svg"
-        },
-        "measure_frequency": {
-            "type": "number",
-            "title": {
-                "en": "Frequency"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "icon": "assets/mobile/frequency.svg"
-        },
-        "measure_tvoc": {
-            "type": "number",
-            "title": {
-                "en": "TVOC"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "icon": "assets/mobile/air_pollution.svg"
-        },
-        "sensor_switch": {
-            "type": "boolean",
-            "title": {
-                "en": "Switch"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "icon": "assets/mobile/switch.svg"
-        },
-        "measure_analog": {
-            "type": "number",
-            "title": {
-                "en": "Analog"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "icon": "assets/mobile/analog.svg"
-        },
-        "sensor_counter": {
-            "type": "number",
-            "title": {
-                "en": "Counter"
-            },
-            "uiComponent": "sensor",
-            "getable": true,
-            "setable": false,
-            "icon": "assets/mobile/counter.svg"
-        },
-        "switch": {
-            "type": "boolean",
-            "title": {
-                "en": "Switch"
-            },
-            "getable": true,
-            "setable": true,
-            "uiComponent": "toggle",
-            "uiQuickAction": false
-        },
-        "onoff": {
-            "type": "boolean",
-            "title": {
-                "en": "Switch"
-            },
-            "getable": true,
-            "setable": true,
-            "uiComponent": null,
-            "uiQuickAction": true
-        },
-        "fan_speed": {
-            "type": "enum",
-            "values": [
-                {
-                    "id": "0",
-                    "title": {
-                        "en": "Off"
-                    }
-                },
-                {
-                    "id": "1",
-                    "title": {
-                        "en": "1"
-                    }
-                },
-                {
-                    "id": "2",
-                    "title": {
-                        "en": "2"
-                    }
-                },
-                {
-                    "id": "3",
-                    "title": {
-                        "en": "3"
-                    }
-                }
-            ],
-            "title": {
-                "en": "Fan speed"
-            },
-            "uiComponent": "picker",
-            "getable": true,
-            "setable": true,
-            "uiQuickAction": true
-        }
-    },
-    "drivers": [
-        {
-            "id": "tasmota_mqtt",
-            "name": {
-                "en": "Tasmota device"
-            },
-            "class": "socket",
-            "capabilities": [],
-            "images": {
-                "large": "/drivers/tasmota_mqtt/assets/images/large.png",
-                "small": "/drivers/tasmota_mqtt/assets/images/small.png"
-            },
-            "pair": [
-                {
-                    "id": "loading",
-                    "template": "loading"
-                },
-                {
-                    "id": "list_devices",
-                    "template": "list_devices",
-                    "navigation": {
-                        "next": "add_devices"
-                    },
-                    "options": {
-                        "singular": false
-                    }
-                },
-                {
-                    "id": "add_devices",
-                    "template": "add_devices"
-                }
-            ],
-            "settings": [
-                {
-                    "type": "group",
-                    "label": "Settings",
-                    "children": [
-                        {
-                            "type": "group",
-                            "label": "MQTT",
-                            "children": [
-                                {
-                                    "id": "mqtt_topic",
-                                    "type": "text",
-                                    "label": {
-                                        "en": "Device MQTT topic"
-                                    },
-                                    "value": "",
-                                    "pattern": "^[^#+\\/]+$"
-                                },
-                                {
-                                    "id": "update_interval",
-                                    "type": "number",
-                                    "label": {
-                                        "en": "Update interval"
-                                    },
-                                    "value": 5,
-                                    "min": 3,
-                                    "max": 20,
-                                    "units": {
-                                        "en": "min"
-                                    }
-                                },
-                                {
-                                    "id": "swap_prefix_topic",
-                                    "type": "checkbox",
-                                    "label": {
-                                        "en": "Swap prefix and topic"
-                                    },
-                                    "value": false
-                                }
-                            ]
-                        },
-                        {
-                            "type": "group",
-                            "label": "Device",
-                            "children": [
-                                {
-                                    "id": "relays_number",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Number of relays"
-                                    },
-                                    "value": "1"
-                                },
-                                {
-                                    "id": "is_dimmable",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Is dimmable"
-                                    },
-                                    "value": "No"
-                                },
-                                {
-                                    "id": "has_lighttemp",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Has light temperature"
-                                    },
-                                    "value": "No"
-                                },
-                                {
-                                    "id": "has_lightcolor",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Has light color control"
-                                    },
-                                    "value": "No"
-                                },
-                                {
-                                    "id": "has_fan",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Fan control"
-                                    },
-                                    "value": "No"
-                                },
-                                {
-                                    "id": "shutters_number",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Number of shutters"
-                                    },
-                                    "value": "0"
-                                },
-                                {
-                                    "id": "additional_sensors",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Additional sensors"
-                                    },
-                                    "value": ""
-                                },
-                                {
-                                    "id": "chip_type",
-                                    "type": "label",
-                                    "label": {
-                                        "en": "Hardware"
-                                    },
-                                    "value": "Unknown"
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "flow": {
-        "triggers": [
-            {
-                "id": "device_connection_changed",
-                "title": {
-                    "en": "Device availability status changed"
-                },
-                "tokens": [
-                    {
-                        "name": "name",
-                        "type": "string",
-                        "title": {
-                            "en": "Device name"
-                        },
-                        "example": "Device 1"
-                    },
-                    {
-                        "name": "device_id",
-                        "type": "string",
-                        "title": {
-                            "en": "Device ID"
-                        },
-                        "example": "DVES_123456"
-                    },
-                    {
-                        "name": "status",
-                        "type": "boolean",
-                        "title": {
-                            "en": "Availability"
-                        },
-                        "example": "true"
-                    }
-                ]
-            },
-            {
-                "id": "new_tasmota_version",
-                "title": {
-                    "en": "New tasmota version released"
-                },
-                "tokens": [
-                    {
-                        "name": "new_major",
-                        "type": "number",
-                        "title": {
-                            "en": "New version major"
-                        },
-                        "example": 9
-                    },
-                    {
-                        "name": "new_minor",
-                        "type": "number",
-                        "title": {
-                            "en": "New version minor"
-                        },
-                        "example": 1
-                    },
-                    {
-                        "name": "new_revision",
-                        "type": "number",
-                        "title": {
-                            "en": "New version revision"
-                        },
-                        "example": 0
-                    },
-                    {
-                        "name": "old_major",
-                        "type": "number",
-                        "title": {
-                            "en": "Previous version major"
-                        },
-                        "example": 8
-                    },
-                    {
-                        "name": "old_minor",
-                        "type": "number",
-                        "title": {
-                            "en": "Previous version minor"
-                        },
-                        "example": 5
-                    },
-                    {
-                        "name": "old_revision",
-                        "type": "number",
-                        "title": {
-                            "en": "Previous version revision"
-                        },
-                        "example": 1
-                    }
-                ]
-            },
-            {
-                "id": "measure_power_factor_changed",
-                "title": {
-                    "en": "Power factor changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=measure_power_factor"
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "value",
-                        "type": "number",
-                        "title": {
-                            "en": "Power factor"
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "measure_power_reactive_changed",
-                "title": {
-                    "en": "Reactive power changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=measure_power_reactive"
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "value",
-                        "type": "number",
-                        "title": {
-                            "en": "Reactive power"
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "measure_apparent_power_changed",
-                "title": {
-                    "en": "Apparent power changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=measure_apparent_power"
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "value",
-                        "type": "number",
-                        "title": {
-                            "en": "Apparent power"
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "meter_energy_today_changed",
-                "title": {
-                    "en": "Today's power meter changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=meter_energy_today"
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "value",
-                        "type": "number",
-                        "title": {
-                            "en": "Today's power meter"
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "multiplesockets_relay_state_changed",
-                "title": {
-                    "en": "Socket status changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
-                    },
-                    {
-                        "name": "socket_id",
-                        "type": "autocomplete",
-                        "placeholder": {
-                            "en": "Select one of the values"
-                        }
-                    },
-                    {
-                        "name": "state",
-                        "type": "dropdown",
-                        "values": [
-                            {
-                                "id": "state_any",
-                                "label": {
-                                    "en": "toggled"
-                                }
-                            },
-                            {
-                                "id": "state_on",
-                                "label": {
-                                    "en": "turned on"
-                                }
-                            },
-                            {
-                                "id": "state_off",
-                                "label": {
-                                    "en": "turned off"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "socket_index",
-                        "type": "number",
-                        "title": {
-                            "en": "Socket index"
-                        },
-                        "example": 2
-                    },
-                    {
-                        "name": "socket_state",
-                        "type": "boolean",
-                        "title": {
-                            "en": "Socket state"
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "singlesocket_relay_state_changed",
-                "title": {
-                    "en": "Socket status changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=singlesocket"
-                    },
-                    {
-                        "name": "state",
-                        "type": "dropdown",
-                        "values": [
-                            {
-                                "id": "state_any",
-                                "label": {
-                                    "en": "toggled"
-                                }
-                            },
-                            {
-                                "id": "state_on",
-                                "label": {
-                                    "en": "turned on"
-                                }
-                            },
-                            {
-                                "id": "state_off",
-                                "label": {
-                                    "en": "turned off"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "socket_state",
-                        "type": "boolean",
-                        "title": {
-                            "en": "Socket state"
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "fan_speed_changed",
-                "title": {
-                    "en": "Fan speed changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "fan_speed",
-                        "type": "number",
-                        "title": {
-                            "en": "Fan speed"
-                        },
-                        "example": 2
-                    }
-                ]
-            },
-            {
-                "id": "sensor_value_changed",
-                "title": {
-                    "en": "Sensor value changed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=additional_sensors"
-                    }
-                ],
-                "tokens": [
-                    {
-                        "name": "sensor_name",
-                        "type": "string",
-                        "title": {
-                            "en": "Sensor name"
-                        },
-                        "example": "DS18B20"
-                    },
-                    {
-                        "name": "sensor_value_kind",
-                        "type": "string",
-                        "title": {
-                            "en": "Sensor value kind"
-                        },
-                        "example": "Temperature"
-                    },
-                    {
-                        "name": "sensor_value_new",
-                        "type": "number",
-                        "title": {
-                            "en": "Sensor new value"
-                        },
-                        "example": 23.5
-                    },
-                    {
-                        "name": "sensor_value_old",
-                        "type": "number",
-                        "title": {
-                            "en": "Sensor old value"
-                        },
-                        "example": 22.2
-                    }
-                ]
-            }
-        ],
-        "conditions": [
-            {
-                "id": "multiplesockets_switch_turned_on",
-                "title": {
-                    "en": "Socket state is !{{on|off}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
-                    },
-                    {
-                        "name": "socket_id",
-                        "type": "autocomplete",
-                        "placeholder": {
-                            "en": "Select one of the values"
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "multiplesockets_all_switches_turned_on",
-                "title": {
-                    "en": "!{{All sockets are turned on|Some sockets are turned off}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
-                    }
-                ]
-            },
-            {
-                "id": "multiplesockets_some_switches_turned_on",
-                "title": {
-                    "en": "!{{Some sockets are turned on|All sockets are turned off}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
-                    }
-                ]
-            },
-            {
-                "id": "singlesocket_switch_turned_on",
-                "title": {
-                    "en": "Socket state is !{{on|off}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=singlesocket"
-                    }
-                ]
-            },
-            {
-                "id": "dim_level_greater",
-                "title": {
-                    "en": "Dim level is !{{greater|lower or equal}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=dim"
-                    },
-                    {
-                        "name": "value",
-                        "type": "range",
-                        "min": 0,
-                        "max": 100,
-                        "step": 1,
-                        "label": "%",
-                        "labelDecimals": 0
-                    }
-                ]
-            },
-            {
-                "id": "dim_level_lower",
-                "title": {
-                    "en": "Dim level is !{{lower|greater or equal}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=dim"
-                    },
-                    {
-                        "name": "value",
-                        "type": "range",
-                        "min": 0,
-                        "max": 100,
-                        "step": 1,
-                        "label": "%",
-                        "labelDecimals": 0
-                    }
-                ]
-            },
-            {
-                "id": "fan_speed_greater",
-                "title": {
-                    "en": "Fan speed is !{{greater | lower or equal}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
-                    },
-                    {
-                        "name": "value",
-                        "type": "range",
-                        "min": 0,
-                        "max": 3,
-                        "step": 1,
-                        "labelDecimals": 0
-                    }
-                ]
-            },
-            {
-                "id": "fan_speed_lower",
-                "title": {
-                    "en": "Fan speed is !{{lower | greater or equal}}"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
-                    },
-                    {
-                        "name": "value",
-                        "type": "range",
-                        "min": 0,
-                        "max": 3,
-                        "step": 1,
-                        "labelDecimals": 0
-                    }
-                ]
-            }
-        ],
-        "actions": [
-            {
-                "id": "multiplesockets_switch_action",
-                "title": {
-                    "en": "Change socket(s) state"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
-                    },
-                    {
-                        "name": "socket_id",
-                        "type": "autocomplete",
-                        "placeholder": {
-                            "en": "Select one of the values"
-                        }
-                    },
-                    {
-                        "name": "state",
-                        "type": "dropdown",
-                        "values": [
-                            {
-                                "id": "state_on",
-                                "label": {
-                                    "en": "turn on"
-                                }
-                            },
-                            {
-                                "id": "state_off",
-                                "label": {
-                                    "en": "turn off"
-                                }
-                            },
-                            {
-                                "id": "state_toggle",
-                                "label": {
-                                    "en": "toggle"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": "singlesocket_switch_action",
-                "title": {
-                    "en": "Change socket state"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=singlesocket"
-                    },
-                    {
-                        "name": "state",
-                        "type": "dropdown",
-                        "values": [
-                            {
-                                "id": "state_on",
-                                "label": {
-                                    "en": "turn on"
-                                }
-                            },
-                            {
-                                "id": "state_off",
-                                "label": {
-                                    "en": "turn off"
-                                }
-                            },
-                            {
-                                "id": "state_toggle",
-                                "label": {
-                                    "en": "toggle"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": "fan_speed_action",
-                "title": {
-                    "en": "Set fan speed"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
-                    },
-                    {
-                        "name": "value",
-                        "type": "range",
-                        "min": 0,
-                        "max": 3,
-                        "step": 1,
-                        "labelDecimals": 0
-                    }
-                ]
-            }
-        ]
+      }
+    ]
+  },
+  "source": "https://github.com/paveldn/homey-mqtt-tasmota",
+  "bugs": {
+    "url": "https://github.com/paveldn/homey-mqtt-tasmota/issues"
+  },
+  "homeyCommunityTopicId": 26164,
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "truemark"
+      }
     }
+  },
+  "flow": {
+    "triggers": [
+      {
+        "id": "device_connection_changed",
+        "title": {
+          "en": "Device availability status changed"
+        },
+        "tokens": [
+          {
+            "name": "name",
+            "type": "string",
+            "title": {
+              "en": "Device name"
+            },
+            "example": "Device 1"
+          },
+          {
+            "name": "device_id",
+            "type": "string",
+            "title": {
+              "en": "Device ID"
+            },
+            "example": "DVES_123456"
+          },
+          {
+            "name": "status",
+            "type": "boolean",
+            "title": {
+              "en": "Availability"
+            },
+            "example": "true"
+          }
+        ]
+      },
+      {
+        "id": "fan_speed_changed",
+        "title": {
+          "en": "Fan speed changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "fan_speed",
+            "type": "number",
+            "title": {
+              "en": "Fan speed"
+            },
+            "example": 2
+          }
+        ]
+      },
+      {
+        "id": "measure_apparent_power_changed",
+        "title": {
+          "en": "Apparent power changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=measure_apparent_power"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "value",
+            "type": "number",
+            "title": {
+              "en": "Apparent power"
+            }
+          }
+        ]
+      },
+      {
+        "id": "measure_power_factor_changed",
+        "title": {
+          "en": "Power factor changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=measure_power_factor"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "value",
+            "type": "number",
+            "title": {
+              "en": "Power factor"
+            }
+          }
+        ]
+      },
+      {
+        "id": "measure_power_reactive_changed",
+        "title": {
+          "en": "Reactive power changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=measure_power_reactive"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "value",
+            "type": "number",
+            "title": {
+              "en": "Reactive power"
+            }
+          }
+        ]
+      },
+      {
+        "id": "meter_energy_today_changed",
+        "title": {
+          "en": "Today's power meter changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=meter_energy_today"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "value",
+            "type": "number",
+            "title": {
+              "en": "Today's power meter"
+            }
+          }
+        ]
+      },
+      {
+        "id": "multiplesockets_relay_state_changed",
+        "title": {
+          "en": "Socket status changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+          },
+          {
+            "name": "socket_id",
+            "type": "autocomplete",
+            "placeholder": {
+              "en": "Select one of the values"
+            }
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "state_any",
+                "label": {
+                  "en": "toggled"
+                }
+              },
+              {
+                "id": "state_on",
+                "label": {
+                  "en": "turned on"
+                }
+              },
+              {
+                "id": "state_off",
+                "label": {
+                  "en": "turned off"
+                }
+              }
+            ]
+          }
+        ],
+        "tokens": [
+          {
+            "name": "socket_index",
+            "type": "number",
+            "title": {
+              "en": "Socket index"
+            },
+            "example": 2
+          },
+          {
+            "name": "socket_state",
+            "type": "boolean",
+            "title": {
+              "en": "Socket state"
+            }
+          }
+        ]
+      },
+      {
+        "id": "new_tasmota_version",
+        "title": {
+          "en": "New tasmota version released"
+        },
+        "tokens": [
+          {
+            "name": "new_major",
+            "type": "number",
+            "title": {
+              "en": "New version major"
+            },
+            "example": 9
+          },
+          {
+            "name": "new_minor",
+            "type": "number",
+            "title": {
+              "en": "New version minor"
+            },
+            "example": 1
+          },
+          {
+            "name": "new_revision",
+            "type": "number",
+            "title": {
+              "en": "New version revision"
+            },
+            "example": 0
+          },
+          {
+            "name": "old_major",
+            "type": "number",
+            "title": {
+              "en": "Previous version major"
+            },
+            "example": 8
+          },
+          {
+            "name": "old_minor",
+            "type": "number",
+            "title": {
+              "en": "Previous version minor"
+            },
+            "example": 5
+          },
+          {
+            "name": "old_revision",
+            "type": "number",
+            "title": {
+              "en": "Previous version revision"
+            },
+            "example": 1
+          }
+        ]
+      },
+      {
+        "id": "sensor_value_changed",
+        "title": {
+          "en": "Sensor value changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=additional_sensors"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "sensor_name",
+            "type": "string",
+            "title": {
+              "en": "Sensor name"
+            },
+            "example": "DS18B20"
+          },
+          {
+            "name": "sensor_value_kind",
+            "type": "string",
+            "title": {
+              "en": "Sensor value kind"
+            },
+            "example": "Temperature"
+          },
+          {
+            "name": "sensor_value_new",
+            "type": "number",
+            "title": {
+              "en": "Sensor new value"
+            },
+            "example": 23.5
+          },
+          {
+            "name": "sensor_value_old",
+            "type": "number",
+            "title": {
+              "en": "Sensor old value"
+            },
+            "example": 22.2
+          }
+        ]
+      },
+      {
+        "id": "singlesocket_relay_state_changed",
+        "title": {
+          "en": "Socket status changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=singlesocket"
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "state_any",
+                "label": {
+                  "en": "toggled"
+                }
+              },
+              {
+                "id": "state_on",
+                "label": {
+                  "en": "turned on"
+                }
+              },
+              {
+                "id": "state_off",
+                "label": {
+                  "en": "turned off"
+                }
+              }
+            ]
+          }
+        ],
+        "tokens": [
+          {
+            "name": "socket_state",
+            "type": "boolean",
+            "title": {
+              "en": "Socket state"
+            }
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "dim_level_greater",
+        "title": {
+          "en": "Dim level is !{{greater|lower or equal}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=dim"
+          },
+          {
+            "name": "value",
+            "type": "range",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "label": "%",
+            "labelDecimals": 0
+          }
+        ]
+      },
+      {
+        "id": "dim_level_lower",
+        "title": {
+          "en": "Dim level is !{{lower|greater or equal}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=dim"
+          },
+          {
+            "name": "value",
+            "type": "range",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "label": "%",
+            "labelDecimals": 0
+          }
+        ]
+      },
+      {
+        "id": "fan_speed_greater",
+        "title": {
+          "en": "Fan speed is !{{greater | lower or equal}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
+          },
+          {
+            "name": "value",
+            "type": "range",
+            "min": 0,
+            "max": 3,
+            "step": 1,
+            "labelDecimals": 0
+          }
+        ]
+      },
+      {
+        "id": "fan_speed_lower",
+        "title": {
+          "en": "Fan speed is !{{lower | greater or equal}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
+          },
+          {
+            "name": "value",
+            "type": "range",
+            "min": 0,
+            "max": 3,
+            "step": 1,
+            "labelDecimals": 0
+          }
+        ]
+      },
+      {
+        "id": "multiplesockets_all_switches_turned_on",
+        "title": {
+          "en": "!{{All sockets are turned on|Some sockets are turned off}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+          }
+        ]
+      },
+      {
+        "id": "multiplesockets_some_switches_turned_on",
+        "title": {
+          "en": "!{{Some sockets are turned on|All sockets are turned off}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+          }
+        ]
+      },
+      {
+        "id": "multiplesockets_switch_turned_on",
+        "title": {
+          "en": "Socket state is !{{on|off}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+          },
+          {
+            "name": "socket_id",
+            "type": "autocomplete",
+            "placeholder": {
+              "en": "Select one of the values"
+            }
+          }
+        ]
+      },
+      {
+        "id": "singlesocket_switch_turned_on",
+        "title": {
+          "en": "Socket state is !{{on|off}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=singlesocket"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "fan_speed_action",
+        "title": {
+          "en": "Set fan speed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
+          },
+          {
+            "name": "value",
+            "type": "range",
+            "min": 0,
+            "max": 3,
+            "step": 1,
+            "labelDecimals": 0
+          }
+        ]
+      },
+      {
+        "id": "multiplesockets_switch_action",
+        "title": {
+          "en": "Change socket(s) state"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+          },
+          {
+            "name": "socket_id",
+            "type": "autocomplete",
+            "placeholder": {
+              "en": "Select one of the values"
+            }
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "state_on",
+                "label": {
+                  "en": "turn on"
+                }
+              },
+              {
+                "id": "state_off",
+                "label": {
+                  "en": "turn off"
+                }
+              },
+              {
+                "id": "state_toggle",
+                "label": {
+                  "en": "toggle"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "singlesocket_switch_action",
+        "title": {
+          "en": "Change socket state"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=singlesocket"
+          },
+          {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "state_on",
+                "label": {
+                  "en": "turn on"
+                }
+              },
+              {
+                "id": "state_off",
+                "label": {
+                  "en": "turn off"
+                }
+              },
+              {
+                "id": "state_toggle",
+                "label": {
+                  "en": "toggle"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "images": {
+        "large": "/drivers/tasmota_mqtt/assets/images/large.png",
+        "small": "/drivers/tasmota_mqtt/assets/images/small.png"
+      },
+      "icon": "/drivers/tasmota_mqtt/assets/icon.svg",
+      "capabilities": [],
+      "class": "socket",
+      "pair": [
+        {
+          "id": "loading",
+          "template": "loading"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          },
+          "options": {
+            "singular": false
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "id": "tasmota_mqtt",
+      "name": {
+        "en": "Tasmota device"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": "Settings",
+          "children": [
+            {
+              "type": "group",
+              "label": "MQTT",
+              "children": [
+                {
+                  "id": "mqtt_topic",
+                  "type": "text",
+                  "label": {
+                    "en": "Device MQTT topic"
+                  },
+                  "value": "",
+                  "pattern": "^[^#+\\/]+$"
+                },
+                {
+                  "id": "update_interval",
+                  "type": "number",
+                  "label": {
+                    "en": "Update interval"
+                  },
+                  "value": 5,
+                  "min": 3,
+                  "max": 20,
+                  "units": {
+                    "en": "min"
+                  }
+                },
+                {
+                  "id": "swap_prefix_topic",
+                  "type": "checkbox",
+                  "label": {
+                    "en": "Swap prefix and topic"
+                  },
+                  "value": false
+                }
+              ]
+            },
+            {
+              "type": "group",
+              "label": "Device",
+              "children": [
+                {
+                  "id": "relays_number",
+                  "type": "label",
+                  "label": {
+                    "en": "Number of relays"
+                  },
+                  "value": "1"
+                },
+                {
+                  "id": "is_dimmable",
+                  "type": "label",
+                  "label": {
+                    "en": "Is dimmable"
+                  },
+                  "value": "No"
+                },
+                {
+                  "id": "has_lighttemp",
+                  "type": "label",
+                  "label": {
+                    "en": "Has light temperature"
+                  },
+                  "value": "No"
+                },
+                {
+                  "id": "has_lightcolor",
+                  "type": "label",
+                  "label": {
+                    "en": "Has light color control"
+                  },
+                  "value": "No"
+                },
+                {
+                  "id": "has_fan",
+                  "type": "label",
+                  "label": {
+                    "en": "Fan control"
+                  },
+                  "value": "No"
+                },
+                {
+                  "id": "shutters_number",
+                  "type": "label",
+                  "label": {
+                    "en": "Number of shutters"
+                  },
+                  "value": "0"
+                },
+                {
+                  "id": "additional_sensors",
+                  "type": "label",
+                  "label": {
+                    "en": "Additional sensors"
+                  },
+                  "value": ""
+                },
+                {
+                  "id": "chip_type",
+                  "type": "label",
+                  "label": {
+                    "en": "Hardware"
+                  },
+                  "value": "Unknown"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "fan_speed": {
+      "type": "enum",
+      "values": [
+        {
+          "id": "0",
+          "title": {
+            "en": "Off"
+          }
+        },
+        {
+          "id": "1",
+          "title": {
+            "en": "1"
+          }
+        },
+        {
+          "id": "2",
+          "title": {
+            "en": "2"
+          }
+        },
+        {
+          "id": "3",
+          "title": {
+            "en": "3"
+          }
+        }
+      ],
+      "title": {
+        "en": "Fan speed"
+      },
+      "uiComponent": "picker",
+      "getable": true,
+      "setable": true,
+      "uiQuickAction": true
+    },
+    "measure_analog": {
+      "type": "number",
+      "title": {
+        "en": "Analog"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/mobile/analog.svg"
+    },
+    "measure_apparent_power": {
+      "type": "number",
+      "title": {
+        "en": "Apparent Power"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "VA"
+      },
+      "icon": "assets/mobile/power_power.svg"
+    },
+    "measure_frequency": {
+      "type": "number",
+      "title": {
+        "en": "Frequency"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/mobile/frequency.svg"
+    },
+    "measure_particulate_matter": {
+      "type": "number",
+      "title": {
+        "en": "Air quality"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/mobile/air_pollution.svg"
+    },
+    "measure_power_factor": {
+      "type": "number",
+      "title": {
+        "en": "Power factor"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/mobile/power_factor.svg"
+    },
+    "measure_power_reactive": {
+      "type": "number",
+      "title": {
+        "en": "Reactive Power"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "VAr"
+      },
+      "icon": "assets/mobile/power_power.svg"
+    },
+    "measure_tvoc": {
+      "type": "number",
+      "title": {
+        "en": "TVOC"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/mobile/air_pollution.svg"
+    },
+    "meter_energy_today": {
+      "type": "number",
+      "title": {
+        "en": "Power Meter Today"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "kWh"
+      },
+      "icon": "assets/mobile/power_meter.svg"
+    },
+    "meter_energy_yesterday": {
+      "type": "number",
+      "title": {
+        "en": "Power Meter Yesterday"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "kWh"
+      },
+      "icon": "assets/mobile/power_meter.svg"
+    },
+    "onoff": {
+      "type": "boolean",
+      "title": {
+        "en": "Switch"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": null,
+      "uiQuickAction": true
+    },
+    "sensor_counter": {
+      "type": "number",
+      "title": {
+        "en": "Counter"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/mobile/counter.svg"
+    },
+    "sensor_switch": {
+      "type": "boolean",
+      "title": {
+        "en": "Switch"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/mobile/switch.svg"
+    },
+    "switch": {
+      "type": "boolean",
+      "title": {
+        "en": "Switch"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "toggle",
+      "uiQuickAction": false
+    }
+  }
 }

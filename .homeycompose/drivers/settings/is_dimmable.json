@@ -1,0 +1,8 @@
+{
+    "id": "is_dimmable",
+    "type": "label",
+    "label": {
+        "en": "Is dimmable"
+    },
+    "value": "No"
+}

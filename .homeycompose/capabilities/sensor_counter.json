@@ -1,0 +1,10 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Counter"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "icon": "assets/mobile/counter.svg"
+}

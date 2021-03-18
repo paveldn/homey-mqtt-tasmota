@@ -1,0 +1,22 @@
+{
+    "id": "measure_power_reactive_changed",
+    "title": {
+        "en": "Reactive power changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=measure_power_reactive"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "value",
+            "type": "number",
+            "title": {
+                "en": "Reactive power"
+            }
+        }
+    ]
+}

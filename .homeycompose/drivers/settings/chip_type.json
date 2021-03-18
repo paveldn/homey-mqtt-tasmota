@@ -1,0 +1,8 @@
+{
+    "id": "chip_type",
+    "type": "label",
+    "label": {
+        "en": "Hardware"
+    },
+    "value": "Unknown"
+}

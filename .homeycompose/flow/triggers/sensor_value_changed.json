@@ -1,0 +1,47 @@
+{
+    "id": "sensor_value_changed",
+    "title": {
+        "en": "Sensor value changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=additional_sensors"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "sensor_name",
+            "type": "string",
+            "title": {
+                "en": "Sensor name"
+            },
+            "example": "DS18B20"
+        },
+        {
+            "name": "sensor_value_kind",
+            "type": "string",
+            "title": {
+                "en": "Sensor value kind"
+            },
+            "example": "Temperature"
+        },
+        {
+            "name": "sensor_value_new",
+            "type": "number",
+            "title": {
+                "en": "Sensor new value"
+            },
+            "example": 23.5
+        },
+        {
+            "name": "sensor_value_old",
+            "type": "number",
+            "title": {
+                "en": "Sensor old value"
+            },
+            "example": 22.2
+        }
+    ]
+}

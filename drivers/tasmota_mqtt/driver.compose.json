@@ -1,0 +1,10 @@
+{
+	"id": "tasmota_mqtt",
+	"name": {
+		"en": "Tasmota device"
+	},
+	"$extends": [
+        "defaults"
+    ],
+	"class": "socket"
+}

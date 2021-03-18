@@ -1,0 +1,20 @@
+{
+    "id": "multiplesockets_switch_turned_on",
+    "title": {
+        "en": "Socket state is !{{on|off}}"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+        },
+        {
+            "name": "socket_id",
+            "type": "autocomplete",
+            "placeholder": {
+                "en": "Select one of the values"
+            }
+        }
+    ]
+}

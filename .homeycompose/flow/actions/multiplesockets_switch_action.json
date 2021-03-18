@@ -1,0 +1,44 @@
+{
+    "id": "multiplesockets_switch_action",
+    "title": {
+        "en": "Change socket(s) state"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+        },
+        {
+            "name": "socket_id",
+            "type": "autocomplete",
+            "placeholder": {
+                "en": "Select one of the values"
+            }
+        },
+        {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+                {
+                    "id": "state_on",
+                    "label": {
+                        "en": "turn on"
+                    }
+                },
+                {
+                    "id": "state_off",
+                    "label": {
+                        "en": "turn off"
+                    }
+                },
+                {
+                    "id": "state_toggle",
+                    "label": {
+                        "en": "toggle"
+                    }
+                }
+            ]
+        }
+    ]
+}

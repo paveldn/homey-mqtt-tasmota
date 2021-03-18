@@ -1,0 +1,8 @@
+{
+    "id": "additional_sensors",
+    "type": "label",
+    "label": {
+        "en": "Additional sensors"
+    },
+    "value": ""
+}

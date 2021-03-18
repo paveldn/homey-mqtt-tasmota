@@ -1,0 +1,32 @@
+{
+    "id": "device_connection_changed",
+    "title": {
+        "en": "Device availability status changed"
+    },
+    "tokens": [
+        {
+            "name": "name",
+            "type": "string",
+            "title": {
+                "en": "Device name"
+            },
+            "example": "Device 1"
+        },
+        {
+            "name": "device_id",
+            "type": "string",
+            "title": {
+                "en": "Device ID"
+            },
+            "example": "DVES_123456"
+        },
+        {
+            "name": "status",
+            "type": "boolean",
+            "title": {
+                "en": "Availability"
+            },
+            "example": "true"
+        }
+    ]
+}

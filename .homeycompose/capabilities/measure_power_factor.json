@@ -1,0 +1,10 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Power factor"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "icon": "assets/mobile/power_factor.svg"
+}

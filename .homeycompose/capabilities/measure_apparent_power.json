@@ -1,0 +1,13 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Apparent Power"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "units": {
+        "en": "VA"
+    },
+    "icon": "assets/mobile/power_power.svg"
+}

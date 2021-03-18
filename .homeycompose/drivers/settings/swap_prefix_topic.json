@@ -1,0 +1,8 @@
+{
+    "id": "swap_prefix_topic",
+    "type": "checkbox",
+    "label": {
+        "en": "Swap prefix and topic"
+    },
+    "value": false
+}

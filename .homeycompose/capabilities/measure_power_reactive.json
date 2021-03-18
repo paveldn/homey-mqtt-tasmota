@@ -1,0 +1,13 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Reactive Power"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "units": {
+        "en": "VAr"
+    },
+    "icon": "assets/mobile/power_power.svg"
+}

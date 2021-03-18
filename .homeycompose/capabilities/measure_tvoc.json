@@ -1,0 +1,10 @@
+{
+    "type": "number",
+    "title": {
+        "en": "TVOC"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "icon": "assets/mobile/air_pollution.svg"
+}

@@ -1,0 +1,64 @@
+[
+    {
+        "type": "group",
+        "label": "Settings",
+        "children": [
+            {
+                "type": "group",
+                "label": "MQTT",
+                "children": [
+                    {
+                        "id": "mqtt_topic",
+                        "$extends": "mqtt_topic"
+                    },
+                    {
+                        "id": "update_interval",
+                        "$extends": "update_interval"
+                    },
+                    {
+                        "id": "swap_prefix_topic",
+                        "$extends": "swap_prefix_topic"
+                    }
+                ]
+            },
+            {
+                "type": "group",
+                "label": "Device",
+                "children": [
+                    {
+                        "id": "relays_number",
+                        "$extends": "relays_number"
+                    },
+                    {
+                        "id": "is_dimmable",
+                        "$extends": "is_dimmable"
+                    },
+                    {
+                        "id": "has_lighttemp",
+                        "$extends": "has_lighttemp"
+                    },
+                    {
+                        "id": "has_lightcolor",
+                        "$extends": "has_lightcolor"
+                    },
+                    {
+                        "id": "has_fan",
+                        "$extends": "has_fan"
+                    },
+                    {
+                        "id": "shutters_number",
+                        "$extends": "shutters_number"
+                    },
+                    {
+                        "id": "additional_sensors",
+                        "$extends": "additional_sensors"
+                    },
+                    {
+                        "id": "chip_type",
+                        "$extends": "chip_type"
+                    }
+                ]
+            }
+        ]
+    }
+]

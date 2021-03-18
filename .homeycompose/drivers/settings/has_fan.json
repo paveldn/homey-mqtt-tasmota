@@ -1,0 +1,8 @@
+{
+    "id": "has_fan",
+    "type": "label",
+    "label": {
+        "en": "Fan control"
+    },
+    "value": "No"
+}

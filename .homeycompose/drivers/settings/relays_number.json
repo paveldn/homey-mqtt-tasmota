@@ -1,0 +1,8 @@
+{
+    "id": "relays_number",
+    "type": "label",
+    "label": {
+        "en": "Number of relays"
+    },
+    "value": "1"
+}

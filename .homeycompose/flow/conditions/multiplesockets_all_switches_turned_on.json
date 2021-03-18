@@ -1,0 +1,13 @@
+{
+    "id": "multiplesockets_all_switches_turned_on",
+    "title": {
+        "en": "!{{All sockets are turned on|Some sockets are turned off}}"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=multiplesockets"
+        }
+    ]
+}

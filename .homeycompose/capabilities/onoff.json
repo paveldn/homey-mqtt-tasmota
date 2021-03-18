@@ -1,0 +1,10 @@
+{
+    "type": "boolean",
+    "title": {
+        "en": "Switch"
+    },
+    "getable": true,
+    "setable": true,
+    "uiComponent": null,
+    "uiQuickAction": true
+}

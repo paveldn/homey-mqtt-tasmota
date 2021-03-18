@@ -1,0 +1,37 @@
+{
+    "id": "singlesocket_switch_action",
+    "title": {
+        "en": "Change socket state"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=singlesocket"
+        },
+        {
+            "name": "state",
+            "type": "dropdown",
+            "values": [
+                {
+                    "id": "state_on",
+                    "label": {
+                        "en": "turn on"
+                    }
+                },
+                {
+                    "id": "state_off",
+                    "label": {
+                        "en": "turn off"
+                    }
+                },
+                {
+                    "id": "state_toggle",
+                    "label": {
+                        "en": "toggle"
+                    }
+                }
+            ]
+        }
+    ]
+}

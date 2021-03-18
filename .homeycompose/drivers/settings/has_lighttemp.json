@@ -1,0 +1,8 @@
+{
+    "id": "has_lighttemp",
+    "type": "label",
+    "label": {
+        "en": "Has light temperature"
+    },
+    "value": "No"
+}
