@@ -3,8 +3,8 @@
         "large": "{{driverAssetsPath}}/images/large.png",
         "small": "{{driverAssetsPath}}/images/small.png"
     },
-    "icon": "{{driverAssetsPath}}/icon.svg",
     "capabilities": [],
+    "icon": "{{driverAssetsPath}}/icon.svg",
     "class": "other",
     "pair": [
         {

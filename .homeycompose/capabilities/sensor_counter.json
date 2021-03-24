@@ -6,5 +6,5 @@
     "uiComponent": "sensor",
     "getable": true,
     "setable": false,
-    "icon": "assets/mobile/counter.svg"
+    "icon": "assets/icons/capabilities/counter.svg"
 }

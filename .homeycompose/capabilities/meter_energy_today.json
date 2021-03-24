@@ -9,5 +9,5 @@
     "units": {
         "en": "kWh"
     },
-    "icon": "assets/mobile/power_meter.svg"
+    "icon": "assets/icons/capabilities/power_meter.svg"
 }

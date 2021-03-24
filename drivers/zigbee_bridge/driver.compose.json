@@ -1,0 +1,10 @@
+{
+    "id": "zigbee_bridge",
+    "name": {
+        "en": "Sonoff zigbee bridge"
+    },
+    "$extends": [
+        "defaults"
+    ],
+    "class": "other"
+}

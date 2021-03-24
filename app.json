@@ -666,8 +666,8 @@
         "large": "/drivers/tasmota_mqtt/assets/images/large.png",
         "small": "/drivers/tasmota_mqtt/assets/images/small.png"
       },
-      "icon": "/drivers/tasmota_mqtt/assets/icon.svg",
       "capabilities": [],
+      "icon": "/drivers/tasmota_mqtt/assets/icon.svg",
       "class": "socket",
       "pair": [
         {
@@ -807,6 +807,105 @@
           ]
         }
       ]
+    },
+    {
+      "images": {
+        "large": "/drivers/zigbee_bridge/assets/images/large.png",
+        "small": "/drivers/zigbee_bridge/assets/images/small.png"
+      },
+      "capabilities": [],
+      "icon": "/drivers/zigbee_bridge/assets/icon.svg",
+      "class": "other",
+      "pair": [
+        {
+          "id": "loading",
+          "template": "loading"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          },
+          "options": {
+            "singular": false
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "id": "zigbee_bridge",
+      "name": {
+        "en": "Sonoff zigbee bridge"
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": "Settings",
+          "children": [
+            {
+              "type": "group",
+              "label": "MQTT",
+              "children": [
+                {
+                  "id": "mqtt_topic",
+                  "type": "text",
+                  "label": {
+                    "en": "Device MQTT topic"
+                  },
+                  "value": "",
+                  "pattern": "^[^#+\\/]+$"
+                },
+                {
+                  "id": "update_interval",
+                  "type": "number",
+                  "label": {
+                    "en": "Update interval"
+                  },
+                  "value": 5,
+                  "min": 3,
+                  "max": 20,
+                  "units": {
+                    "en": "min"
+                  }
+                },
+                {
+                  "id": "swap_prefix_topic",
+                  "type": "checkbox",
+                  "label": {
+                    "en": "Swap prefix and topic"
+                  },
+                  "value": false
+                }
+              ]
+            },
+            {
+              "type": "group",
+              "label": "Device",
+              "children": [
+                {
+                  "id": "auto_add_devices",
+                  "type": "checkbox",
+                  "label": {
+                    "en": "Automatically update devices list"
+                  },
+                  "value": true
+                },
+                {
+                  "id": "chip_type",
+                  "type": "label",
+                  "label": {
+                    "en": "Hardware"
+                  },
+                  "value": "Unknown"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "capabilities": {
@@ -854,7 +953,7 @@
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
-      "icon": "assets/mobile/analog.svg"
+      "icon": "assets/icons/capabilities/analog.svg"
     },
     "measure_apparent_power": {
       "type": "number",
@@ -867,7 +966,7 @@
       "units": {
         "en": "VA"
       },
-      "icon": "assets/mobile/power_power.svg"
+      "icon": "assets/icons/capabilities/power_power.svg"
     },
     "measure_frequency": {
       "type": "number",
@@ -877,7 +976,7 @@
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
-      "icon": "assets/mobile/frequency.svg"
+      "icon": "assets/icons/capabilities/frequency.svg"
     },
     "measure_particulate_matter": {
       "type": "number",
@@ -887,7 +986,7 @@
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
-      "icon": "assets/mobile/air_pollution.svg"
+      "icon": "assets/icons/capabilities/air_pollution.svg"
     },
     "measure_power_factor": {
       "type": "number",
@@ -897,7 +996,7 @@
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
-      "icon": "assets/mobile/power_factor.svg"
+      "icon": "assets/icons/capabilities/power_factor.svg"
     },
     "measure_power_reactive": {
       "type": "number",
@@ -910,7 +1009,7 @@
       "units": {
         "en": "VAr"
       },
-      "icon": "assets/mobile/power_power.svg"
+      "icon": "assets/icons/capabilities/power_power.svg"
     },
     "measure_tvoc": {
       "type": "number",
@@ -920,7 +1019,7 @@
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
-      "icon": "assets/mobile/air_pollution.svg"
+      "icon": "assets/icons/capabilities/air_pollution.svg"
     },
     "meter_energy_today": {
       "type": "number",
@@ -933,7 +1032,7 @@
       "units": {
         "en": "kWh"
       },
-      "icon": "assets/mobile/power_meter.svg"
+      "icon": "assets/icons/capabilities/power_meter.svg"
     },
     "meter_energy_yesterday": {
       "type": "number",
@@ -946,7 +1045,7 @@
       "units": {
         "en": "kWh"
       },
-      "icon": "assets/mobile/power_meter.svg"
+      "icon": "assets/icons/capabilities/power_meter.svg"
     },
     "onoff": {
       "type": "boolean",
@@ -966,7 +1065,7 @@
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
-      "icon": "assets/mobile/counter.svg"
+      "icon": "assets/icons/capabilities/counter.svg"
     },
     "sensor_switch": {
       "type": "boolean",
@@ -976,7 +1075,7 @@
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
-      "icon": "assets/mobile/switch.svg"
+      "icon": "assets/icons/capabilities/switch.svg"
     },
     "switch": {
       "type": "boolean",

@@ -1,0 +1,40 @@
+[
+    {
+        "type": "group",
+        "label": "Settings",
+        "children": [
+            {
+                "type": "group",
+                "label": "MQTT",
+                "children": [
+                    {
+                        "id": "mqtt_topic",
+                        "$extends": "mqtt_topic"
+                    },
+                    {
+                        "id": "update_interval",
+                        "$extends": "update_interval"
+                    },
+                    {
+                        "id": "swap_prefix_topic",
+                        "$extends": "swap_prefix_topic"
+                    }
+                ]
+            },
+            {
+                "type": "group",
+                "label": "Device",
+                "children": [
+                    {
+                        "id": "auto_add_devices",
+                        "$extends": "auto_add_devices"
+                    },
+                    {
+                        "id": "chip_type",
+                        "$extends": "chip_type"
+                    }
+                ]
+            }
+        ]
+    }
+]

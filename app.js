@@ -49,7 +49,9 @@ class TasmotaMqttApp extends Homey.App {
                 method: 'GET',
                 headers: {
                     'user-agent': 'node.js'
-                }}, 2000);
+                }}, 2000).catch((error) => {
+					this.log(`makeHttpsRequest error: ${error}`);
+				});
             if (result.statusCode !== 200) 
                 throw new Error(`Error while checking tasmota releases, staus: ${result.statusCode}`);
             const info = JSON.parse(result.body);
@@ -140,13 +142,24 @@ class TasmotaMqttApp extends Homey.App {
             this.log(`checkTasmotaReleases: ${error}`);
         }
     }
+	
+	checkMqttClient() {
+		this.MQTTClient = this.homey.api.getApiApp('nl.scanno.mqtt');
+		this.homey.apps.getInstalled(this.MQTTClient).then( (isInstalled) => {
+			if (isInstalled)
+				this.homey.apps.getVersion(this.MQTTClient).then( (version) => {
+					this.log(`MQTT client installed, version: ${version}`);
+				});
+			else
+				this.log(`MQTT client not installed`);
+		});
+	}
     
     onInit() {
 		try {
-			let manifest = JSON.parse(fs.readFileSync('./app.json', 'utf8'));
-			this.applicationVersion = manifest.version;
+			this.applicationVersion = Homey.manifest.version;
 			this.debug = process.env.DEBUG == 1;
-			this.applicationName = manifest.name.en;
+			this.applicationName = Homey.manifest.name.en;
 		}
 		catch (error)
 		{
@@ -154,9 +167,14 @@ class TasmotaMqttApp extends Homey.App {
 			this.debug = false;
 			this.applicationName = this.constructor.name;
 		}
+		process.on('unhandledRejection', (reason, p) => {
+			if (!reason.message.startsWith('invalid json response body at'))
+				this.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+		});
+		this.checkMqttClient();
         this.log(`${this.applicationName} is running. Version: ${this.applicationVersion}, debug: ${this.debug}`);
         this.lastTasmotaVersion = this.loadTasmotaVersion();
-        this.tasmotaUpdateTrigger = this.homey.flow.getTriggerCard('new_tasmota_version');
+        this.tasmotaUpdateTrigger = this.homey.flow.getTriggerCard('new_tasmota_version')	;
         setTimeout(() => {
                 this.checkTasmotaReleases();
                 setInterval(() => {
