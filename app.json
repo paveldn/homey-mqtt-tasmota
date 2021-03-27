@@ -176,6 +176,29 @@
         ]
       },
       {
+        "id": "measure_signal_strength_changed",
+        "title": {
+          "en": "Signal strength changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt|zigbee_bridge&capabilities=measure_signal_strength"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "measure_signal_strength",
+            "type": "number",
+            "title": {
+              "en": "Signal strength"
+            },
+            "example": 46
+          }
+        ]
+      },
+      {
         "id": "meter_energy_today_changed",
         "title": {
           "en": "Today's power meter changed"
@@ -886,12 +909,17 @@
               "label": "Device",
               "children": [
                 {
-                  "id": "auto_add_devices",
-                  "type": "checkbox",
+                  "id": "update_zigbee_devices",
+                  "type": "number",
                   "label": {
-                    "en": "Automatically update devices list"
+                    "en": "Devices list update interval (0 - disabled)"
                   },
-                  "value": true
+                  "value": 10,
+                  "min": 0,
+                  "max": 60,
+                  "units": {
+                    "en": "min"
+                  }
                 },
                 {
                   "id": "chip_type",
@@ -1011,6 +1039,19 @@
       },
       "icon": "assets/icons/capabilities/power_power.svg"
     },
+    "measure_signal_strength": {
+      "type": "number",
+      "title": {
+        "en": "Signal strength"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/icons/capabilities/signal_strength.svg",
+      "units": {
+        "en": "%"
+      }
+    },
     "measure_tvoc": {
       "type": "number",
       "title": {
@@ -1081,6 +1122,16 @@
       "type": "boolean",
       "title": {
         "en": "Switch"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "toggle",
+      "uiQuickAction": false
+    },
+    "zigbee_pair": {
+      "type": "boolean",
+      "title": {
+        "en": "Zigbee permit join"
       },
       "getable": true,
       "setable": true,

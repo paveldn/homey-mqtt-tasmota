@@ -49,7 +49,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 shutters_number: '0', 
                 chip_type: 'unknown'
             },
-            capabilities: [],
+            capabilities: ['measure_signal_strength'],
             capabilitiesOptions: {},
             class: 'other',
             icon: 'icons/tasmota.svg'

@@ -6,21 +6,51 @@ const GeneralTasmotaDevice = require('../device.js');
 class ZigbeeBridgeDevice extends GeneralTasmotaDevice {
 
     async onInit() {
-        this.debug = this.homey.app.debug;
-        this.log(`Device init, debug=${this.debug}`);
-        this.log(`Name: ${this.getName()}`);
-        this.log(`Class: ${this.getClass()}`);
-        let settings = this.getSettings();
-        this.log(`Setting: ${JSON.stringify(settings)}`);
-        this.log(`Capabilities: ${JSON.stringify(this.getCapabilities())}`);
+        super.onInit();
+        this.setCapabilityValue('zigbee_pair', false);
+        this.registerCapabilityListener('zigbee_pair', ( value, opts ) => {
+                // this.log(`zigbee_pair cap: ${JSON.stringify(value)}`);
+                // Trigger ???
+                this.sendMessage('ZbPermitJoin', value ? '1' : '0');
+                return Promise.resolve();
+            });
     }
 
     updateDevice() {
-		this.sendMessage('Status', '11');   // StatusSTS
+        this.sendMessage('Status', '11');   // StatusSTS
     }
     
     processMqttMessage(topic, message) {
-        this.log(`processMqttMessage: ${topic} => ${JSON.stringify(message)}`);
+        let topicParts = topic.split('/');
+        try
+        {
+            if (this.stage !== 'available')
+            {
+                this.setDeviceStatus('available');
+                this.setAvailable();
+            }               
+
+            if (topicParts[2] === 'RESULT')
+            {
+                Object.keys(message).forEach( (key) => {
+                    if ((key === 'ZbState') && ('Status' in message.ZbState))
+                    {
+                        let zbStateVal = message.ZbState.Status;
+                        if ((zbStateVal == 21) || (zbStateVal == 22))
+                            this.setCapabilityValue('zigbee_pair', true);
+                        else if (zbStateVal == 20)
+                            this.setCapabilityValue('zigbee_pair', false);
+                    }
+                });
+            }
+        }
+        catch(error)
+        {
+            if (this.debug) 
+                throw(error);
+            else
+                this.log(`processMqttMessage error: ${error}`); 
+        }
     }
     
 

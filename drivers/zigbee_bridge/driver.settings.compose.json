@@ -26,8 +26,8 @@
                 "label": "Device",
                 "children": [
                     {
-                        "id": "auto_add_devices",
-                        "$extends": "auto_add_devices"
+                        "id": "update_zigbee_devices",
+                        "$extends": "update_zigbee_devices"
                     },
                     {
                         "id": "chip_type",

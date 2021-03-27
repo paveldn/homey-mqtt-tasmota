@@ -7,7 +7,7 @@ const GeneralTasmotaDevice = require('../device.js');
 class TasmotaDevice extends GeneralTasmotaDevice {
 
     async onInit() {
-		super.onInit();
+        super.onInit();
         let settings = this.getSettings();
         this.relaysCount = parseInt(settings.relays_number);
         this.additionalSensors = (settings.additional_sensors !== '') || (settings.pwr_monitor === 'Yes');
@@ -125,12 +125,10 @@ class TasmotaDevice extends GeneralTasmotaDevice {
         {
             this.registerShuttersCapListeners();
         }
-        if (this.driver.clientAvailable)
-            this.updateDevice();
     }
     
     updateDevice() {
-		this.sendMessage('Status', '11');   // StatusSTS
+        this.sendMessage('Status', '11');   // StatusSTS
         if ((this.additionalSensors) || (this.shuttersNubmber > 0))
             this.sendMessage('Status', '10');  // StatusSNS
     }

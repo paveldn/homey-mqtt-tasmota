@@ -32,7 +32,7 @@ class ZigbeeBridgeDeviceDriver extends GeneralTasmotaDriver {
                 swap_prefix_topic: swapPrefixTopic, 
                 chip_type: 'unknown'
             },
-            capabilities: [],
+            capabilities: ['zigbee_pair', 'measure_signal_strength'],
             capabilitiesOptions: {},
             class: 'sensor',
             icon: 'icons/zigbee.svg'

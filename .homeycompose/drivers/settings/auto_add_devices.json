@@ -1,8 +1,0 @@
-{
-    "id": "auto_add_devices",
-    "type": "checkbox",
-    "label": {
-        "en": "Automatically update devices list"
-    },
-    "value": true
-}

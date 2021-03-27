@@ -1,0 +1,23 @@
+{
+    "id": "measure_signal_strength_changed",
+    "title": {
+        "en": "Signal strength changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt|zigbee_bridge&capabilities=measure_signal_strength"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "measure_signal_strength",
+            "type": "number",
+            "title": {
+                "en": "Signal strength"
+            },
+            "example": 46
+        }
+    ]
+}

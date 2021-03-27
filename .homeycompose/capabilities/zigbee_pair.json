@@ -1,0 +1,10 @@
+{
+    "type": "boolean",
+    "title": {
+        "en": "Zigbee permit join"
+    },
+    "getable": true,
+    "setable": true,
+    "uiComponent": "toggle",
+    "uiQuickAction": false
+}
