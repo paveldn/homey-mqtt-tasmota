@@ -2,6 +2,7 @@
 
 const Homey = require('homey');
 const GeneralTasmotaDriver = require('../driver.js');
+const ZigbeeBridgeDevice = require('./device.js');
 
 class ZigbeeBridgeDeviceDriver extends GeneralTasmotaDriver {
     
@@ -32,7 +33,7 @@ class ZigbeeBridgeDeviceDriver extends GeneralTasmotaDriver {
                 swap_prefix_topic: swapPrefixTopic, 
                 chip_type: 'unknown'
             },
-            capabilities: ['zigbee_pair', 'measure_signal_strength'],
+            capabilities: ZigbeeBridgeDevice.baseCapabilities,
             capabilitiesOptions: {},
             class: 'sensor',
             icon: 'icons/zigbee.svg'

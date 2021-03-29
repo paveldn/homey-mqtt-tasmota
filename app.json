@@ -346,7 +346,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt&capabilities=additional_sensors"
+            "filter": "driver_id=tasmota_mqtt|zigbee_bridge&capabilities=additional_sensors"
           }
         ],
         "tokens": [
@@ -861,7 +861,27 @@
       ],
       "id": "zigbee_bridge",
       "name": {
-        "en": "Sonoff zigbee bridge"
+        "en": "Sonoff zigbee bridge (testing)"
+      },
+      "capabilitiesOptions": {
+        "button.drop_zigbee_devices": {
+          "maintenanceAction": true,
+          "title": {
+            "en": "Delete devices"
+          },
+          "desc": {
+            "en": "Clear zigbee devices list."
+          }
+        },
+        "button.search_zigbee_devices": {
+          "maintenanceAction": true,
+          "title": {
+            "en": "Search new devices"
+          },
+          "desc": {
+            "en": "Search for new supported zigbee devices. Devices should be pired with bridge."
+          }
+        }
       },
       "settings": [
         {
@@ -995,6 +1015,19 @@
         "en": "VA"
       },
       "icon": "assets/icons/capabilities/power_power.svg"
+    },
+    "measure_battery_level": {
+      "type": "number",
+      "title": {
+        "en": "Battery"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/icons/capabilities/battery.svg",
+      "units": {
+        "en": "%"
+      }
     },
     "measure_frequency": {
       "type": "number",

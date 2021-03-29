@@ -75,8 +75,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             // Sensors and shutters
             let sensors_settings = {};
             Sensor.forEachSensorValue(messages['StatusSNS'], (path, value) => {
-                let capObj = Sensor.getPropertyObjectForSensorField(path, false);
-                
+                let capObj = Sensor.getPropertyObjectForSensorField(path, false);                
                 let sensorField = path[path.length - 1];
                 let sensor = "";
                 if (path.length > 1)

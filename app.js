@@ -244,7 +244,7 @@ class TasmotaMqttApp extends Homey.App {
 	
 	register() {
         this.clientAvailable = true;
-        for  (let topic in this.topics)
+        for (let topic in this.topics)
         {
             this.subscribeTopic(this.topics[topic] + "/#");
             this.subscribeTopic("+/" + this.topics[topic] + "/#");

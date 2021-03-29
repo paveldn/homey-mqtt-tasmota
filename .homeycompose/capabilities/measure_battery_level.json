@@ -1,0 +1,13 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Battery"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "icon": "assets/icons/capabilities/battery.svg",
+    "units": {
+        "en": "%"
+    }
+}

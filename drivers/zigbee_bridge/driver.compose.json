@@ -1,10 +1,30 @@
 {
     "id": "zigbee_bridge",
     "name": {
-        "en": "Sonoff zigbee bridge"
+        "en": "Sonoff zigbee bridge (experimental)"
     },
     "$extends": [
         "defaults"
     ],
-    "class": "other"
+    "class": "other",
+    "capabilitiesOptions": {
+        "button.drop_zigbee_devices": {
+            "maintenanceAction": true,
+            "title": {
+                "en": "Delete devices"
+            },
+            "desc": {
+                "en": "Clear zigbee devices list."
+            }
+        },
+        "button.search_zigbee_devices": {
+            "maintenanceAction": true,
+            "title": {
+                "en": "Search new devices"
+            },
+            "desc": {
+                "en": "Search for new supported zigbee devices. Devices should be pired with bridge."
+            }
+        }
+    }
 }
