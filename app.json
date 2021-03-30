@@ -833,11 +833,11 @@
     },
     {
       "images": {
-        "large": "/drivers/zigbee_bridge/assets/images/large.png",
-        "small": "/drivers/zigbee_bridge/assets/images/small.png"
+        "large": "/drivers/tasmota_zigbee/assets/images/large.png",
+        "small": "/drivers/tasmota_zigbee/assets/images/small.png"
       },
       "capabilities": [],
-      "icon": "/drivers/zigbee_bridge/assets/icon.svg",
+      "icon": "/drivers/tasmota_zigbee/assets/icon.svg",
       "class": "other",
       "pair": [
         {
@@ -859,9 +859,9 @@
           "template": "add_devices"
         }
       ],
-      "id": "zigbee_bridge",
+      "id": "tasmota_zigbee",
       "name": {
-        "en": "Sonoff zigbee bridge (testing)"
+        "en": "Tasmota Zigbee device (experimental)"
       },
       "capabilitiesOptions": {
         "button.drop_zigbee_devices": {

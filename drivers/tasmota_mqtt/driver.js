@@ -37,6 +37,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
     }
     
     collectedDataToDevice( deviceTopic, messages, swapPrefixTopic) {
+        this.log(`collectedDataToDevice: ${JSON.stringify(deviceTopic)} => ${JSON.stringify(messages)}`);
         let devItem = { 
             settings: {
                 mqtt_topic: deviceTopic, 
@@ -75,30 +76,38 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             // Sensors and shutters
             let sensors_settings = {};
             Sensor.forEachSensorValue(messages['StatusSNS'], (path, value) => {
-                let capObj = Sensor.getPropertyObjectForSensorField(path, false);                
                 let sensorField = path[path.length - 1];
                 let sensor = "";
                 if (path.length > 1)
                     sensor = path[path.length - 2]; 
+                let capObj = Sensor.getPropertyObjectForSensorField(path, 'wired', false, sensor);  
+                this.log(`collectedDataToDevice: ${JSON.stringify(path)} => ${JSON.stringify(capObj)}`);
                 if (capObj !== null) {
                     this.log(`getPropertyObjectForSensorField: ${JSON.stringify(capObj)}`);
-                    let units = capObj.units.default;
-                    const units_field = capObj.units.units_field;
-                    if ((units_field !== null) && (units_field in messages['StatusSNS']))
-                        units = messages['StatusSNS'][units_field];
-                    units = capObj.units.units_template.replace('{value}', units);
                     devItem.capabilities.push(capObj.capability);
-                    devItem.capabilitiesOptions[capObj.capability] = {title: { en:  capObj.caption }, units:{ en: units } };
+                    let capSettings = {};
+                    if (capObj.units)
+                    {
+                        let units = capObj.units.default;
+                        const units_field = capObj.units.units_field;
+                        if ((units_field !== null) && (units_field in messages['StatusSNS']))
+                            units = messages['StatusSNS'][units_field];
+                        units = capObj.units.units_template.replace('{value}', units);
+                        capSettings['units'] = { en:  units };
+                    }
+                    if (capObj.caption)
+                        capSettings['title'] = { en:  capObj.caption };
+                    if (Object.keys(capSettings).length > 0)
+                        devItem.capabilitiesOptions[capObj.capability] = capSettings;
                     if (sensorField in sensors_settings)
                             sensors_settings[sensorField] = sensors_settings[sensorField] + 1;
                         else
-                            sensors_settings[sensorField] = 1;
-                        let u = capObj.units;                                          
+                            sensors_settings[sensorField] = 1;                                     
                 }
                 else if (sensor.startsWith('Shutter')) {
                     shutters++;
                 }
-            });
+            }, this.debug);
             if (Object.keys(sensors_settings).length > 0)
             {
                 devItem.capabilities.push('additional_sensors');
@@ -186,7 +195,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 devItem.class = 'other';
             }
         }
-        if (devItem.capabilities.length === 0)
+        if (devItem.capabilities.length <= 1)
             return null;
         return devItem;
     }

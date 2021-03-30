@@ -516,7 +516,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             if ((messageType === 'Result') || (messageType === 'StatusSNS'))
             {
                 Sensor.forEachSensorValue(message, (path, value) => {
-                    let capObj = Sensor.getPropertyObjectForSensorField(path, true);
+                    let capObj = Sensor.getPropertyObjectForSensorField(path, 'wired', true);
                     // this.log(`Sensor status: ${JSON.stringify(path)} => ${capObj ? JSON.stringify(capObj) : 'none'}`);
                     let sensorField = path[path.length - 1];
                     let sensor = "";
@@ -576,7 +576,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                             }
                         }
                     }
-                });
+                }, this.debug);
                 if ((this.relaysCount == 0) && (this.stage !== 'available'))
                 {
                     this.setDeviceStatus('available');

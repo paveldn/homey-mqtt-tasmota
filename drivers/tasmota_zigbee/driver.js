@@ -36,7 +36,7 @@ class ZigbeeBridgeDeviceDriver extends GeneralTasmotaDriver {
             capabilities: ZigbeeBridgeDevice.baseCapabilities,
             capabilitiesOptions: {},
             class: 'sensor',
-            icon: 'icons/zigbee.svg'
+            icon: 'icons/zigbee_bridge.svg'
         };
         if (('StatusMQT' in messages) && (messages['StatusMQT']['MqttClient'] !== undefined))
             devItem.data = { id: messages['StatusMQT']['MqttClient']};

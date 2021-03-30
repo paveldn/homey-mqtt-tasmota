@@ -1,7 +1,7 @@
 {
     "id": "zigbee_bridge",
     "name": {
-        "en": "Sonoff zigbee bridge (experimental)"
+        "en": "Tasmota Zigbee device (experimental)"
     },
     "$extends": [
         "defaults"
