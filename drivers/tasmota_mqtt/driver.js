@@ -28,7 +28,6 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
     
     pairingStarted() {
         this.log('pairingStarted called');
-        this.devicesFound = {};
         this.sendMessage('cmnd/sonoffs/Status', '0');
         this.sendMessage('cmnd/tasmotas/Status', '0');
         this.sendMessage('sonoffs/cmnd/Status', '0');
@@ -55,27 +54,36 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             class: 'other',
             icon: 'icons/tasmota.svg'
         };
-        if (('StatusMQT' in messages) && (messages['StatusMQT']['MqttClient'] !== undefined))
-            devItem.data = { id: messages['StatusMQT']['MqttClient']};
+        if (('StatusMQT' in messages) && (messages['StatusMQT'][0]['MqttClient'] !== undefined))
+            devItem.data = { id: messages['StatusMQT'][0]['MqttClient']};
         else
             return null;
+        let isZigbeeBridge = false;
         if ('Status' in messages)
         {
-            if (messages['Status']['DeviceName'] !== undefined)
-                devItem.name = messages['Status']['DeviceName'];
-            else if (messages['Status']['FriendlyName'] !== undefined)
-                devItem.name = messages['Status']['FriendlyName'][0];
+            if (messages['Status'][0]['DeviceName'] !== undefined)
+                devItem.name = messages['Status'][0]['DeviceName'];
+            else if (messages['Status'][0]['FriendlyName'] !== undefined)
+                devItem.name = messages['Status'][0]['FriendlyName'][0];
             else
                 devItem.name = deviceTopic;
+            if (messages['Status'][0]['Module'] !== undefined)
+            {
+                if (messages['Status'][0]['Module'] === 75)
+                {
+                    devItem.capabilities.push('zigbee_pair');
+                    isZigbeeBridge = true;
+                }
+            }
         }
-        if (('StatusFWR' in messages) && (messages['StatusFWR']['Hardware'] !== undefined))
-            devItem.settings.chip_type = messages['StatusFWR']['Hardware'];
+        if (('StatusFWR' in messages) && (messages['StatusFWR'][0]['Hardware'] !== undefined))
+            devItem.settings.chip_type = messages['StatusFWR'][0]['Hardware'];
         let shutters = 0;
         if ('StatusSNS' in messages)
         {
             // Sensors and shutters
             let sensors_settings = {};
-            Sensor.forEachSensorValue(messages['StatusSNS'], (path, value) => {
+            Sensor.forEachSensorValue(messages['StatusSNS'][0], (path, value) => {
                 let sensorField = path[path.length - 1];
                 let sensor = "";
                 if (path.length > 1)
@@ -90,8 +98,8 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                     {
                         let units = capObj.units.default;
                         const units_field = capObj.units.units_field;
-                        if ((units_field !== null) && (units_field in messages['StatusSNS']))
-                            units = messages['StatusSNS'][units_field];
+                        if ((units_field !== null) && (units_field in messages['StatusSNS'][0]))
+                            units = messages['StatusSNS'][0][units_field];
                         units = capObj.units.units_template.replace('{value}', units);
                         capSettings['units'] = { en:  units };
                     }
@@ -138,7 +146,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             if (shutters === 0)
             {
                 // Search for switches only if there is no shutters
-                relaysCount = Object.keys(messages['StatusSTS']).filter(function(key) {
+                relaysCount = Object.keys(messages['StatusSTS'][0]).filter(function(key) {
                     return key.startsWith('POWER');
                 }).length;
                 for (let propIndex = 1; propIndex <= relaysCount; propIndex++)
@@ -158,7 +166,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             {
                 devItem.class = 'socket';
                 devItem.icon = 'icons/power_socket.svg';
-                if ('Dimmer' in messages['StatusSTS'])
+                if ('Dimmer' in messages['StatusSTS'][0])
                 {
                     devItem.class = 'light';
                     devItem.icon = 'icons/light_bulb.svg';
@@ -166,13 +174,13 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                     devItem.capabilities.push('dim');
                 }
                 let lmCounter = 0;
-                if ('CT' in messages['StatusSTS'])
+                if ('CT' in messages['StatusSTS'][0])
                 {
                     devItem.capabilities.push('light_temperature');
                     devItem.settings.has_lighttemp = 'Yes';
                     lmCounter++;
                 }
-                if ('HSBColor' in messages['StatusSTS'])
+                if ('HSBColor' in messages['StatusSTS'][0])
                 {
                     devItem.capabilities.push('light_hue');
                     devItem.capabilities.push('light_saturation');
@@ -181,7 +189,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 }
                 if (lmCounter === 2)
                     capabilities.push('light_mode'); 
-                if ('FanSpeed' in messages['StatusSTS'])
+                if ('FanSpeed' in messages['StatusSTS'][0])
                 {
                     devItem.icon = 'icons/table_fan.svg';
                     devItem.class = 'fan';
@@ -194,6 +202,11 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 devItem.icon = 'icons/power_strip.svg';
                 devItem.class = 'other';
             }
+        }
+        if (isZigbeeBridge)
+        {
+            devItem.icon = 'icons/zigbee_bridge.svg';
+            devItem.class = 'other';
         }
         if (devItem.capabilities.length <= 1)
             return null;

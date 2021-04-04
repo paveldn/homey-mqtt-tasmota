@@ -1,30 +1,10 @@
 {
     "id": "zigbee_bridge",
     "name": {
-        "en": "Tasmota Zigbee device (experimental)"
+        "en": "Zigbee device (experimental)"
     },
     "$extends": [
         "defaults"
     ],
-    "class": "other",
-    "capabilitiesOptions": {
-        "button.drop_zigbee_devices": {
-            "maintenanceAction": true,
-            "title": {
-                "en": "Delete devices"
-            },
-            "desc": {
-                "en": "Clear zigbee devices list."
-            }
-        },
-        "button.search_zigbee_devices": {
-            "maintenanceAction": true,
-            "title": {
-                "en": "Search new devices"
-            },
-            "desc": {
-                "en": "Search for new supported zigbee devices. Devices should be pired with bridge."
-            }
-        }
-    }
+    "class": "other"
 }

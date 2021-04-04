@@ -18,6 +18,10 @@
                     {
                         "id": "swap_prefix_topic",
                         "$extends": "swap_prefix_topic"
+                    },
+                    {
+                        "id": "zigbee_device_id",
+                        "$extends": "zigbee_device_id"
                     }
                 ]
             },
@@ -25,10 +29,6 @@
                 "type": "group",
                 "label": "Device",
                 "children": [
-                    {
-                        "id": "update_zigbee_devices",
-                        "$extends": "update_zigbee_devices"
-                    },
                     {
                         "id": "chip_type",
                         "$extends": "chip_type"

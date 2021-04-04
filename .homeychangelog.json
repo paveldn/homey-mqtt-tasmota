@@ -70,5 +70,8 @@
   },
   "0.8.7": {
     "en": "Homey SDK 3 support added. Minor fixes and improvements."
+  },
+  "0.9.0": {
+    "en": "Added experimental suipport for Sonoff zigbee bridge and some zigbee sensors."
   }
 }

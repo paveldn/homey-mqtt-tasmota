@@ -121,6 +121,17 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                 }, 500);
             }
         }
+		if (this.hasCapability('zigbee_pair'))
+		{
+			this.setCapabilityValue('zigbee_pair', false);
+			this.registerCapabilityListener('zigbee_pair', ( value, opts ) => {
+                // this.log(`zigbee_pair cap: ${JSON.stringify(value)}`);
+                // Trigger ???
+                this.sendMessage('ZbPermitJoin', value ? '1' : '0');
+                return Promise.resolve();
+			});
+
+		}
         if (this.shuttersNubmber > 0)
         {
             this.registerShuttersCapListeners();
@@ -499,6 +510,16 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                                 }
                             }
                             break;
+						case 'ZbState':
+							if (this.hasCapability('zigbee_pair') && (typeof value === 'object' ) && ('Status' in value))
+							{
+								let zbStateVal = value.Status;
+								if ((zbStateVal == 21) || (zbStateVal == 22))
+									this.setCapabilityValue('zigbee_pair', true);
+								else if (zbStateVal == 20)
+									this.setCapabilityValue('zigbee_pair', false);
+							}
+							break;
                         default:
                             if (valueKey.startsWith('POWER') && (this.relaysCount > 0))
                             {

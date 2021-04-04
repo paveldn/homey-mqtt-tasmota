@@ -1,6 +1,6 @@
 {
     "id": "com.paveld.tasmota",
-    "version": "0.8.8",
+    "version": "0.9.0",
     "compatibility": ">=5.0.0",
     "sdk": 3,
     "brandColor": "#42A3E9",

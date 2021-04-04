@@ -2,58 +2,180 @@
 
 const Homey = require('homey');
 const GeneralTasmotaDriver = require('../driver.js');
-const ZigbeeBridgeDevice = require('./device.js');
+const Sensor = require('../sensor.js');
+const ZigbeeDevice = require('./device.js');
 
 class ZigbeeBridgeDeviceDriver extends GeneralTasmotaDriver {
-    
+	static specialSensors = {
+        'lumi.sensor_wleak.aq1' : {
+            'attributes': {'0500<00': "000000FF0000"} // "010000FF0000" - on / "000000FF0000" - off
+        },
+		'lumi.sensor_magnet.aq2': {
+            'attributes': {'Contact': "1"}
+        },
+    };
+	
     onInit() {
         super.onInit();
     }
 
     pairingStarted() {
         this.log('pairingStarted called');
-        this.devicesFound = {};
-        this.sendMessage('cmnd/sonoffs/Status', '0');
-        this.sendMessage('cmnd/tasmotas/Status', '0');
-        this.sendMessage('sonoffs/cmnd/Status', '0');
-        this.sendMessage('tasmotas/cmnd/Status', '0');
         this.sendMessage('cmnd/sonoffs/ZbStatus1', '');
         this.sendMessage('cmnd/tasmotas/ZbStatus1', '');
         this.sendMessage('sonoffs/cmnd/ZbStatus1', '');
         this.sendMessage('tasmotas/cmnd/ZbStatus1', '');
         return true;
     }
-    
-    collectedDataToDevice( deviceTopic, messages, swapPrefixTopic) {
-        if (!('ZbStatus1' in messages))
-            return null;
-        let devItem = { 
-            settings: {
-                mqtt_topic: deviceTopic, 
-                swap_prefix_topic: swapPrefixTopic, 
-                chip_type: 'unknown'
-            },
-            capabilities: ZigbeeBridgeDevice.baseCapabilities,
-            capabilitiesOptions: {},
-            class: 'sensor',
-            icon: 'icons/zigbee_bridge.svg'
-        };
-        if (('StatusMQT' in messages) && (messages['StatusMQT']['MqttClient'] !== undefined))
-            devItem.data = { id: messages['StatusMQT']['MqttClient']};
-        else
-            return null;
-        if ('Status' in messages)
+	
+	getTopicsToIgnore() {
+		return [];
+	}
+	
+	sendMessageToDevices(topic, message, prefixFirst) {
+		let topicParts = topic.split('/');
+		let topicIndex = prefixFirst ? 1 : 0;
+		let devices = this.getDevices();
+		if (typeof message === 'object') 
+		{
+			
+			if ('ZbReceived' in message)
+			{ 
+				// Example: tele/tasmota_9C9350/SENSOR = {"ZbReceived":{"0xAF4A":{"Device":"0xAF4A","Name":"Test_temperature","Humidity":44.45,"Endpoint":1,"LinkQuality":92}}}
+				for (let dstKey in message.ZbReceived)
+				{
+					for (let index = 0; index < devices.length; index++)
+						if ((devices[index].getMqttTopic() === topicParts[topicIndex]) && (devices[index].getDeviceId() === dstKey))
+						{
+							this.log(`sendMessageToDevices: ZbReceived ${dstKey} <= ${JSON.stringify(message.ZbReceived[dstKey])}`);
+							devices[index].onMessage(topic, message.ZbReceived[dstKey], prefixFirst);
+							break;
+						};
+				}
+			}
+			if (('ZbStatus3' in message) && (Array.isArray(message.ZbStatus3)))
+			{ 
+				// Example: stat/tasmota_9C9350/RESULT = {"ZbStatus3":[{"Device":"0xAF4A","Name":"Test_temperature","IEEEAddr":"0x00124B002269C745","ModelId":"TH01","Manufacturer":"eWeLink","Endpoints":[1],"Config":["T01"],"Temperature":22.42,"Humidity":41.85,"Reachable":true,"BatteryPercentage":100,"LastSeen":33,"LastSeenEpoch":1617186515,"LinkQuality":81}]}
+				for (let deviceIndex in message.ZbStatus3)
+				{
+					let devId = message.ZbStatus3[deviceIndex].Device;
+					if (devId)
+					{
+						for (let index = 0; index < devices.length; index++)
+							if ((devices[index].getMqttTopic() === topicParts[topicIndex]) && (devices[index].getDeviceId() === devId))
+							{
+								this.log(`sendMessageToDevices: ZbStatus3 ${devId} <= ${JSON.stringify(message.ZbStatus3[deviceIndex])}`);
+								devices[index].onMessage(topic, message.ZbStatus3[deviceIndex], prefixFirst);
+								break;
+							};
+					}
+				}
+			}
+		}
+	}
+	
+	collectPairingData(topic, message) {
+        let topicParts = topic.split('/');
+        if ((topicParts[0] === 'stat') || (topicParts[1] === 'stat'))
         {
-            if (messages['Status']['DeviceName'] !== undefined)
-                devItem.name = messages['Status']['DeviceName'];
-            else if (messages['Status']['FriendlyName'] !== undefined)
-                devItem.name = messages['Status']['FriendlyName'][0];
-            else
-                devItem.name = deviceTopic;
+            let swapPrefixTopic = topicParts[1] === 'stat';
+            let deviceTopic = swapPrefixTopic ? topicParts[0] : topicParts[1];
+			if (typeof message === 'object')
+			{
+				if ('ZbStatus1' in message)
+				{
+					for (let zbDeviceIndex in message.ZbStatus1)
+					{
+						if ('Device'in message.ZbStatus1[zbDeviceIndex])
+						{
+							let topic = "";
+							if (swapPrefixTopic)
+								topic = deviceTopic + '/cmnd/ZbStatus3';
+							else
+								topic = 'cmnd/' + deviceTopic + '/ZbStatus3';
+							this.log(`collectPairingData: requesting info from sensor ${deviceTopic}/${JSON.stringify(message.ZbStatus1[zbDeviceIndex])}`);
+							this.sendMessage(topic, message.ZbStatus1[zbDeviceIndex].Device);
+						}
+					}
+				}
+				if ('ZbStatus3' in message)
+					super.collectPairingData(topic, message);
+			}
         }
-        if (('StatusFWR' in messages) && (messages['StatusFWR']['Hardware'] !== undefined))
-            devItem.settings.chip_type = messages['StatusFWR']['Hardware'];
-        return devItem;
+    }
+    
+    collectedDataToDevices( deviceTopic, messages, swapPrefixTopic) {
+        if (!('ZbStatus3' in messages))
+            return null;
+		let result = [];
+		for (let zbStatusIndex in messages.ZbStatus3)
+		{
+			let message = messages.ZbStatus3[zbStatusIndex];
+			let deviceId = message.Device;
+			if (!deviceId)
+				continue;
+			let model = message.ModelId;
+			if (!model)
+				model = "unknown";
+			if (model in ZigbeeBridgeDeviceDriver.specialSensors)
+				message = {...ZigbeeBridgeDeviceDriver.specialSensors[model].attributes, ...message};
+			if ('Manufacturer' in message)
+				model = `${model} (${message.Manufacturer})`;
+			let dname = ('Name' in message) ? message.Name : `Sensor ${deviceId}`;
+			let devItem = {
+				data: { id: deviceTopic + '.' + deviceId },
+				name: dname,
+				settings: {
+					mqtt_topic: deviceTopic, 
+					swap_prefix_topic: swapPrefixTopic, 
+					zigbee_device_id: deviceId,
+					chip_type: model
+				},
+				capabilities: [],
+				capabilitiesOptions: {},
+				class: 'sensor',
+				icon: 'icons/zigbee_sensor.svg'
+			};
+			this.log(`Message: ${JSON.stringify(message)}`);
+			let msgObj = {'ZbReceived': {}};
+			let capCounter = 0;
+			msgObj.ZbReceived[deviceId] = message;
+			message = msgObj;   // Mimic to zbreceived message
+			let supportedAttributes = {};
+			let dev_icon = undefined;
+			Sensor.forEachSensorValue(message, (path, value) => {
+				try {
+					let field = path[path.length - 1];
+					let capObj = Sensor.getPropertyObjectForSensorField(path, 'zigbee', false, deviceId);
+					if (capObj !== null)
+					{
+						supportedAttributes[field] = {
+							'value': value,
+							'capability': capObj,
+							'path': path
+						};
+						if (!dev_icon && capObj.icon)
+							dev_icon = capObj.icon;
+						if (!ZigbeeDevice.additionalFields.includes(field))
+							capCounter++; 
+					}
+				}
+				catch (error) {
+					if (this.debug)
+						throw error;
+				};
+			}, this.debug);
+			if (dev_icon)
+				devItem.icon = `icons/${dev_icon}.svg`;
+			if (capCounter > 0)
+			{
+				this.log(`Attributes found: ${deviceId} => ${JSON.stringify(supportedAttributes)}`);
+				for (let attr in supportedAttributes)
+					devItem.capabilities.push(supportedAttributes[attr].capability.capability);
+				result.push(devItem);
+			}
+		}
+        return result;
     }
 
     pairingFinished( messagesCollected ) {
@@ -61,9 +183,8 @@ class ZigbeeBridgeDeviceDriver extends GeneralTasmotaDriver {
         this.log(`pairingFinished: messages collected ${JSON.stringify(messagesCollected)}`);
         let devices = [];
         Object.keys(messagesCollected).sort().forEach( key => {
-            let devItem = this.collectedDataToDevice( key, messagesCollected[key].messages, messagesCollected[key].swapPrefixTopic);
-            if (devItem !== null)
-                devices.push(devItem);
+            let devItems = this.collectedDataToDevices( key, messagesCollected[key].messages, messagesCollected[key].swapPrefixTopic);
+			devices = devices.concat(devItems);
         });
         this.log(`pairingFinished: devices found ${JSON.stringify(devices)}`);
         return devices;

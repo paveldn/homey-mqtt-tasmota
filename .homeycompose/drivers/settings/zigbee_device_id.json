@@ -1,0 +1,8 @@
+{
+    "id": "zigbee_device_id",
+    "type": "label",
+    "label": {
+        "en": "Zigbee device ID"
+    },
+    "value": "0xA17E"
+}
