@@ -1,0 +1,23 @@
+{
+    "id": "zigbee_pair_changed",
+    "title": {
+        "en": "Zigbee permit join changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=zigbee_pair"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "value",
+            "type": "boolean",
+            "title": {
+                "en": "Zigbee permit join"
+            },
+            "example": "true"
+        }
+    ]
+}

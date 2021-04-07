@@ -12,8 +12,8 @@
                         "$extends": "mqtt_topic"
                     },
                     {
-                        "id": "update_interval",
-                        "$extends": "update_interval"
+                        "id": "zigbee_timeout",
+                        "$extends": "zigbee_timeout"
                     },
                     {
                         "id": "swap_prefix_topic",

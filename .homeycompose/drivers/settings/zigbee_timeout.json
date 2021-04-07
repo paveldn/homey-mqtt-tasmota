@@ -1,0 +1,76 @@
+{
+	"id": "zigbee_timeout",
+	"type": "dropdown",
+	"label": {
+		"en": "Sensor timeout"
+	},
+	"value": "no_timeout",
+	"values": [
+		{
+			"id": "no_timeout",
+			"label": {
+				"en": "No timout"
+			}
+		},
+		{
+			"id": "timeout_5",
+			"label": {
+				"en": "5 minutes"
+			}
+		},
+		{
+			"id": "timeout_15",
+			"label": {
+				"en": "15 minutes"
+			}
+		},
+		{
+			"id": "timeout_30",
+			"label": {
+				"en": "30 minutes"
+			}
+		},
+		{
+			"id": "timeout_60",
+			"label": {
+				"en": "1 hour"
+			}
+		},
+		{
+			"id": "timeout_90",
+			"label": {
+				"en": "1.5 hours"
+			}
+		},
+		{
+			"id": "timeout_120",
+			"label": {
+				"en": "2 hours"
+			}
+		},
+		{
+			"id": "timeout_180",
+			"label": {
+				"en": "3 hours"
+			}
+		},
+		{
+			"id": "timeout_360",
+			"label": {
+				"en": "6 hours"
+			}
+		},
+		{
+			"id": "timeout_720",
+			"label": {
+				"en": "12 hours"
+			}
+		},
+		{
+			"id": "timeout_1440",
+			"label": {
+				"en": "24 hours"
+			}
+		}
+	]
+}

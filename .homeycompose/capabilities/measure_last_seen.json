@@ -1,0 +1,13 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Last seen"
+    },
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "units": {
+        "en": "sec"
+    },
+    "icon": "assets/icons/capabilities/clock.svg"
+}

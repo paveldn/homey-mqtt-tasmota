@@ -10,7 +10,109 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
     
     onInit() {
         super.onInit();
+		this.registerRunListeners();
     }
+	
+	registerRunListeners() {
+		this.homey.flow.getConditionCard('dim_level_greater').registerRunListener((args, state) => {
+				return Promise.resolve(state.value * 100 > args.value);
+			});
+		this.homey.flow.getConditionCard('dim_level_lower').registerRunListener((args, state) => {
+				return Promise.resolve(state.value * 100 < args.value);
+			});   
+        let multiSocketTrigger = this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed');
+        multiSocketTrigger.registerRunListener((args, state) => {
+                return Promise.resolve(((args.socket_id.name === 'any socket') || (args.socket_id.name === state.socket_id.name)) &&
+                                       ((args.state === 'state_any') || (args.state === state.state)));
+            });
+        multiSocketTrigger.getArgument('socket_id').registerAutocompleteListener((query, args) => {
+                return Promise.resolve([{name: 'any socket'}].concat(args.device.socketsList));
+            });
+        this.homey.flow.getDeviceTriggerCard('singlesocket_relay_state_changed').registerRunListener((args, state) => {
+                return Promise.resolve((args.state === 'state_any') || (args.state === state.state));
+            });
+        let multipleSocketCondition = this.homey.flow.getConditionCard('multiplesockets_switch_turned_on');
+        multipleSocketCondition.registerRunListener((args, state) => {
+                return Promise.resolve(args.device.getCapabilityValue('switch.'+args.socket_id.name.slice(-1)) === true);
+            });
+        multipleSocketCondition.getArgument('socket_id').registerAutocompleteListener((query, args) => {
+                return Promise.resolve(args.device.socketsList);
+            });
+        this.homey.flow.getConditionCard('multiplesockets_all_switches_turned_on').registerRunListener((args, state) => {
+                for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
+                {
+                    if (!args.device.getCapabilityValue('switch.'+socketIndex.toString()))
+                        return Promise.resolve(false);
+                }
+                return Promise.resolve(true);
+            });
+        this.homey.flow.getConditionCard('multiplesockets_some_switches_turned_on').registerRunListener((args, state) => {
+                for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
+                {
+                    if (args.device.getCapabilityValue('switch.'+socketIndex.toString()))
+                        return Promise.resolve(true);
+                }
+                return Promise.resolve(false);
+            });
+		let multipleSocketAction = this.homey.flow.getActionCard('multiplesockets_switch_action');         
+        multipleSocketAction.registerRunListener((args, state) => {
+                let valueToSend;
+                switch(args.state) {
+                    case 'state_toggle':
+                        valueToSend = 'TOGGLE';
+                        break;
+                    case 'state_on':
+                        valueToSend = 'ON';
+                        break;
+                    case 'state_off':
+                        valueToSend = 'OFF';
+                        break;
+                    default:
+                        return Promise.resolve(false);                            
+                }
+                if (args.socket_id.name === 'all sockets')
+                {   for (let socketIndex=1;socketIndex<=this.relaysCount;socketIndex++)
+                        args.device.sendTasmotaPowerCommand(socketIndex.toString(),valueToSend); 
+                    return Promise.resolve(true);
+                }
+                args.device.sendTasmotaPowerCommand(args.socket_id.name.slice(-1),valueToSend); 
+                return Promise.resolve(true);
+            });
+        multipleSocketAction.getArgument('socket_id').registerAutocompleteListener((query, args) => {
+                return Promise.resolve([{name: 'all sockets'}].concat(args.device.socketsList));
+            });
+        this.homey.flow.getConditionCard('fan_speed_greater').registerRunListener((args, state) => {
+                return Promise.resolve(parseInt(state.value) > args.value);
+            });
+        this.homey.flow.getConditionCard('fan_speed_lower').registerRunListener((args, state) => {
+                return Promise.resolve(parseInt(state.value) < args.value);
+            });                            
+        this.homey.flow.getActionCard('fan_speed_action').registerRunListener((args, state) => {
+                args.device.sendMessage('FanSpeed', args.value.toString());
+                return Promise.resolve(true);
+            });
+        this.homey.flow.getConditionCard('singlesocket_switch_turned_on').registerRunListener((args, state) => {
+                return Promise.resolve(args.device.getCapabilityValue('switch.1') === true);
+            });         
+        this.homey.flow.getActionCard('singlesocket_switch_action').registerRunListener((args, state) => {
+                let valueToSend;
+                switch(args.state) {
+                    case 'state_toggle':
+                        valueToSend = 'TOGGLE';
+                        break;
+                    case 'state_on':
+                        valueToSend = 'ON';
+                        break;
+                    case 'state_off':
+                        valueToSend = 'OFF';
+                        break;
+                    default:
+                        return Promise.resolve(false);                            
+                }
+                args.device.sendTasmotaPowerCommand('1',valueToSend); 
+                return Promise.resolve(true);
+            });
+	}
 
     onMapDeviceClass(device) {
         this.log(`Mapping device "${device.getName()}"`);

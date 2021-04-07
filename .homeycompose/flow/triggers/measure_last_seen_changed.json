@@ -1,13 +1,13 @@
 {
-    "id": "fan_speed_changed",
+    "id": "measure_last_seen_changed",
     "title": {
-        "en": "Fan speed changed"
+        "en": "Last seen changed"
     },
     "args": [
         {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt&capabilities=fan_speed"
+            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=measure_last_seen"
         }
     ],
     "tokens": [
@@ -15,9 +15,9 @@
             "name": "value",
             "type": "number",
             "title": {
-                "en": "Fan speed"
+                "en": "Seen seconds ago"
             },
-            "example": 2
+            "example": 46
         }
     ]
 }

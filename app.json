@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.paveld.tasmota",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "brandColor": "#42A3E9",
@@ -100,7 +100,7 @@
         ],
         "tokens": [
           {
-            "name": "fan_speed",
+            "name": "value",
             "type": "number",
             "title": {
               "en": "Fan speed"
@@ -128,6 +128,29 @@
             "title": {
               "en": "Apparent power"
             }
+          }
+        ]
+      },
+      {
+        "id": "measure_last_seen_changed",
+        "title": {
+          "en": "Last seen changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=measure_last_seen"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "value",
+            "type": "number",
+            "title": {
+              "en": "Seen seconds ago"
+            },
+            "example": 46
           }
         ]
       },
@@ -184,12 +207,12 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt|zigbee_bridge&capabilities=measure_signal_strength"
+            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=measure_signal_strength"
           }
         ],
         "tokens": [
           {
-            "name": "measure_signal_strength",
+            "name": "value",
             "type": "number",
             "title": {
               "en": "Signal strength"
@@ -346,7 +369,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt|zigbee_bridge&capabilities=additional_sensors"
+            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=additional_sensors"
           }
         ],
         "tokens": [
@@ -427,6 +450,29 @@
             "title": {
               "en": "Socket state"
             }
+          }
+        ]
+      },
+      {
+        "id": "zigbee_pair_changed",
+        "title": {
+          "en": "Zigbee permit join changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=zigbee_pair"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "value",
+            "type": "boolean",
+            "title": {
+              "en": "Zigbee permit join"
+            },
+            "example": "true"
           }
         ]
       }
@@ -882,17 +928,80 @@
                   "pattern": "^[^#+\\/]+$"
                 },
                 {
-                  "id": "update_interval",
-                  "type": "number",
+                  "id": "zigbee_timeout",
+                  "type": "dropdown",
                   "label": {
-                    "en": "Update interval"
+                    "en": "Sensor timeout"
                   },
-                  "value": 5,
-                  "min": 3,
-                  "max": 20,
-                  "units": {
-                    "en": "min"
-                  }
+                  "value": "no_timeout",
+                  "values": [
+                    {
+                      "id": "no_timeout",
+                      "label": {
+                        "en": "No timout"
+                      }
+                    },
+                    {
+                      "id": "timeout_5",
+                      "label": {
+                        "en": "5 minutes"
+                      }
+                    },
+                    {
+                      "id": "timeout_15",
+                      "label": {
+                        "en": "15 minutes"
+                      }
+                    },
+                    {
+                      "id": "timeout_30",
+                      "label": {
+                        "en": "30 minutes"
+                      }
+                    },
+                    {
+                      "id": "timeout_60",
+                      "label": {
+                        "en": "1 hour"
+                      }
+                    },
+                    {
+                      "id": "timeout_90",
+                      "label": {
+                        "en": "1.5 hours"
+                      }
+                    },
+                    {
+                      "id": "timeout_120",
+                      "label": {
+                        "en": "2 hours"
+                      }
+                    },
+                    {
+                      "id": "timeout_180",
+                      "label": {
+                        "en": "3 hours"
+                      }
+                    },
+                    {
+                      "id": "timeout_360",
+                      "label": {
+                        "en": "6 hours"
+                      }
+                    },
+                    {
+                      "id": "timeout_720",
+                      "label": {
+                        "en": "12 hours"
+                      }
+                    },
+                    {
+                      "id": "timeout_1440",
+                      "label": {
+                        "en": "24 hours"
+                      }
+                    }
+                  ]
                 },
                 {
                   "id": "swap_prefix_topic",
@@ -1013,6 +1122,19 @@
       "getable": true,
       "setable": false,
       "icon": "assets/icons/capabilities/frequency.svg"
+    },
+    "measure_last_seen": {
+      "type": "number",
+      "title": {
+        "en": "Last seen"
+      },
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "sec"
+      },
+      "icon": "assets/icons/capabilities/clock.svg"
     },
     "measure_particulate_matter": {
       "type": "number",

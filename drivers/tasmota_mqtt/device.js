@@ -65,20 +65,14 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             this.hasFan = true;
             this.registerCapabilityListener('fan_speed', ( value, opts ) => {
                 // this.log(`fan_speed cap: ${JSON.stringify(value)}`);
-                this.fanTrigger.trigger(this, {fan_speed: parseInt(value)}, value);
                 this.sendMessage('FanSpeed', value);
                 return Promise.resolve();
             });
-            this.registerFanFlows
-            ();
         }
         else
             this.hasFan = false;
-        if (this.hasCapability('multiplesockets'))
-            this.registerMultipleSocketsFlows();
-        else if (this.hasCapability('singlesocket'))
+        if (this.hasCapability('singlesocket'))
         {
-            this.registerSingleSocketFlows();
             if (this.hasCapability('dim'))
             {
                 this.isDimmable = true;
@@ -86,15 +80,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                     //this.log(`dim cap: ${JSON.stringify(value)}`);
                     this.sendMessage('Dimmer', Math.round(value * 100).toString());
                     return Promise.resolve();
-                });
-                this.dimCondition1 = this.homey.flow.getConditionCard('dim_level_greater')
-                this.dimCondition1.registerRunListener((args, state) => {
-                        return Promise.resolve(state.value * 100 > args.value);
-                    });
-                this.dimCondition2 = this.homey.flow.getConditionCard('dim_level_lower');
-                this.dimCondition2.registerRunListener((args, state) => {
-                        return Promise.resolve(state.value * 100 < args.value);
-                    });                            
+                });                           
             }
             if (this.hasCapability('light_temperature'))
             {
@@ -121,17 +107,17 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                 }, 500);
             }
         }
-		if (this.hasCapability('zigbee_pair'))
-		{
-			this.setCapabilityValue('zigbee_pair', false);
-			this.registerCapabilityListener('zigbee_pair', ( value, opts ) => {
+        if (this.hasCapability('zigbee_pair'))
+        {
+            this.setCapabilityValue('zigbee_pair', false);
+            this.registerCapabilityListener('zigbee_pair', ( value, opts ) => {
                 // this.log(`zigbee_pair cap: ${JSON.stringify(value)}`);
                 // Trigger ???
                 this.sendMessage('ZbPermitJoin', value ? '1' : '0');
                 return Promise.resolve();
-			});
+            });
 
-		}
+        }
         if (this.shuttersNubmber > 0)
         {
             this.registerShuttersCapListeners();
@@ -143,87 +129,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
         if ((this.additionalSensors) || (this.shuttersNubmber > 0))
             this.sendMessage('Status', '10');  // StatusSNS
     }
-
-    registerMultipleSocketsFlows() {
-        this.socketTrigger = this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed');
-        this.socketTrigger.registerRunListener((args, state) => {
-                return Promise.resolve(((args.socket_id.name === 'any socket') || (args.socket_id.name === state.socket_id.name)) &&
-                                       ((args.state === 'state_any') || (args.state === state.state)));
-            });
-        this.socketTrigger.getArgument('socket_id').registerAutocompleteListener((query, args) => {
-                return Promise.resolve([{name: 'any socket'}].concat(args.device.socketsList));
-            });
-        this.socketCondition = this.homey.flow.getConditionCard('multiplesockets_switch_turned_on');
-        this.socketCondition.registerRunListener((args, state) => {
-                return Promise.resolve(args.device.getCapabilityValue('switch.'+args.socket_id.name.slice(-1)) === true);
-            });
-        this.socketCondition.getArgument('socket_id').registerAutocompleteListener((query, args) => {
-                return Promise.resolve(args.device.socketsList);
-            });
-        this.socketConditionAll = this.homey.flow.getConditionCard('multiplesockets_all_switches_turned_on'); 
-        this.socketConditionAll.registerRunListener((args, state) => {
-                for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
-                {
-                    if (!args.device.getCapabilityValue('switch.'+socketIndex.toString()))
-                        return Promise.resolve(false);
-                }
-                return Promise.resolve(true);
-            });
-        this.socketConditionAny = this.homey.flow.getConditionCard('multiplesockets_some_switches_turned_on'); 
-        this.socketConditionAny.registerRunListener((args, state) => {
-                for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
-                {
-                    if (args.device.getCapabilityValue('switch.'+socketIndex.toString()))
-                        return Promise.resolve(true);
-                }
-                return Promise.resolve(false);
-            });
-        this.socketAction = this.homey.flow.getActionCard('multiplesockets_switch_action');         
-        this.socketAction.registerRunListener((args, state) => {
-                let valueToSend;
-                switch(args.state) {
-                    case 'state_toggle':
-                        valueToSend = 'TOGGLE';
-                        break;
-                    case 'state_on':
-                        valueToSend = 'ON';
-                        break;
-                    case 'state_off':
-                        valueToSend = 'OFF';
-                        break;
-                    default:
-                        return Promise.resolve(false);                            
-                }
-                if (args.socket_id.name === 'all sockets')
-                {   for (let socketIndex=1;socketIndex<=this.relaysCount;socketIndex++)
-                        args.device.sendTasmotaPowerCommand(socketIndex.toString(),valueToSend); 
-                    return Promise.resolve(true);
-                }
-                args.device.sendTasmotaPowerCommand(args.socket_id.name.slice(-1),valueToSend); 
-                return Promise.resolve(true);
-            });
-        this.socketAction.getArgument('socket_id').registerAutocompleteListener((query, args) => {
-                return Promise.resolve([{name: 'all sockets'}].concat(args.device.socketsList));
-            });
-    }
-    
-    registerFanFlows() {
-        this.fanTrigger = this.homey.flow.getDeviceTriggerCard('fan_speed_changed');
-        this.fanCondition1 = this.homey.flow.getConditionCard('fan_speed_greater');
-        this.fanCondition1.registerRunListener((args, state) => {
-                return Promise.resolve(parseInt(state.value) > args.value);
-            });
-        this.fanCondition2 = this.homey.flow.getConditionCard('fan_speed_lower');
-        this.fanCondition2.registerRunListener((args, state) => {
-                return Promise.resolve(parseInt(state.value) < args.value);
-            });                            
-        this.fanAction = this.homey.flow.getActionCard('fan_speed_action');         
-        this.fanAction.registerRunListener((args, state) => {
-                args.device.sendMessage('FanSpeed', args.value.toString());
-                return Promise.resolve(true);
-            });
-    }
-    
+        
     registerShuttersCapListeners() {
         this.registerCapabilityListener('windowcoverings_state', ( value, opts ) => {
             // this.log(`windowcoverings_state cap: ${JSON.stringify(value)}`);
@@ -268,36 +174,6 @@ class TasmotaDevice extends GeneralTasmotaDevice {
         }); 
     }
     
-    registerSingleSocketFlows() {
-        this.socketTrigger = this.homey.flow.getDeviceTriggerCard('singlesocket_relay_state_changed');
-        this.socketTrigger.registerRunListener((args, state) => {
-                return Promise.resolve((args.state === 'state_any') || (args.state === state.state));
-            })
-        this.socketCondition = this.homey.flow.getConditionCard('singlesocket_switch_turned_on');
-        this.socketCondition.registerRunListener((args, state) => {
-                return Promise.resolve(args.device.getCapabilityValue('switch.1') === true);
-            });
-        this.socketAction = this.homey.flow.getActionCard('singlesocket_switch_action');         
-        this.socketAction.registerRunListener((args, state) => {
-                let valueToSend;
-                switch(args.state) {
-                    case 'state_toggle':
-                        valueToSend = 'TOGGLE';
-                        break;
-                    case 'state_on':
-                        valueToSend = 'ON';
-                        break;
-                    case 'state_off':
-                        valueToSend = 'OFF';
-                        break;
-                    default:
-                        return Promise.resolve(false);                            
-                }
-                args.device.sendTasmotaPowerCommand('1',valueToSend); 
-                return Promise.resolve(true);
-            });
-    }
-
     sendTasmotaPowerCommand(socketId, status) {
         let currentVal = this.getCapabilityValue('switch.' + socketId);
         if ((status === 'TOGGLE') ||
@@ -369,7 +245,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             let newSt = {};
             newSt['socket_id'] = {name: 'socket ' + socketIndex};
             newSt['state'] =  newState ? 'state_on' : 'state_off';
-            this.socketTrigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
+			this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed').trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
             if (this.additionalSensors)
                 setTimeout(() => {
                     this.sendMessage('Status', '10');  // StatusSNS
@@ -415,8 +291,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                             {
                                 try
                                 {
-                                    if (this.updateCapabilityValue('fan_speed', value.toString()))
-                                        this.fanTrigger.trigger(this, {fan_speed: value}, {value: value});
+                                    this.updateCapabilityValue('fan_speed', value.toString());
                                 }
                                 catch (error)
                                 {
@@ -510,16 +385,16 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                                 }
                             }
                             break;
-						case 'ZbState':
-							if (this.hasCapability('zigbee_pair') && (typeof value === 'object' ) && ('Status' in value))
-							{
-								let zbStateVal = value.Status;
-								if ((zbStateVal == 21) || (zbStateVal == 22))
-									this.setCapabilityValue('zigbee_pair', true);
-								else if (zbStateVal == 20)
-									this.setCapabilityValue('zigbee_pair', false);
-							}
-							break;
+                        case 'ZbState':
+                            if (this.hasCapability('zigbee_pair') && (typeof value === 'object' ) && ('Status' in value))
+                            {
+                                let zbStateVal = value.Status;
+                                if ((zbStateVal == 21) || (zbStateVal == 22))
+                                    this.setCapabilityValue('zigbee_pair', true);
+                                else if (zbStateVal == 20)
+                                    this.setCapabilityValue('zigbee_pair', false);
+                            }
+                            break;
                         default:
                             if (valueKey.startsWith('POWER') && (this.relaysCount > 0))
                             {

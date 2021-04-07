@@ -5,25 +5,19 @@ const GeneralTasmotaDevice = require('../device.js');
 const Sensor = require('../sensor.js');
 
 class ZigbeeDevice extends GeneralTasmotaDevice {
-    static specialSensors = {
-        'lumi.sensor_wleak.aq1' : {
-            'attributes': {'0500<00': "000000FF0000"} // "010000FF0000" - on / "000000FF0000" - off
-        }           
-    };
-    static additionalFields = ['BatteryPercentage', 'LinkQuality'];
+    static additionalFields = ['BatteryPercentage', 'LinkQuality', 'LastSeen'];
     #shootDeviceStatusRequest = null;
     #sensorsCollected = [];
     
     async onInit() {
+        this.device_id = this.getSettings().zigbee_device_id;
         super.onInit();
-		this.device_id = this.getSettings().zigbee_device_id;
-		this.updateDevice();
     }
-	
-	getDeviceId() {
-		return this.device_id;
-	}
-	
+    
+    getDeviceId() {
+        return this.device_id;
+    }
+    
     updateDevice() {
         this.sendMessage('ZbStatus3', this.getDeviceId());
     }
@@ -32,19 +26,6 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
         // this.log(`checkSensorCapability: ${sensorName}.${valueKind} => ${newValue}`); 
         let oldValue = this.getCapabilityValue(capName);
         this.setCapabilityValue(capName, newValue);
-        if (oldValue != newValue)
-        {
-            if (typeof oldValue === "boolean")
-                oldValue = oldValue ? 1 : 0;
-            if (typeof newValue === "boolean")
-                newValue = newValue ? 1 : 0;
-            this.sensorTrigger.trigger(this, {
-                    sensor_name: sensorName,
-                    sensor_value_kind: valueKind,
-                    sensor_value_new: newValue,
-                    sensor_value_old: oldValue
-                }, newValue);
-        }
     }
 
     processMqttMessage(topic, message) {
@@ -58,9 +39,12 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
             }
             if (typeof message === 'object')
             {
-                Sensor.forEachSensorValue(message, (path, value) => {
-                    let capObj = Sensor.getPropertyObjectForSensorField(path, 'zigbee', false);
-                    this.log(`Sensor status: ${JSON.stringify(path)} => ${capObj ? JSON.stringify(capObj) : 'none'}`);
+				let tmp_message = {};				
+				tmp_message[this.getDeviceId()] = message;
+				let m_message = {};
+				m_message[this.getMqttTopic()] = tmp_message;
+                Sensor.forEachSensorValue(m_message, (path, value) => {
+                    let capObj = Sensor.getPropertyObjectForSensorField(path, 'zigbee', true);
                     let sensorField = path[path.length - 1];
                     let sensor = "";
                     if (path.length > 1)
@@ -71,6 +55,7 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
                         {
                             try {
                                 let sensorFieldValue = capObj.value_converter != null ? capObj.value_converter(value) : value;
+								this.log(`Updating sensor field: ${capObj.capability} <= ${sensorFieldValue}`);
                                 this.checkSensorCapability(capObj.capability, sensorFieldValue, sensor, sensorField);
                             }
                             catch(error) {
@@ -81,7 +66,7 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
                             }
                         }
                     }
-                });
+                }, this.debug);
             }
         }
         catch(error)

@@ -7,12 +7,12 @@
         {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt|zigbee_bridge&capabilities=measure_signal_strength"
+            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=measure_signal_strength"
         }
     ],
     "tokens": [
         {
-            "name": "measure_signal_strength",
+            "name": "value",
             "type": "number",
             "title": {
                 "en": "Signal strength"

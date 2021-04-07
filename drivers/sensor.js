@@ -14,6 +14,8 @@ const BinaryToBool = (value) => {
 	return value == "1";
 }
 
+
+
 var WiredSensorCapabilities = {
     'CapabilitiesTemplates' : {
         'Temperature': [
@@ -162,6 +164,9 @@ var ZigbeeSensorCapabilities = {
         ],
 		'Contact': [
             { sensor_filter: '*',               caption: null,      capability: 'alarm_contact',                value_converter: BinaryToBool,      		units: null,    icon: 'door_sensor' },		
+		],
+		'LastSeen': [
+            { sensor_filter: '*',               caption: null,      capability: 'measure_last_seen',            value_converter: null,      				units: null,    icon: 'clock' },
 		]
     },
     'Cache' : {}
