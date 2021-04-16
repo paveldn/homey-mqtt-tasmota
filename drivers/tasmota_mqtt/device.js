@@ -65,6 +65,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             this.hasFan = true;
             this.registerCapabilityListener('fan_speed', ( value, opts ) => {
                 // this.log(`fan_speed cap: ${JSON.stringify(value)}`);
+                this.homey.flow.getDeviceTriggerCard('fan_speed_changed').trigger(this, {fan_speed: parseInt(value)}, value);
                 this.sendMessage('FanSpeed', value);
                 return Promise.resolve();
             });
@@ -112,7 +113,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             this.setCapabilityValue('zigbee_pair', false);
             this.registerCapabilityListener('zigbee_pair', ( value, opts ) => {
                 // this.log(`zigbee_pair cap: ${JSON.stringify(value)}`);
-                // Trigger ???
+                this.homey.flow.getDeviceTriggerCard('zigbee_pair_changed').trigger(this, {value: value}, null);
                 this.sendMessage('ZbPermitJoin', value ? '1' : '0');
                 return Promise.resolve();
             });
@@ -245,7 +246,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             let newSt = {};
             newSt['socket_id'] = {name: 'socket ' + socketIndex};
             newSt['state'] =  newState ? 'state_on' : 'state_off';
-			this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed').trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
+            this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed').trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
             if (this.additionalSensors)
                 setTimeout(() => {
                     this.sendMessage('Status', '10');  // StatusSNS
@@ -257,6 +258,21 @@ class TasmotaDevice extends GeneralTasmotaDevice {
         let topicParts = topic.split('/');
         try
         {
+            if (this.stage === 'unavailable')
+            {
+                this.setDeviceStatus('available');
+                this.setAvailable();
+            }
+            if (this.hasCapability('measure_signal_strength'))
+            {
+                let signal = this.getValueByPath(message, ['StatusSTS', 'Wifi', 'RSSI']);
+                if (signal && (typeof signal !== 'object'))
+                {
+                    signal = parseInt(signal)
+                    if (!isNaN(signal))
+                        this.setCapabilityValue('measure_signal_strength', signal);
+                }
+            }
             let messageType = undefined;
             let root_topic = this.swap_prefix_topic ? topicParts[1] : topicParts[0];
             if (root_topic === 'tele')
@@ -291,7 +307,8 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                             {
                                 try
                                 {
-                                    this.updateCapabilityValue('fan_speed', value.toString());
+                                    if (this.updateCapabilityValue('fan_speed', value.toString()))
+                                        this.homey.flow.getDeviceTriggerCard('fan_speed_changed').trigger(this, {fan_speed: parseInt(value)}, value);
                                 }
                                 catch (error)
                                 {
@@ -388,11 +405,24 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                         case 'ZbState':
                             if (this.hasCapability('zigbee_pair') && (typeof value === 'object' ) && ('Status' in value))
                             {
-                                let zbStateVal = value.Status;
-                                if ((zbStateVal == 21) || (zbStateVal == 22))
-                                    this.setCapabilityValue('zigbee_pair', true);
-                                else if (zbStateVal == 20)
-                                    this.setCapabilityValue('zigbee_pair', false);
+                                let zbStateVal = undefined;
+                                switch (value.Status)
+                                {
+                                    case 21:
+                                    case 22:
+                                        zbStateVal = true;
+                                        break;
+                                    case 20:
+                                        zbStateVal = false;
+                                        break;
+                                }
+                                if (zbStateVal !== undefined)
+                                {
+                                    if (this.updateCapabilityValue('zigbee_pair', zbStateVal))
+                                    {
+                                         this.homey.flow.getDeviceTriggerCard('zigbee_pair_changed').trigger(this, {value: zbStateVal}, null);
+                                    }
+                                }
                             }
                             break;
                         default:
@@ -505,7 +535,9 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                     sensor_value_new: newValue,
                     sensor_value_old: oldValue
                 }, newValue);
+            return true;
         }
+        return false;
     }
 }
 

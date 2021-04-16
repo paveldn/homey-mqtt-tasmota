@@ -1,0 +1,31 @@
+{
+	"id": "zigbee_pair_action",
+	"title": {
+		"en": "Set Zigbee permit join"
+	},
+	"args": [
+		{
+			"name": "device",
+			"type": "device",
+			"filter": "driver_id=tasmota_mqtt&capabilities=zigbee_pair"
+		},
+		{
+			"name": "permission",
+			"type": "dropdown",
+			"values": [
+				{
+					"id": "true",
+					"label": {
+						"en": "Allowed"
+					}
+				},
+				{
+					"id": "false",
+					"label": {
+						"en": "Disallowed"
+					}
+				}
+			]
+		}
+	]
+}

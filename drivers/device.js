@@ -15,7 +15,7 @@ class GeneralTasmotaDevice extends Homey.Device {
         this.log(`Capabilities: ${JSON.stringify(this.getCapabilities())}`);
         if (!this.hasCapability('measure_signal_strength'))
             this.addCapability('measure_signal_strength');
-		this.swap_prefix_topic = settings.swap_prefix_topic;
+        this.swap_prefix_topic = settings.swap_prefix_topic;
         this.stage = 'init';
         this.answerTimeout = undefined;
         this.nextRequest = Date.now();
@@ -44,10 +44,30 @@ class GeneralTasmotaDevice extends Homey.Device {
         if ((this.answerTimeout == undefined) || (updateTm < this.answerTimeout)) 
             this.answerTimeout = updateTm;
     }
+    
+    // Debug only function
+    getFunctionCallers(max_depth) {
+        if (max_depth === undefined)
+            max_depth = 1;
+        let e = new Error();
+        let frames = e.stack.split("\n");
+        let frameIndex = 2;
+        let result = [];
+        while ((max_depth > 0) && (frameIndex < frames.length))
+        {
+            let lineNumber = frames[frameIndex].split(":")[1];
+            let functionName = frames[frameIndex].split(" ")[5];
+            result.push({ line: lineNumber, functionName: functionName});
+            max_depth--;
+            frameIndex++;
+        }
+        return result;
+    }
 
     setDeviceStatus(newStatus) {
         if (this.stage !== newStatus)
         {
+            this.log(`Device status changed ${this.stage} => ${newStatus}`)
             let oldStatus = this.stage;
             this.stage = newStatus;
             this.driver.onDeviceStatusChange(this, newStatus, oldStatus);
@@ -89,6 +109,7 @@ class GeneralTasmotaDevice extends Homey.Device {
         if (this.hasCapability(cap))
         {
             let oldValue = this.getCapabilityValue(cap);
+            //this.log(`updateCapabilityValue: ${cap}: ${oldValue} => ${value}`);
             this.setCapabilityValue(cap, value);
             return oldValue !== value;
         }
@@ -128,27 +149,12 @@ class GeneralTasmotaDevice extends Homey.Device {
                 this.nextRequest = now + this.updateInterval;
                 return;
             }
-            if (this.stage === 'unavailable')
-            {
-                this.setDeviceStatus('available');
-                this.setAvailable();
-            }
             if (this.stage === 'available')
             {
                 this.nextRequest = now + this.updateInterval;
                 this.answerTimeout = undefined;
             }
             this.processMqttMessage(topic, message);
-            if (this.hasCapability('measure_signal_strength'))
-            {
-                let signal = this.getValueByPath(message, ['StatusSTS', 'Wifi', 'RSSI']);
-                if (signal && (typeof signal !== 'object'))
-                {
-                    signal = parseInt(signal)
-                    if (!isNaN(signal))
-						this.setCapabilityValue('measure_signal_strength', signal);
-                }
-            }
         }
         catch(error)
         {

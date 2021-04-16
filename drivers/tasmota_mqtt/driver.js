@@ -13,6 +13,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
 		this.registerRunListeners();
     }
 	
+	
 	registerRunListeners() {
 		this.homey.flow.getConditionCard('dim_level_greater').registerRunListener((args, state) => {
 				return Promise.resolve(state.value * 100 > args.value);
@@ -111,6 +112,21 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 }
                 args.device.sendTasmotaPowerCommand('1',valueToSend); 
                 return Promise.resolve(true);
+            });
+		this.homey.flow.getActionCard('zigbee_pair_action').registerRunListener((args, state) => {
+				let valueToSend;
+                switch(args.permission) {
+                    case 'true':
+                        valueToSend = '1';
+                        break;
+                    case 'false':
+                        valueToSend = '0';
+                        break;
+                    default:
+                        return Promise.resolve(false);                            
+                }
+				args.device.sendMessage('ZbPermitJoin', valueToSend);
+				return Promise.resolve(true);
             });
 	}
 

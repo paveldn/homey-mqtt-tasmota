@@ -100,7 +100,7 @@
         ],
         "tokens": [
           {
-            "name": "value",
+            "name": "fan_speed",
             "type": "number",
             "title": {
               "en": "Fan speed"
@@ -462,7 +462,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=zigbee_pair"
+            "filter": "driver_id=tasmota_mqtt&capabilities=zigbee_pair"
           }
         ],
         "tokens": [
@@ -472,7 +472,7 @@
             "title": {
               "en": "Zigbee permit join"
             },
-            "example": "true"
+            "example": true
           }
         ]
       }
@@ -726,6 +726,37 @@
             ]
           }
         ]
+      },
+      {
+        "id": "zigbee_pair_action",
+        "title": {
+          "en": "Set Zigbee permit join"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=tasmota_mqtt&capabilities=zigbee_pair"
+          },
+          {
+            "name": "permission",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "true",
+                "label": {
+                  "en": "Allowed"
+                }
+              },
+              {
+                "id": "false",
+                "label": {
+                  "en": "Disallowed"
+                }
+              }
+            ]
+          }
+        ]
       }
     ]
   },
@@ -928,75 +959,88 @@
                   "pattern": "^[^#+\\/]+$"
                 },
                 {
+                  "id": "update_interval",
+                  "type": "number",
+                  "label": {
+                    "en": "Update interval"
+                  },
+                  "value": 5,
+                  "min": 3,
+                  "max": 20,
+                  "units": {
+                    "en": "min"
+                  }
+                },
+                {
                   "id": "zigbee_timeout",
                   "type": "dropdown",
                   "label": {
                     "en": "Sensor timeout"
                   },
-                  "value": "no_timeout",
+                  "value": "0",
                   "values": [
                     {
-                      "id": "no_timeout",
+                      "id": "0",
                       "label": {
                         "en": "No timout"
                       }
                     },
                     {
-                      "id": "timeout_5",
+                      "id": "5",
                       "label": {
                         "en": "5 minutes"
                       }
                     },
                     {
-                      "id": "timeout_15",
+                      "id": "15",
                       "label": {
                         "en": "15 minutes"
                       }
                     },
                     {
-                      "id": "timeout_30",
+                      "id": "30",
                       "label": {
                         "en": "30 minutes"
                       }
                     },
                     {
-                      "id": "timeout_60",
+                      "id": "60",
                       "label": {
                         "en": "1 hour"
                       }
                     },
                     {
-                      "id": "timeout_90",
+                      "id": "90",
                       "label": {
                         "en": "1.5 hours"
                       }
                     },
                     {
-                      "id": "timeout_120",
+                      "id": "120",
                       "label": {
                         "en": "2 hours"
                       }
                     },
                     {
-                      "id": "timeout_180",
+                      "id": "180",
                       "label": {
                         "en": "3 hours"
                       }
                     },
                     {
-                      "id": "timeout_360",
+                      "id": "360",
                       "label": {
                         "en": "6 hours"
                       }
                     },
                     {
-                      "id": "timeout_720",
+                      "id": "720",
                       "label": {
                         "en": "12 hours"
                       }
                     },
                     {
-                      "id": "timeout_1440",
+                      "id": "1440",
                       "label": {
                         "en": "24 hours"
                       }

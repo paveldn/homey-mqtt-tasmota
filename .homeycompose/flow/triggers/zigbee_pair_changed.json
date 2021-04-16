@@ -7,7 +7,7 @@
         {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=zigbee_pair"
+            "filter": "driver_id=tasmota_mqtt&capabilities=zigbee_pair"
         }
     ],
     "tokens": [
@@ -17,7 +17,7 @@
             "title": {
                 "en": "Zigbee permit join"
             },
-            "example": "true"
+            "example": true
         }
     ]
 }

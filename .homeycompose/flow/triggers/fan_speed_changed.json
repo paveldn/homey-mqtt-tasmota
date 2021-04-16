@@ -12,7 +12,7 @@
     ],
     "tokens": [
         {
-            "name": "value",
+            "name": "fan_speed",
             "type": "number",
             "title": {
                 "en": "Fan speed"

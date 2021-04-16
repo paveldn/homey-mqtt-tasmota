@@ -73,7 +73,7 @@ class GeneralTasmotaDriver extends Homey.Driver {
     
     updateDevices() {
         this.getDevices().forEach( device => {
-            device.updateDevice();
+			device.checkDeviceStatus();
         });
     }
     
