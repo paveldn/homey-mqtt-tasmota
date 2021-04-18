@@ -25,6 +25,10 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
         this.sendMessage('cmnd/tasmotas/ZbStatus1', '');
         this.sendMessage('sonoffs/cmnd/ZbStatus1', '');
         this.sendMessage('tasmotas/cmnd/ZbStatus1', '');
+        this.sendMessage('cmnd/sonoffs/Status', '5');
+        this.sendMessage('cmnd/tasmotas/Status', '5');
+        this.sendMessage('sonoffs/cmnd/Status', '5');
+        this.sendMessage('tasmotas/cmnd/Status', '5');
         return true;
     }
     
@@ -36,9 +40,17 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
         let topicParts = topic.split('/');
         let topicIndex = prefixFirst ? 1 : 0;
         let devices = this.getDevices();
-        if (typeof message === 'object') 
+		if ((topicParts.length > 2) && (topicParts[2] === 'LWT'))
+		{
+			for (let index = 0; index < devices.length; index++)
+				if (devices[index].getMqttTopic() === topicParts[topicIndex])
+				{
+					this.log(`sendMessageToDevices: LWT ${devices[index].getDeviceId()} <= ${JSON.stringify(message)}`);
+					devices[index].onMessage(topic, message, prefixFirst);
+				}
+		}
+        else if (typeof message === 'object') 
         {
-            
             if ('ZbReceived' in message)
             { 
                 // Example: tele/tasmota_9C9350/SENSOR = {"ZbReceived":{"0xAF4A":{"Device":"0xAF4A","Name":"Test_temperature","Humidity":44.45,"Endpoint":1,"LinkQuality":92}}}
@@ -48,7 +60,7 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                         if ((devices[index].getMqttTopic() === topicParts[topicIndex]) && (devices[index].getDeviceId() === dstKey))
                         {
                             this.log(`sendMessageToDevices: ZbReceived ${dstKey} <= ${JSON.stringify(message.ZbReceived[dstKey])}`);
-                            devices[index].onMessage(topic, message.ZbReceived[dstKey], prefixFirst);
+                            devices[index].onMessage(topic + '/ZbReceived', message.ZbReceived[dstKey], prefixFirst);
                             break;
                         };
                 }
@@ -65,7 +77,7 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                             if ((devices[index].getMqttTopic() === topicParts[topicIndex]) && (devices[index].getDeviceId() === devId))
                             {
                                 this.log(`sendMessageToDevices: ZbStatus3 ${devId} <= ${JSON.stringify(message.ZbStatus3[deviceIndex])}`);
-                                devices[index].onMessage(topic, message.ZbStatus3[deviceIndex], prefixFirst);
+                                devices[index].onMessage(topic + '/ZbStatus3', message.ZbStatus3[deviceIndex], prefixFirst);
                                 break;
                             };
                     }
@@ -98,15 +110,24 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                         }
                     }
                 }
-                if ('ZbStatus3' in message)
+                if (('ZbStatus3' in message) /* Zigbee device id */ || ('StatusNET' in message) /* Zigbee bridge id */)
                     super.collectPairingData(topic, message);
             }
         }
     }
     
     collectedDataToDevices( deviceTopic, messages, swapPrefixTopic) {
-        if (!('ZbStatus3' in messages))
-            return null;
+        if (!('ZbStatus3' in messages) || !('StatusNET' in messages))
+            return [];
+		let bridgeId;
+		try {
+			bridgeId = messages.StatusNET[0].Mac;
+		}
+		catch (error) {
+			return [];
+		}
+		if (!bridgeId)
+			return [];
         let result = [];
         for (let zbStatusIndex in messages.ZbStatus3)
         {
@@ -114,6 +135,9 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
             let deviceId = message.Device;
             if (!deviceId)
                 continue;
+			let deviceAddr = message.IEEEAddr;
+			if (!deviceAddr)
+				continue;
             let model = message.ModelId;
             if (!model)
                 model = "unknown";
@@ -123,7 +147,7 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                 model = `${model} (${message.Manufacturer})`;
             let dname = ('Name' in message) ? message.Name : `Sensor ${deviceId}`;
             let devItem = {
-                data: { id: deviceTopic + '.' + deviceId },
+                data: { id: `${bridgeId}.${deviceAddr}` },
                 name: dname,
                 settings: {
                     mqtt_topic: deviceTopic, 
@@ -131,7 +155,7 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                     zigbee_device_id: deviceId,
                     chip_type: model
                 },
-                capabilities: [],
+                capabilities: [measure_last_seen],
                 capabilitiesOptions: {},
                 class: 'sensor',
                 icon: 'icons/zigbee_sensor.svg'

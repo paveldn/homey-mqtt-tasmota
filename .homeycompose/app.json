@@ -16,7 +16,10 @@
     "tags": {
         "en": [
             "tasmota",
-            "sonoff"
+            "sonoff",
+            "sensor",
+            "zigbee",
+            "bridge"
         ]
     },
     "permissions": [

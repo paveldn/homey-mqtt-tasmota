@@ -7,9 +7,9 @@ class GeneralTasmotaDevice extends Homey.Device {
     //  updateDevice
     //  processMqttMessage
     
-    async onInit() {
+    onInit() {
         this.debug = this.homey.app.debug;
-        this.log(`Device initialization. Name: ${this.getName()}, class ${this.getClass()}`);
+        this.log(`Device initialization. Name: ${this.getName()}, class: ${this.getClass()}, id: ${this.getData().id}`);
         let settings = this.getSettings();
         this.log(`Setting: ${JSON.stringify(settings)}`);
         this.log(`Capabilities: ${JSON.stringify(this.getCapabilities())}`);
@@ -65,6 +65,8 @@ class GeneralTasmotaDevice extends Homey.Device {
     }
 
     setDeviceStatus(newStatus) {
+		// uncoment if you need to know who is calling function
+		// this.log(`setDeviceStatus: ${JSON.stringify(this.getFunctionCallers(5))}`);
         if (this.stage !== newStatus)
         {
             this.log(`Device status changed ${this.stage} => ${newStatus}`)
@@ -132,26 +134,29 @@ class GeneralTasmotaDevice extends Homey.Device {
         }       
     }
     
+	onDeviceOffline() {
+		this.setDeviceStatus('unavailable');
+		this.invalidateStatus(this.homey.__('device.unavailable.offline'));
+		this.nextRequest = Date.now(); + this.updateInterval;		
+	}
+	
     onMessage(topic, message, prefixFirst) {
         if (this.swap_prefix_topic === prefixFirst)
             return;
         this.log(`onMessage: ${topic} => ${JSON.stringify(message)}`);
         let topicParts = topic.split('/');
-        if (topicParts.length != 3)
+        if (topicParts.length < 3)
             return;
         try
         {
-            let now = Date.now();
             if ((topicParts[2] === 'LWT') && (message === 'Offline'))
             {
-                this.setDeviceStatus('unavailable');
-                this.invalidateStatus(this.homey.__('device.unavailable.offline'));
-                this.nextRequest = now + this.updateInterval;
+				this.onDeviceOffline();
                 return;
             }
             if (this.stage === 'available')
             {
-                this.nextRequest = now + this.updateInterval;
+                this.nextRequest = Date.now() + this.updateInterval;
                 this.answerTimeout = undefined;
             }
             this.processMqttMessage(topic, message);

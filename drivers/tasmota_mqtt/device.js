@@ -6,7 +6,7 @@ const GeneralTasmotaDevice = require('../device.js');
 
 class TasmotaDevice extends GeneralTasmotaDevice {
 
-    async onInit() {
+    onInit() {
         super.onInit();
         let settings = this.getSettings();
         this.relaysCount = parseInt(settings.relays_number);
@@ -58,6 +58,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                     this.sendTasmotaPowerCommand(itemIndex.toString(), message);
                 return Promise.resolve();
             });
+            this.setCapabilityValue('onoff', this.calculateOnOffCapabilityValue());
         }
         this.isDimmable = false;
         if (this.hasCapability('fan_speed'))
@@ -126,8 +127,9 @@ class TasmotaDevice extends GeneralTasmotaDevice {
     }
     
     updateDevice() {
-        this.sendMessage('Status', '11');   // StatusSTS
-        if ((this.additionalSensors) || (this.shuttersNubmber > 0))
+        // Can be called before onInit, do not use variables initialized in it!
+        this.sendMessage('Status', '11');   // StatusSTS 
+        if (this.hasCapability('additional_sensors') || this.hasCapability('windowcoverings_state'))
             this.sendMessage('Status', '10');  // StatusSNS
     }
         
@@ -216,31 +218,39 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             socketIndex = topic.slice(-1);
             capName = 'switch.' + socketIndex;
         }
-        let intIndex =  parseInt(socketIndex) - 1;
-        if (intIndex > this.relaysCount)
-            return;
-        let oldVal = this.sockets[intIndex];
-        let newState = message === 'ON';
-        this.sockets[intIndex] = newState;
-        if ((this.stage === 'available') && (oldVal === newState))
-            return;
-        this.setCapabilityValue(capName, newState).then( () => 
-            {
-                // this.log(`Setting value ${capName}  => ${newState}`);
-                if (!this.shouldUpdateOnOff)
-                {
-                    this.shouldUpdateOnOff = true;
-                    setTimeout(() => {
-                        this.shouldUpdateOnOff = false;
-                        if (this.hasCapability('onoff'))
-                        {
-                            let newVal = this.calculateOnOffCapabilityValue();
-                            //this.log(`onoff =>${newVal}`);
-                            this.setCapabilityValue('onoff', newVal);
-                        }
-                    }, 500);
-                }
-            });
+		let newState = message === 'ON';
+		try {
+			let intIndex =  parseInt(socketIndex) - 1;
+			if (!this.hasCapability(capName))
+				return;
+			let oldVal = this.sockets[intIndex];
+			this.sockets[intIndex] = newState;
+			if ((this.stage === 'available') && (oldVal === newState))
+				return;
+			this.setCapabilityValue(capName, newState).then( () => 
+				{
+					// this.log(`Setting value ${capName}  => ${newState}`);
+					if (!this.shouldUpdateOnOff)
+					{
+						this.shouldUpdateOnOff = true;
+						setTimeout(() => {
+							this.shouldUpdateOnOff = false;
+							if (this.hasCapability('onoff'))
+							{
+								let newVal = this.calculateOnOffCapabilityValue();
+								//this.log(`onoff =>${newVal}`);
+								this.setCapabilityValue('onoff', newVal);
+							}
+						}, 500);
+					}
+				});
+		}
+		catch (error) {
+            if (this.debug) 
+                throw(error);
+            else
+                this.log(`powerReceived error: ${error}`); 
+		}
         if (this.stage === 'available')
         {
             let newSt = {};
@@ -256,13 +266,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
     
     processMqttMessage(topic, message) {
         let topicParts = topic.split('/');
-        try
-        {
-            if (this.stage === 'unavailable')
-            {
-                this.setDeviceStatus('available');
-                this.setAvailable();
-            }
+        try {
             if (this.hasCapability('measure_signal_strength'))
             {
                 let signal = this.getValueByPath(message, ['StatusSTS', 'Wifi', 'RSSI']);
@@ -297,6 +301,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                 return;
             if ((messageType === 'Result') || (messageType === 'StatusSTS'))
             {
+				let isPowerSet = false;
                 for (let valueKey in message)
                 {
                     let value = message[valueKey];
@@ -428,12 +433,13 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                         default:
                             if (valueKey.startsWith('POWER') && (this.relaysCount > 0))
                             {
+								isPowerSet = true;
                                 this.powerReceived(valueKey, value);
                             }
                             break;
                     }
                 }
-                if ((this.relaysCount > 0) && (this.stage !== 'available'))
+                if ((this.relaysCount > 0) && (this.stage !== 'available') && isPowerSet)
                 {
                     this.setDeviceStatus('available');
                     this.setAvailable();

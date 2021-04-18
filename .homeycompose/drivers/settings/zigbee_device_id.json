@@ -1,8 +1,9 @@
 {
     "id": "zigbee_device_id",
-    "type": "label",
+    "type": "text",
     "label": {
-        "en": "Zigbee device ID"
+        "en": "Zigbee device address"
     },
-    "value": "0xA17E"
+    "value": "",
+   "pattern": "^0x[0-9A-F]{4}$"
 }

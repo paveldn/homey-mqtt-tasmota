@@ -11,7 +11,7 @@ const WaterAlarmConverter = (value) => {
 }
 
 const BinaryToBool = (value) => {
-	return value == "1";
+    return value == "1";
 }
 
 
@@ -157,17 +157,14 @@ var ZigbeeSensorCapabilities = {
             { sensor_filter: '*',               caption: null,      capability: 'alarm_water',                  value_converter: WaterAlarmConverter,       units: null,    icon: 'water_leak' },
         ],
         'Illuminance': [
-            { sensor_filter: '*',               caption: null,      capability: 'measure_luminance',            value_converter: null,       				units: null },
+            { sensor_filter: '*',               caption: null,      capability: 'measure_luminance',            value_converter: null,                      units: null },
         ],
         'Occupancy': [
-            { sensor_filter: '*',               caption: null,      capability: 'alarm_motion',                 value_converter: BinaryToBool,      		units: null,    icon: 'motion_sensor' },
+            { sensor_filter: '*',               caption: null,      capability: 'alarm_motion',                 value_converter: BinaryToBool,              units: null,    icon: 'motion_sensor' },
         ],
-		'Contact': [
-            { sensor_filter: '*',               caption: null,      capability: 'alarm_contact',                value_converter: BinaryToBool,      		units: null,    icon: 'door_sensor' },		
-		],
-		'LastSeen': [
-            { sensor_filter: '*',               caption: null,      capability: 'measure_last_seen',            value_converter: null,      				units: null,    icon: 'clock' },
-		]
+        'Contact': [
+            { sensor_filter: '*',               caption: null,      capability: 'alarm_contact',                value_converter: BinaryToBool,              units: null,    icon: 'door_sensor' },      
+        ]
     },
     'Cache' : {}
 }

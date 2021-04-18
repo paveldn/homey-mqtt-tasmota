@@ -50,8 +50,8 @@ class TasmotaMqttApp extends Homey.App {
                 headers: {
                     'user-agent': 'node.js'
                 }}, 2000).catch((error) => {
-					this.log(`makeHttpsRequest error: ${error}`);
-				});
+                    this.log(`makeHttpsRequest error: ${error}`);
+                });
             if (result.statusCode !== 200) 
                 throw new Error(`Error while checking tasmota releases, staus: ${result.statusCode}`);
             const info = JSON.parse(result.body);
@@ -143,32 +143,14 @@ class TasmotaMqttApp extends Homey.App {
         }
     }
 	
-    onInit() {
-		try {
-			this.applicationVersion = Homey.manifest.version;
-			this.debug = process.env.DEBUG == 1;
-			this.applicationName = Homey.manifest.name.en;
-		}
-		catch (error)
-		{
-			this.applicationVersion = undefined;
-			this.debug = false;
-			this.applicationName = this.constructor.name;
-		}
-		process.on('unhandledRejection', (reason, p) => {
-			if (!reason.message.startsWith('invalid json response body at'))
-				this.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-		});
-		this.topics = ["stat", "tele"];
-		this.drivers = this.homey.drivers.getDrivers();
-		this.MQTTClient = this.homey.api.getApiApp('nl.scanno.mqtt');
-		this.clientAvailable = false;
+	connectMqttClient() {
+        this.MQTTClient = this.homey.api.getApiApp('nl.scanno.mqtt');
         this.MQTTClient
             .on('install', () => this.register())
             .on('uninstall', () => this.unregister())
             .on('realtime', (topic, message) => {
-				this.onMessage(topic, message);
-			});
+                this.onMessage(topic, message);
+            });
         try {
             this.MQTTClient.getInstalled()
                 .then(installed => {
@@ -176,43 +158,84 @@ class TasmotaMqttApp extends Homey.App {
                     this.log(`MQTT client status: ${this.clientAvailable}`); 
                     if (installed) {
                         this.register();
-						this.homey.apps.getVersion(this.MQTTClient).then( (version) => {
-							this.log(`MQTT client installed, version: ${version}`);
-						});
+                        this.homey.apps.getVersion(this.MQTTClient).then( (version) => {
+                            this.log(`MQTT client installed, version: ${version}`);
+                        });
                     }
                 }).catch((error) => {
-					this.log(`MQTT client app error: ${error}`);
-				});
+                    this.log(`MQTT client app error: ${error}`);
+                });
         }
         catch(error) {
             this.log(`MQTT client app error: ${error}`);
         };
+	}
+    
+    onInit() {
+        try {
+            this.applicationVersion = Homey.manifest.version;
+            this.debug = process.env.DEBUG == 1;
+            this.applicationName = Homey.manifest.name.en;
+        }
+        catch (error)
+        {
+            this.applicationVersion = undefined;
+            this.debug = false;
+            this.applicationName = this.constructor.name;
+        }
+        process.on('unhandledRejection', (reason, p) => {
+			this.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+        });
+        this.topics = ["stat", "tele"];
+        this.drivers = this.homey.drivers.getDrivers();
+		this.lastMqttMessage = undefined;
+		this.clientAvailable = false;
+		this.connectMqttClient();
         this.log(`${this.applicationName} is running. Version: ${this.applicationVersion}, debug: ${this.debug}`);
-		this.log(`Drivers available: ${Object.keys(this.drivers).join(', ')}`);
+        this.log(`Drivers available: ${Object.keys(this.drivers).join(', ')}`);
         this.lastTasmotaVersion = this.loadTasmotaVersion();
-        this.tasmotaUpdateTrigger = this.homey.flow.getTriggerCard('new_tasmota_version')	;
+        this.tasmotaUpdateTrigger = this.homey.flow.getTriggerCard('new_tasmota_version')   ;
         setTimeout(() => {
                 this.checkTasmotaReleases();
                 setInterval(() => {
                         this.checkTasmotaReleases();
                     }, 86400000); // Check for new tasmota releases once per day
             }, 300000);
+		this.checkConnection = setInterval(() => {
+            try {
+				if ((this.lastMqttMessage !== undefined) && (Date.now() - this.lastMqttMessage > 10 * 60 * 1000))
+				{
+					this.log(`MQTT connection timeout. Resetting connection`);
+					this.lastMqttMessage = undefined;
+					this.connectMqttClient();
+				}
+            }
+            catch (error) 
+            { 
+                if (this.debug) 
+                    throw(error);
+                else 
+                    this.log(`${this.constructor.name} checkDevices error: ${error}`);
+            }
+        }, 60000);
+
     }
-	
-	onMessage(topic, message) {
-		let topicParts = topic.split('/');
-		if (topicParts.length > 1)
-		{
-			let prefixFirst = this.topics.includes(topicParts[0]);
-			if (prefixFirst || this.topics.includes(topicParts[1]))
-			Object.keys(this.drivers).forEach( (driverId) =>
-			{
-				this.drivers[driverId].onMessage(topic, message, prefixFirst);
-			});
-		}
+    
+    onMessage(topic, message) {
+        let topicParts = topic.split('/');
+        if (topicParts.length > 1)
+        {
+			this.lastMqttMessage = Date.now();
+            let prefixFirst = this.topics.includes(topicParts[0]);
+            if (prefixFirst || this.topics.includes(topicParts[1]))
+            Object.keys(this.drivers).forEach( (driverId) =>
+            {
+                this.drivers[driverId].onMessage(topic, message, prefixFirst);
+            });
+        }
     }
-	
-	subscribeTopic(topicName) {
+    
+    subscribeTopic(topicName) {
         if (!this.clientAvailable)
             return;
         return this.MQTTClient.post('subscribe', { topic: topicName }, error => {
@@ -222,44 +245,50 @@ class TasmotaMqttApp extends Homey.App {
                 this.log(`Sucessfully subscribed to topic: ${topicName}`);
             }
         }).catch ( error => {
-			if (!error.message.startsWith('invalid json response body at'))
-				this.log(`Error while subscribing to ${topicName}. ${error}`);
+			this.log(`Error while subscribing to ${topicName}. ${error}`);
         });
     }
-	
-	sendMessage(topic, payload) {
-		this.log(`sendMessage: ${topic} <= ${payload}`);
+    
+    sendMessage(topic, payload) {
+        this.log(`sendMessage: ${topic} <= ${payload}`);
         if (!this.clientAvailable)
             return;
-		this.MQTTClient.post('send', {
-			qos: 0,
-			retain: false,
-			mqttTopic: topic,
-			mqttMessage: payload
+        this.MQTTClient.post('send', {
+            qos: 0,
+            retain: false,
+            mqttTopic: topic,
+            mqttMessage: payload
+       }, error => {
+		   if (error)
+			this.log(`Error sending ${topic} <= "${payload}"`);
 	   }).catch ( error => {
-		if (!error.message.startsWith('invalid json response body at'))
-			this.log(`Error while sending ${topic} <= "${payload}". ${error}`);
-		});
+            this.log(`Error while sending ${topic} <= "${payload}". ${error}`);
+        });
     }
-	
-	register() {
+    
+    register() {
         this.clientAvailable = true;
+		// Subscribing to system topic to check if connection still alive (update ~10 second for mosquitto)
+		this.subscribeTopic("$SYS/broker/uptime");
+		this.lastMqttMessage = Date.now();
         for (let topic in this.topics)
         {
             this.subscribeTopic(this.topics[topic] + "/#");
             this.subscribeTopic("+/" + this.topics[topic] + "/#");
         }
-		let now = Date.now();
-		Object.keys(this.drivers).forEach( (driverId) =>
-		{
-			this.drivers[driverId].getDevices().forEach( (device) => {
-				device.nextRequest = now;
-			});
-		});
+        let now = Date.now();
+        Object.keys(this.drivers).forEach( (driverId) =>
+        {
+            this.drivers[driverId].getDevices().forEach( (device) => {
+                device.nextRequest = now;
+            });
+            this.drivers[driverId].updateDevices();
+        });
     }
 
     unregister() {
         this.clientAvailable = false;
+		this.lastMqttMessage = undefined;
         this.log(`${this.constructor.name} unregister called`);
     }
     

@@ -12,6 +12,10 @@
                         "$extends": "mqtt_topic"
                     },
                     {
+                        "id": "zigbee_device_id",
+                        "$extends": "zigbee_device_id"
+                    },
+                    {
                         "id": "update_interval",
                         "$extends": "update_interval"
                     },
@@ -22,10 +26,6 @@
                     {
                         "id": "swap_prefix_topic",
                         "$extends": "swap_prefix_topic"
-                    },
-                    {
-                        "id": "zigbee_device_id",
-                        "$extends": "zigbee_device_id"
                     }
                 ]
             },
