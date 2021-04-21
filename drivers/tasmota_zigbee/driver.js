@@ -11,7 +11,10 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
             'attributes': {'0500<00': "000000FF0000"} // "010000FF0000" - on / "000000FF0000" - off
         },
         'lumi.sensor_magnet.aq2': {
-            'attributes': {'Contact': "1"}
+            'attributes': {'Contact': "0"}
+        },
+		'lumi.sensor_magnet': {
+            'attributes': {'Contact': "0"}
         },
     };
     
@@ -25,10 +28,6 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
         this.sendMessage('cmnd/tasmotas/ZbStatus1', '');
         this.sendMessage('sonoffs/cmnd/ZbStatus1', '');
         this.sendMessage('tasmotas/cmnd/ZbStatus1', '');
-        this.sendMessage('cmnd/sonoffs/Status', '5');
-        this.sendMessage('cmnd/tasmotas/Status', '5');
-        this.sendMessage('sonoffs/cmnd/Status', '5');
-        this.sendMessage('tasmotas/cmnd/Status', '5');
         return true;
     }
     
@@ -110,24 +109,15 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                         }
                     }
                 }
-                if (('ZbStatus3' in message) /* Zigbee device id */ || ('StatusNET' in message) /* Zigbee bridge id */)
+                if ('ZbStatus3' in message)
                     super.collectPairingData(topic, message);
             }
         }
     }
     
     collectedDataToDevices( deviceTopic, messages, swapPrefixTopic) {
-        if (!('ZbStatus3' in messages) || !('StatusNET' in messages))
+        if (!('ZbStatus3' in messages))
             return [];
-		let bridgeId;
-		try {
-			bridgeId = messages.StatusNET[0].Mac;
-		}
-		catch (error) {
-			return [];
-		}
-		if (!bridgeId)
-			return [];
         let result = [];
         for (let zbStatusIndex in messages.ZbStatus3)
         {
@@ -147,7 +137,7 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                 model = `${model} (${message.Manufacturer})`;
             let dname = ('Name' in message) ? message.Name : `Sensor ${deviceId}`;
             let devItem = {
-                data: { id: `${bridgeId}.${deviceAddr}` },
+                data: { id: deviceAddr },
                 name: dname,
                 settings: {
                     mqtt_topic: deviceTopic, 
@@ -155,7 +145,7 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                     zigbee_device_id: deviceId,
                     chip_type: model
                 },
-                capabilities: [measure_last_seen],
+                capabilities: [],
                 capabilitiesOptions: {},
                 class: 'sensor',
                 icon: 'icons/zigbee_sensor.svg'
@@ -196,6 +186,8 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                 this.log(`Attributes found: ${deviceId} => ${JSON.stringify(supportedAttributes)}`);
                 for (let attr in supportedAttributes)
                     devItem.capabilities.push(supportedAttributes[attr].capability.capability);
+				// Should be added last to be the last in the list
+				devItem.capabilities.push('measure_last_seen');
                 result.push(devItem);
             }
         }

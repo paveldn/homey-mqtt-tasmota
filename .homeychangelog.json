@@ -75,6 +75,6 @@
     "en": "Added experimental suipport for Sonoff zigbee bridge and some zigbee sensors."
   },
   "0.9.1": {
-    "en": "Improvements and bugfixes."
+    "en": "Improvements and bugfixes. New zigbee devices id value."
   }
 }
