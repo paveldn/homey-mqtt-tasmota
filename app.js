@@ -142,8 +142,8 @@ class TasmotaMqttApp extends Homey.App {
             this.log(`checkTasmotaReleases: ${error}`);
         }
     }
-	
-	connectMqttClient() {
+    
+    connectMqttClient() {
         this.MQTTClient = this.homey.api.getApiApp('nl.scanno.mqtt');
         this.MQTTClient
             .on('install', () => this.register())
@@ -169,7 +169,7 @@ class TasmotaMqttApp extends Homey.App {
         catch(error) {
             this.log(`MQTT client app error: ${error}`);
         };
-	}
+    }
     
     onInit() {
         try {
@@ -184,13 +184,13 @@ class TasmotaMqttApp extends Homey.App {
             this.applicationName = this.constructor.name;
         }
         process.on('unhandledRejection', (reason, p) => {
-			this.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+            this.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         });
         this.topics = ["stat", "tele"];
         this.drivers = this.homey.drivers.getDrivers();
-		this.lastMqttMessage = undefined;
-		this.clientAvailable = false;
-		this.connectMqttClient();
+        this.lastMqttMessage = undefined;
+        this.clientAvailable = false;
+        this.connectMqttClient();
         this.log(`${this.applicationName} is running. Version: ${this.applicationVersion}, debug: ${this.debug}`);
         this.log(`Drivers available: ${Object.keys(this.drivers).join(', ')}`);
         this.lastTasmotaVersion = this.loadTasmotaVersion();
@@ -201,14 +201,14 @@ class TasmotaMqttApp extends Homey.App {
                         this.checkTasmotaReleases();
                     }, 86400000); // Check for new tasmota releases once per day
             }, 300000);
-		this.checkConnection = setInterval(() => {
+        this.checkConnection = setInterval(() => {
             try {
-				if ((this.lastMqttMessage !== undefined) && (Date.now() - this.lastMqttMessage > 10 * 60 * 1000))
-				{
-					this.log(`MQTT connection timeout. Resetting connection`);
-					this.lastMqttMessage = undefined;
-					this.connectMqttClient();
-				}
+                if ((this.lastMqttMessage !== undefined) && (Date.now() - this.lastMqttMessage > 10 * 60 * 1000))
+                {
+                    this.log(`MQTT connection timeout. Resetting connection`);
+                    this.lastMqttMessage = undefined;
+                    this.connectMqttClient();
+                }
             }
             catch (error) 
             { 
@@ -225,7 +225,7 @@ class TasmotaMqttApp extends Homey.App {
         let topicParts = topic.split('/');
         if (topicParts.length > 1)
         {
-			this.lastMqttMessage = Date.now();
+            this.lastMqttMessage = Date.now();
             let prefixFirst = this.topics.includes(topicParts[0]);
             if (prefixFirst || this.topics.includes(topicParts[1]))
             Object.keys(this.drivers).forEach( (driverId) =>
@@ -245,7 +245,7 @@ class TasmotaMqttApp extends Homey.App {
                 this.log(`Sucessfully subscribed to topic: ${topicName}`);
             }
         }).catch ( error => {
-			this.log(`Error while subscribing to ${topicName}. ${error}`);
+            this.log(`Error while subscribing to ${topicName}. ${error}`);
         });
     }
     
@@ -259,18 +259,18 @@ class TasmotaMqttApp extends Homey.App {
             mqttTopic: topic,
             mqttMessage: payload
        }, error => {
-		   if (error)
-			this.log(`Error sending ${topic} <= "${payload}"`);
-	   }).catch ( error => {
+           if (error)
+            this.log(`Error sending ${topic} <= "${payload}"`);
+       }).catch ( error => {
             this.log(`Error while sending ${topic} <= "${payload}". ${error}`);
         });
     }
     
     register() {
         this.clientAvailable = true;
-		// Subscribing to system topic to check if connection still alive (update ~10 second for mosquitto)
-		this.subscribeTopic("$SYS/broker/uptime");
-		this.lastMqttMessage = Date.now();
+        // Subscribing to system topic to check if connection still alive (update ~10 second for mosquitto)
+        this.subscribeTopic("$SYS/broker/uptime");
+        this.lastMqttMessage = Date.now();
         for (let topic in this.topics)
         {
             this.subscribeTopic(this.topics[topic] + "/#");
@@ -288,7 +288,7 @@ class TasmotaMqttApp extends Homey.App {
 
     unregister() {
         this.clientAvailable = false;
-		this.lastMqttMessage = undefined;
+        this.lastMqttMessage = undefined;
         this.log(`${this.constructor.name} unregister called`);
     }
     

@@ -2,7 +2,7 @@
 
 const Homey = require('homey');
 const GeneralTasmotaDriver = require('../driver.js');
-const Sensor = require('../sensor.js');
+const Sensor = require('../../lib/sensor.js');
 const ZigbeeDevice = require('./device.js');
 
 class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
@@ -13,7 +13,7 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
         'lumi.sensor_magnet.aq2': {
             'attributes': {'Contact': "0"}
         },
-		'lumi.sensor_magnet': {
+        'lumi.sensor_magnet': {
             'attributes': {'Contact': "0"}
         },
     };
@@ -39,15 +39,15 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
         let topicParts = topic.split('/');
         let topicIndex = prefixFirst ? 1 : 0;
         let devices = this.getDevices();
-		if ((topicParts.length > 2) && (topicParts[2] === 'LWT'))
-		{
-			for (let index = 0; index < devices.length; index++)
-				if (devices[index].getMqttTopic() === topicParts[topicIndex])
-				{
-					this.log(`sendMessageToDevices: LWT ${devices[index].getDeviceId()} <= ${JSON.stringify(message)}`);
-					devices[index].onMessage(topic, message, prefixFirst);
-				}
-		}
+        if ((topicParts.length > 2) && (topicParts[2] === 'LWT'))
+        {
+            for (let index = 0; index < devices.length; index++)
+                if (devices[index].getMqttTopic() === topicParts[topicIndex])
+                {
+                    this.log(`sendMessageToDevices: LWT ${devices[index].getDeviceId()} <= ${JSON.stringify(message)}`);
+                    devices[index].onMessage(topic, message, prefixFirst);
+                }
+        }
         else if (typeof message === 'object') 
         {
             if ('ZbReceived' in message)
@@ -125,9 +125,9 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
             let deviceId = message.Device;
             if (!deviceId)
                 continue;
-			let deviceAddr = message.IEEEAddr;
-			if (!deviceAddr)
-				continue;
+            let deviceAddr = message.IEEEAddr;
+            if (!deviceAddr)
+                continue;
             let model = message.ModelId;
             if (!model)
                 model = "unknown";
@@ -186,8 +186,8 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
                 this.log(`Attributes found: ${deviceId} => ${JSON.stringify(supportedAttributes)}`);
                 for (let attr in supportedAttributes)
                     devItem.capabilities.push(supportedAttributes[attr].capability.capability);
-				// Should be added last to be the last in the list
-				devItem.capabilities.push('measure_last_seen');
+                // Should be added last to be the last in the list
+                devItem.capabilities.push('measure_last_seen');
                 result.push(devItem);
             }
         }

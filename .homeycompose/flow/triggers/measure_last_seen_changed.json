@@ -7,7 +7,7 @@
         {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=tasmota_mqtt|tasmota_zigbee&capabilities=measure_last_seen"
+            "filter": "capabilities=measure_last_seen"
         }
     ],
     "tokens": [

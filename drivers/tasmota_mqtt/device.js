@@ -1,7 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
-const Sensor = require('../sensor.js');
+const Sensor = require('../../lib/sensor.js');
 const GeneralTasmotaDevice = require('../device.js');
 
 class TasmotaDevice extends GeneralTasmotaDevice {
@@ -38,7 +38,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
         {
             if (!this.hasCapability('additional_sensors'))
                 this.addCapability('additional_sensors');
-            this.sensorTrigger = this.homey.flow.getDeviceTriggerCard('sensor_value_changed')
+            this.sensorTrigger = this.homey.flow.getDeviceTriggerCard('sensor_value_changed');
         }
         this.onOffList = this.getCapabilities().filter( cap => cap.startsWith('switch.') );
         if (this.onOffList.length > 0)
@@ -218,45 +218,48 @@ class TasmotaDevice extends GeneralTasmotaDevice {
             socketIndex = topic.slice(-1);
             capName = 'switch.' + socketIndex;
         }
-		let newState = message === 'ON';
-		try {
-			let intIndex =  parseInt(socketIndex) - 1;
-			if (!this.hasCapability(capName))
-				return;
-			let oldVal = this.sockets[intIndex];
-			this.sockets[intIndex] = newState;
-			if ((this.stage === 'available') && (oldVal === newState))
-				return;
-			this.setCapabilityValue(capName, newState).then( () => 
-				{
-					// this.log(`Setting value ${capName}  => ${newState}`);
-					if (!this.shouldUpdateOnOff)
-					{
-						this.shouldUpdateOnOff = true;
-						setTimeout(() => {
-							this.shouldUpdateOnOff = false;
-							if (this.hasCapability('onoff'))
-							{
-								let newVal = this.calculateOnOffCapabilityValue();
-								//this.log(`onoff =>${newVal}`);
-								this.setCapabilityValue('onoff', newVal);
-							}
-						}, 500);
-					}
-				});
-		}
-		catch (error) {
+        let newState = message === 'ON';
+        try {
+            let intIndex =  parseInt(socketIndex) - 1;
+            if (!this.hasCapability(capName))
+                return;
+            let oldVal = this.sockets[intIndex];
+            this.sockets[intIndex] = newState;
+            if ((this.stage === 'available') && (oldVal === newState))
+                return;
+            this.setCapabilityValue(capName, newState).then( () => 
+                {
+                    // this.log(`Setting value ${capName}  => ${newState}`);
+                    if (!this.shouldUpdateOnOff)
+                    {
+                        this.shouldUpdateOnOff = true;
+                        setTimeout(() => {
+                            this.shouldUpdateOnOff = false;
+                            if (this.hasCapability('onoff'))
+                            {
+                                let newVal = this.calculateOnOffCapabilityValue();
+                                //this.log(`onoff =>${newVal}`);
+                                this.setCapabilityValue('onoff', newVal);
+                            }
+                        }, 500);
+                    }
+                });
+            let trigger = undefined;
+            if (this.hasCapability('multiplesockets'))
+                trigger = this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed');
+            else if (this.hasCapability('singlesocket'))
+                trigger = this.homey.flow.getDeviceTriggerCard('singlesocket_relay_state_changed')
+            if (trigger !== undefined)
+                trigger.trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, {socket_id: {name: 'socket ' + socketIndex}, state:  newState ? 'state_on' : 'state_off'});
+        }
+        catch (error) {
             if (this.debug) 
                 throw(error);
             else
                 this.log(`powerReceived error: ${error}`); 
-		}
+        }
         if (this.stage === 'available')
         {
-            let newSt = {};
-            newSt['socket_id'] = {name: 'socket ' + socketIndex};
-            newSt['state'] =  newState ? 'state_on' : 'state_off';
-            this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed').trigger(this, {socket_index: parseInt(socketIndex), socket_state: newState}, newSt);
             if (this.additionalSensors)
                 setTimeout(() => {
                     this.sendMessage('Status', '10');  // StatusSNS
@@ -274,7 +277,12 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                 {
                     signal = parseInt(signal)
                     if (!isNaN(signal))
+                    {
+                        let oldValue = this.getCapabilityValue('measure_signal_strength');
                         this.setCapabilityValue('measure_signal_strength', signal);
+                        if (oldValue !== signal)
+                            this.homey.flow.getDeviceTriggerCard('measure_signal_strength_changed').trigger(this, {value: signal}, signal);
+                    }
                 }
             }
             let messageType = undefined;
@@ -301,7 +309,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                 return;
             if ((messageType === 'Result') || (messageType === 'StatusSTS'))
             {
-				let isPowerSet = false;
+                let isPowerSet = false;
                 for (let valueKey in message)
                 {
                     let value = message[valueKey];
@@ -433,7 +441,7 @@ class TasmotaDevice extends GeneralTasmotaDevice {
                         default:
                             if (valueKey.startsWith('POWER') && (this.relaysCount > 0))
                             {
-								isPowerSet = true;
+                                isPowerSet = true;
                                 this.powerReceived(valueKey, value);
                             }
                             break;

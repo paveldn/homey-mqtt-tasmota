@@ -1,26 +1,27 @@
 'use strict';
+'use strict';
 
 const Homey = require('homey');
 
 const TasmotaDevice = require('./device.js');
-const Sensor = require('../sensor.js');
+const Sensor = require('../../lib/sensor.js');
 const GeneralTasmotaDriver = require('../driver.js');
 
 class TasmotaDeviceDriver extends GeneralTasmotaDriver {
     
     onInit() {
         super.onInit();
-		this.registerRunListeners();
+        this.registerRunListeners();
     }
-	
-	
-	registerRunListeners() {
-		this.homey.flow.getConditionCard('dim_level_greater').registerRunListener((args, state) => {
-				return Promise.resolve(state.value * 100 > args.value);
-			});
-		this.homey.flow.getConditionCard('dim_level_lower').registerRunListener((args, state) => {
-				return Promise.resolve(state.value * 100 < args.value);
-			});   
+    
+    
+    registerRunListeners() {
+        this.homey.flow.getConditionCard('dim_level_greater').registerRunListener((args, state) => {
+                return Promise.resolve(args.device.getCapabilityValue('dim') * 100 > args.value);
+            });
+        this.homey.flow.getConditionCard('dim_level_lower').registerRunListener((args, state) => {
+                return Promise.resolve(args.device.getCapabilityValue('dim') * 100 < args.value);
+            });   
         let multiSocketTrigger = this.homey.flow.getDeviceTriggerCard('multiplesockets_relay_state_changed');
         multiSocketTrigger.registerRunListener((args, state) => {
                 return Promise.resolve(((args.socket_id.name === 'any socket') || (args.socket_id.name === state.socket_id.name)) &&
@@ -40,7 +41,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 return Promise.resolve(args.device.socketsList);
             });
         this.homey.flow.getConditionCard('multiplesockets_all_switches_turned_on').registerRunListener((args, state) => {
-                for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
+                for (let socketIndex=1; socketIndex <= args.device.relaysCount; socketIndex++)
                 {
                     if (!args.device.getCapabilityValue('switch.'+socketIndex.toString()))
                         return Promise.resolve(false);
@@ -48,14 +49,14 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 return Promise.resolve(true);
             });
         this.homey.flow.getConditionCard('multiplesockets_some_switches_turned_on').registerRunListener((args, state) => {
-                for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
+                for (let socketIndex=1; socketIndex <= args.device.relaysCount; socketIndex++)
                 {
-                    if (args.device.getCapabilityValue('switch.'+socketIndex.toString()))
+                    if (args.device.getCapabilityValue('switch.' + socketIndex.toString()))
                         return Promise.resolve(true);
                 }
                 return Promise.resolve(false);
             });
-		let multipleSocketAction = this.homey.flow.getActionCard('multiplesockets_switch_action');         
+        let multipleSocketAction = this.homey.flow.getActionCard('multiplesockets_switch_action');         
         multipleSocketAction.registerRunListener((args, state) => {
                 let valueToSend;
                 switch(args.state) {
@@ -82,11 +83,11 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
         multipleSocketAction.getArgument('socket_id').registerAutocompleteListener((query, args) => {
                 return Promise.resolve([{name: 'all sockets'}].concat(args.device.socketsList));
             });
-        this.homey.flow.getConditionCard('fan_speed_greater').registerRunListener((args, state) => {
-                return Promise.resolve(parseInt(state.value) > args.value);
+        this.homey.flow.getConditionCard('fan_speed_greater').registerRunListener((args, state) => {                
+                return Promise.resolve(args.device.getCapabilityValue("fan_speed") > args.value);
             });
         this.homey.flow.getConditionCard('fan_speed_lower').registerRunListener((args, state) => {
-                return Promise.resolve(parseInt(state.value) < args.value);
+                return Promise.resolve(args.device.getCapabilityValue("fan_speed") < args.value);
             });                            
         this.homey.flow.getActionCard('fan_speed_action').registerRunListener((args, state) => {
                 args.device.sendMessage('FanSpeed', args.value.toString());
@@ -113,8 +114,8 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 args.device.sendTasmotaPowerCommand('1',valueToSend); 
                 return Promise.resolve(true);
             });
-		this.homey.flow.getActionCard('zigbee_pair_action').registerRunListener((args, state) => {
-				let valueToSend;
+        this.homey.flow.getActionCard('zigbee_pair_action').registerRunListener((args, state) => {
+                let valueToSend;
                 switch(args.permission) {
                     case 'true':
                         valueToSend = '1';
@@ -125,10 +126,10 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                     default:
                         return Promise.resolve(false);                            
                 }
-				args.device.sendMessage('ZbPermitJoin', valueToSend);
-				return Promise.resolve(true);
+                args.device.sendMessage('ZbPermitJoin', valueToSend);
+                return Promise.resolve(true);
             });
-	}
+    }
 
     onMapDeviceClass(device) {
         this.log(`Mapping device "${device.getName()}"`);
@@ -167,7 +168,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 shutters_number: '0', 
                 chip_type: 'unknown'
             },
-            capabilities: ['measure_signal_strength'],
+            capabilities: [],
             capabilitiesOptions: {},
             class: 'other',
             icon: 'icons/tasmota.svg'
@@ -326,6 +327,8 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             devItem.icon = 'icons/zigbee_bridge.svg';
             devItem.class = 'other';
         }
+		// Should be the last one
+		devItem.capabilities.push('measure_signal_strength');
         if (devItem.capabilities.length <= 1)
             return null;
         return devItem;

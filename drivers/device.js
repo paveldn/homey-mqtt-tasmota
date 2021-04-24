@@ -45,25 +45,6 @@ class GeneralTasmotaDevice extends Homey.Device {
             this.answerTimeout = updateTm;
     }
     
-    // Debug only function
-    getFunctionCallers(max_depth) {
-        if (max_depth === undefined)
-            max_depth = 1;
-        let e = new Error();
-        let frames = e.stack.split("\n");
-        let frameIndex = 2;
-        let result = [];
-        while ((max_depth > 0) && (frameIndex < frames.length))
-        {
-            let lineNumber = frames[frameIndex].split(":")[1];
-            let functionName = frames[frameIndex].split(" ")[5];
-            result.push({ line: lineNumber, functionName: functionName});
-            max_depth--;
-            frameIndex++;
-        }
-        return result;
-    }
-
     setDeviceStatus(newStatus) {
 		// uncoment if you need to know who is calling function
 		// this.log(`setDeviceStatus: ${JSON.stringify(this.getFunctionCallers(5))}`);

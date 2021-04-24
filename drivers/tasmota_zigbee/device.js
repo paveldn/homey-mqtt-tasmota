@@ -2,7 +2,8 @@
 
 const Homey = require('homey');
 const GeneralTasmotaDevice = require('../device.js');
-const Sensor = require('../sensor.js');
+const Sensor = require('../../lib/sensor.js');
+//const Utils = require('../../lib/utils.js');
 
 class ZigbeeDevice extends GeneralTasmotaDevice {
     static additionalFields = ['BatteryPercentage', 'LinkQuality', 'LastSeen'];
@@ -26,11 +27,11 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
     }
     
     async onSettings(event) {
-		if (event.changedKeys.includes('mqtt_topic') || event.changedKeys.includes('swap_prefix_topic') || event.changedKeys.includes('zigbee_device_id'))
+        if (event.changedKeys.includes('mqtt_topic') || event.changedKeys.includes('swap_prefix_topic') || event.changedKeys.includes('zigbee_device_id'))
         {
             this.swap_prefix_topic = event.newSettings.swap_prefix_topic;
-			this.device_id = event.newSettings.zigbee_device_id;
-			this.lastSeen = undefined;
+            this.device_id = event.newSettings.zigbee_device_id;
+            this.lastSeen = undefined;
             setTimeout(() => {
                 this.setDeviceStatus('init');
                 this.nextRequest = Date.now();
@@ -44,11 +45,19 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
         }
     }
     
-	updateLastSeen() {
-		if (this.hasCapability('measure_last_seen') && (this.lastSeen != undefined))
-			this.setCapabilityValue('measure_last_seen', Math.floor((Date.now() - this.lastSeen.getTime()) / 1000) );
-	}
-	
+    updateLastSeen() {
+        if (this.hasCapability('measure_last_seen') && (this.lastSeen != undefined))
+        {
+            let oldValue = this.getCapabilityValue('measure_last_seen');
+            let newValue = Math.floor((Date.now() - this.lastSeen.getTime()) / 1000);
+            if (oldValue !== newValue)
+            {
+                this.setCapabilityValue('measure_last_seen',  newValue);
+                this.homey.flow.getDeviceTriggerCard('measure_last_seen_changed').trigger(this, {value: newValue}, newValue);
+            }
+        }
+    }
+    
     checkDeviceStatus() {
         if ((this.lastSeen != undefined) && (this.stage === 'init'))
         {
@@ -57,41 +66,41 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
         }
         super.checkDeviceStatus();
         let now = Date.now();
-		if (this.lastSeen != undefined)
-		{
-			this.updateLastSeen();
-			if ((this.answerTimeout == undefined) || (now < this.answerTimeout))
-			{
-				try {
-					if (this.zigbee_timeout > 0)
-					{
-						let timeout = new Date(this.lastSeen.getTime() + this.zigbee_timeout * 60 * 1000);
-						let device_valid =  timeout.getTime() >= now;
-						if ((this.stage === 'available') && !device_valid)
-						{
-							this.setDeviceStatus('unavailable');
-							this.invalidateStatus(this.homey.__('device.unavailable.timeout'));
-						}
-						else if ((this.stage === 'unavailable') && device_valid)
-						{
-							this.setDeviceStatus('available');
-							this.setAvailable();
-						}
-					}
-					else if (this.stage === 'unavailable')
-					{
-						this.setDeviceStatus('available');
-						this.setAvailable();
-					}
-				}
-				catch(error) {
-					if (this.debug) 
-						throw(error);
-					else
-						this.log(`Zigbee timeout check failed. Error happened: ${error}`);
-				}
-			}
-		}
+        if (this.lastSeen != undefined)
+        {
+            this.updateLastSeen();
+            if ((this.answerTimeout == undefined) || (now < this.answerTimeout))
+            {
+                try {
+                    if (this.zigbee_timeout > 0)
+                    {
+                        let timeout = new Date(this.lastSeen.getTime() + this.zigbee_timeout * 60 * 1000);
+                        let device_valid =  timeout.getTime() >= now;
+                        if ((this.stage === 'available') && !device_valid)
+                        {
+                            this.setDeviceStatus('unavailable');
+                            this.invalidateStatus(this.homey.__('device.unavailable.timeout'));
+                        }
+                        else if ((this.stage === 'unavailable') && device_valid)
+                        {
+                            this.setDeviceStatus('available');
+                            this.setAvailable();
+                        }
+                    }
+                    else if (this.stage === 'unavailable')
+                    {
+                        this.setDeviceStatus('available');
+                        this.setAvailable();
+                    }
+                }
+                catch(error) {
+                    if (this.debug) 
+                        throw(error);
+                    else
+                        this.log(`Zigbee timeout check failed. Error happened: ${error}`);
+                }
+            }
+        }
     }
     
     checkSensorCapability(capName, newValue, sensorName, valueKind) {
@@ -100,21 +109,21 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
         return this.setCapabilityValue(capName, newValue);
     }
 
-	onDeviceOffline() {
-		this.lastSeen = undefined;
-		super.onDeviceOffline();
-	}
-	
+    onDeviceOffline() {
+        this.lastSeen = undefined;
+        super.onDeviceOffline();
+    }
+    
     processMqttMessage(topic, message) {
         try
         {
-			let topicParts = topic.split('/');
-			let is_object = typeof message === 'object';
-			if ((topicParts.length > 3) && (topicParts[3] === 'ZbReceived'))
-			{
-				this.lastSeen = new Date();
-				this.updateLastSeen();
-			}
+            let topicParts = topic.split('/');
+            let is_object = typeof message === 'object';
+            if ((topicParts.length > 3) && (topicParts[3] === 'ZbReceived'))
+            {
+                this.lastSeen = new Date();
+                this.updateLastSeen();
+            }
             if (is_object)
             {
                 let tmp_message = {};               
@@ -136,9 +145,8 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
                             {
                                 this.lastSeen = lSeen;
                                 this.answerTimeout = undefined;
-                                this.checkDeviceStatus();
                             }
-							this.updateLastSeen();
+                            this.checkDeviceStatus();
                         }
                     }
                     catch(error) {
