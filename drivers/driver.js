@@ -105,6 +105,7 @@ class GeneralTasmotaDriver extends Homey.Driver {
         this.log(`onPair called`);
         var driver = this;
         var devices = {};
+        var selectedDevices = [];
         session.setHandler('list_devices', async (data) => {
             if (devices.length === 0)
             {
@@ -115,6 +116,13 @@ class GeneralTasmotaDriver extends Homey.Driver {
             }
             driver.log(`list_devices: New devices found: ${JSON.stringify(devices)}`);
             return devices;
+        });
+        session.setHandler("list_devices_selection", async (devices) => {
+            selectedDevices = devices;
+        });
+        session.setHandler('create_devices', async () => {
+            // Assign icons here!
+            return selectedDevices;
         });
         session.setHandler('showView', async (viewId) => {
             driver.log(`onPair current phase: "${viewId}"`);

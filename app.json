@@ -781,15 +781,14 @@
           "id": "list_devices",
           "template": "list_devices",
           "navigation": {
-            "next": "add_devices"
+            "next": "create_devices"
           },
           "options": {
             "singular": false
           }
         },
         {
-          "id": "add_devices",
-          "template": "add_devices"
+          "id": "create_devices"
         }
       ],
       "id": "tasmota_mqtt",
@@ -928,15 +927,14 @@
           "id": "list_devices",
           "template": "list_devices",
           "navigation": {
-            "next": "add_devices"
+            "next": "create_devices"
           },
           "options": {
             "singular": false
           }
         },
         {
-          "id": "add_devices",
-          "template": "add_devices"
+          "id": "create_devices"
         }
       ],
       "id": "tasmota_zigbee",

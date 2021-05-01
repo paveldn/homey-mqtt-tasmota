@@ -1,0 +1,19 @@
+<script type="text/javascript">
+	Homey.emit('create_devices', {})
+		.then(devices => {
+			if (devices.length === 0)
+			{
+				Homey.alert(Homey.__( 'pair.no_devices_selected'), 'warning').then( () => {
+					Homey.done();
+				});
+			}
+			devices.forEach(device => {
+				Homey.createDevice(device);
+			});
+			Homey.done();
+		})
+	.catch(error => {
+		Homey.alert(error);
+		Homey.done();
+	});
+</script>

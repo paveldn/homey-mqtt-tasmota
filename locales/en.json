@@ -11,6 +11,9 @@
         "unavailable":      "No MQTT client available. Please, install, start and configure Homey application called \"MQTT Client\"",
         "no_messages":      "No MQTT messages received during device search. Please, make sure that MQTT client application, MQTT broker and Tasmota devices are properly configured",
         "no_new_devices":   "No new devices found"
+    },
+    "pair": {
+        "no_devices_selected":      "No devices selected"
     }
 
 }

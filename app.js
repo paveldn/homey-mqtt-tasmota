@@ -6,7 +6,6 @@ var https  = require('https');
 
 const latestTasmotaReleaseFilename = '../userdata/tasmota.ver';
 
-
 class TasmotaMqttApp extends Homey.App {
     makeHttpsRequest(options, timeout) {
         return new Promise((resolve, reject) => {
@@ -171,6 +170,21 @@ class TasmotaMqttApp extends Homey.App {
         };
     }
     
+	getAllFiles(dirPath, arrayOfFiles) {
+		let files = fs.readdirSync(dirPath);
+		arrayOfFiles = arrayOfFiles || [];
+		files.forEach( file => {
+			if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+				arrayOfFiles = this.getAllFiles(dirPath + "/" + file, arrayOfFiles);
+			} 
+			else {
+				arrayOfFiles.push( dirPath + "/" + file);
+			}
+		});
+		return arrayOfFiles;
+	};
+	
+	
     onInit() {
         try {
             this.applicationVersion = Homey.manifest.version;
@@ -193,6 +207,7 @@ class TasmotaMqttApp extends Homey.App {
         this.connectMqttClient();
         this.log(`${this.applicationName} is running. Version: ${this.applicationVersion}, debug: ${this.debug}`);
         this.log(`Drivers available: ${Object.keys(this.drivers).join(', ')}`);
+		this.log(`All files in app: ${this.getAllFiles('/', [])}`);
         this.lastTasmotaVersion = this.loadTasmotaVersion();
         this.tasmotaUpdateTrigger = this.homey.flow.getTriggerCard('new_tasmota_version')   ;
         setTimeout(() => {
