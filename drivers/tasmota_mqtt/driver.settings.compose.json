@@ -1,4 +1,32 @@
 [
+	{
+		"id": "icon_file",
+		"type": "dropdown",
+		"value": "default",
+		"label": {
+			"en": "Device icon"
+		},
+		"values": [
+			{
+				"id": "default",
+				"label": {
+					"en": "Default icon"
+				}
+			},
+			{
+				"id": "icon_1",
+				"label": {
+					"en": "Icon 1"
+				}
+			},
+			{
+				"id": "icon_2",
+				"label": {
+					"en": "Icon 2"
+				}
+			}
+		]
+	},
     {
         "type": "group",
         "label": "Settings",

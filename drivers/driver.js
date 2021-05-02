@@ -27,6 +27,15 @@ class GeneralTasmotaDriver extends Homey.Driver {
                     this.log(`${this.constructor.name} checkDevices error: ${error}`);
             }
         }, 30000);
+		this.isIconChangeSupported = false;
+		for (let settingsIndex = 0; !this.isIconChangeSupported && (settingsIndex < this.manifest.settings.length); settingsIndex++) {
+			if (this.manifest.settings[settingsIndex].id === 'icon_file')
+			{
+				this.isIconChangeSupported = true;
+				break;
+			}
+		}
+		this.log(`onInit: ${this.constructor.name} ${this.isIconChangeSupported ? "support" : "not support"} icon change`);
         this.deviceConnectionTrigger = this.homey.flow.getTriggerCard('device_connection_changed');
     }
         
