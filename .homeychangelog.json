@@ -79,5 +79,8 @@
   },
   "0.9.2": {
     "en": "Some flow cards fixed."
+  },
+  "0.9.3": {
+    "en": "Multiple socket device action flow card fixed."
   }
 }

@@ -73,7 +73,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                         return Promise.resolve(false);                            
                 }
                 if (args.socket_id.name === 'all sockets')
-                {   for (let socketIndex=1;socketIndex<=this.relaysCount;socketIndex++)
+                {   for (let socketIndex=1;socketIndex<=args.device.relaysCount;socketIndex++)
                         args.device.sendTasmotaPowerCommand(socketIndex.toString(),valueToSend); 
                     return Promise.resolve(true);
                 }
@@ -327,8 +327,8 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             devItem.icon = 'icons/zigbee_bridge.svg';
             devItem.class = 'other';
         }
-		// Should be the last one
-		devItem.capabilities.push('measure_signal_strength');
+        // Should be the last one
+        devItem.capabilities.push('measure_signal_strength');
         if (devItem.capabilities.length <= 1)
             return null;
         return devItem;
