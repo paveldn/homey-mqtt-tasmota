@@ -13,6 +13,8 @@ class GeneralTasmotaDevice extends Homey.Device {
         let settings = this.getSettings();
         this.log(`Setting: ${JSON.stringify(settings)}`);
         this.log(`Capabilities: ${JSON.stringify(this.getCapabilities())}`);
+		this.supportIconChange = this.isIconChangeSupported();
+		this.log(`Icon change supported: ${this.supportIconChange}`);
         if (!this.hasCapability('measure_signal_strength'))
             this.addCapability('measure_signal_strength');
         this.swap_prefix_topic = settings.swap_prefix_topic;
@@ -44,6 +46,20 @@ class GeneralTasmotaDevice extends Homey.Device {
         if ((this.answerTimeout == undefined) || (updateTm < this.answerTimeout)) 
             this.answerTimeout = updateTm;
     }
+	
+	static getDriverIconFolder(driverName, absolutePath = true) {
+		if (absolutePath)
+			return `//userdata/icons/${driverName}`;
+		else
+			return `../../../userdata/icons/${driverName}`
+	}
+	static getDeviceIconFileName(deviceId) {
+		return `${deviceId}.svg`;
+	}
+	
+	getDeviceIconFileName() {
+		return `${GeneralTasmotaDevice.getDriverIconFolder(this.driver.manifest.id)}/${GeneralTasmotaDevice.getDeviceIconFileName(this.getData().id)}`;
+	}
     
     setDeviceStatus(newStatus) {
 		// uncoment if you need to know who is calling function
@@ -56,7 +72,11 @@ class GeneralTasmotaDevice extends Homey.Device {
             this.driver.onDeviceStatusChange(this, newStatus, oldStatus);
         }
     }
-
+	
+	isIconChangeSupported() {
+		return this.driver.isDeviceSupportIconChange(this);
+	}
+	
     checkDeviceStatus() {
         let now = Date.now();
         if ((this.stage === 'available') && (this.answerTimeout != undefined) && (now >= this.answerTimeout))
@@ -75,8 +95,19 @@ class GeneralTasmotaDevice extends Homey.Device {
         this.setUnavailable(message);
         this.updateDevice();
     }
+	
+	applyNewIcon(iconFileName) {
+		this.driver.setNewDeviceIcon(`//assets/icons/devices/${iconFileName}`, this.getDeviceIconFileName());
+		this.homey.notifications.createNotification({excerpt: "Please, restart application to apply new icon"});
+	}
     
     async onSettings(event) {
+		if (event.changedKeys.includes('icon_file') && this.supportIconChange)
+		{
+			let iconFile = event.newSettings.icon_file;
+			this.log(`Applyig new icon file ${JSON.stringify(iconFile)}`);
+			this.applyNewIcon(iconFile);
+		}
         if (event.changedKeys.includes('mqtt_topic') || event.changedKeys.includes('swap_prefix_topic'))
         {
             this.swap_prefix_topic = event.newSettings.swap_prefix_topic;

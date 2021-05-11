@@ -4,7 +4,7 @@ const Homey = require('homey');
 var fs = require('fs');
 var https  = require('https');
 
-const latestTasmotaReleaseFilename = '../userdata/tasmota.ver';
+const latestTasmotaReleaseFilename = '//userdata/tasmota.ver';
 
 class TasmotaMqttApp extends Homey.App {
     makeHttpsRequest(options, timeout) {

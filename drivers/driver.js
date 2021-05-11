@@ -1,6 +1,9 @@
 'use strict';
 
 const Homey = require('homey');
+const GeneralTasmotaDevice = require('./device.js');
+const fs = require('fs');
+const path = require('path');
 
 class GeneralTasmotaDriver extends Homey.Driver {
     // methoids that should be implement:
@@ -14,7 +17,7 @@ class GeneralTasmotaDriver extends Homey.Driver {
     onInit()
     {
         this.debug = this.homey.app.debug;
-        this.log(`${this.constructor.name} has been initiated`);
+        this.log(`${this.constructor.name} has been initiated, driver id: ${this.manifest.id}, driver name: ${this.manifest.name.en}`);
         this.checkDevices = setInterval(() => {
             try {
                 this.updateDevices();
@@ -38,7 +41,11 @@ class GeneralTasmotaDriver extends Homey.Driver {
 		this.log(`onInit: ${this.constructor.name} ${this.isIconChangeSupported ? "support" : "not support"} icon change`);
         this.deviceConnectionTrigger = this.homey.flow.getTriggerCard('device_connection_changed');
     }
-        
+	
+	isDeviceSupportIconChange(device) {
+		return this.isIconChangeSupported && fs.existsSync(device.getDeviceIconFileName());
+	}
+	
     collectPairingData(topic, message) {
         let topicParts = topic.split('/');
         if ((topicParts[0] === 'stat') || (topicParts[1] === 'stat'))
@@ -109,7 +116,19 @@ class GeneralTasmotaDriver extends Homey.Driver {
         this.checkDeviceSearchStatus.devicesCounter = devCount;
         return false;
     }
-    
+	
+    setNewDeviceIcon(iconFile, deviceIcon) {
+		try {
+			fs.unlinkSync(deviceIcon);
+		} 
+		catch(error) {
+		}
+		fs.copyFile(iconFile, deviceIcon, error => {
+			if (error) 
+				throw error;
+		});
+	}
+	
     onPair( session ) {
         this.log(`onPair called`);
         var driver = this;
@@ -130,7 +149,23 @@ class GeneralTasmotaDriver extends Homey.Driver {
             selectedDevices = devices;
         });
         session.setHandler('create_devices', async () => {
-            // Assign icons here!
+			if (this.isIconChangeSupported)
+			{
+				// Assign icons here!
+				let deviceIconsFolderAbs = GeneralTasmotaDevice.getDriverIconFolder(this.manifest.id, true);
+				let deviceIconsFolderRel = GeneralTasmotaDevice.getDriverIconFolder(this.manifest.id, false);
+				fs.mkdir(deviceIconsFolderAbs, { recursive: true }, error => {
+					if (error) 
+						throw error;
+				});
+				for (let device in selectedDevices) {
+					
+					let deviceIconName = GeneralTasmotaDevice.getDeviceIconFileName(selectedDevices[device].data.id);
+					let fullIconName = `${deviceIconsFolderAbs}/${deviceIconName}`
+					this.setNewDeviceIcon('//assets/icons/devices/led_profile.svg', fullIconName);
+					selectedDevices[device].icon = `${deviceIconsFolderRel}/${deviceIconName}`;
+				}
+			}
             return selectedDevices;
         });
         session.setHandler('showView', async (viewId) => {
