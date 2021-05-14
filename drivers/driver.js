@@ -39,8 +39,42 @@ class GeneralTasmotaDriver extends Homey.Driver {
 			}
 		}
 		this.log(`onInit: ${this.constructor.name} ${this.isIconChangeSupported ? "support" : "not support"} icon change`);
+		if (this.isIconChangeSupported)
+			this.removeUnusedIcons();
         this.deviceConnectionTrigger = this.homey.flow.getTriggerCard('device_connection_changed');
     }
+	
+	getDefaultIcon(settings, capabilities) {
+		return 'tasmota.svg';
+	}
+	
+	removeDeviceIcon(iconFileName) {
+		let driverIconFolder = GeneralTasmotaDevice.getDriverIconFolder(this.manifest.id, true);
+		try {
+			fs.unlinkSync(`${driverIconFolder}/${iconFileName}`);
+		} 
+		catch(error) {
+		}
+	}
+	
+	removeUnusedIcons() {
+		let driverIconFolder = GeneralTasmotaDevice.getDriverIconFolder(this.manifest.id, true);
+		let iconFiles = fs.readdirSync(driverIconFolder);
+		let usedIcons = [];
+		this.getDevices().forEach( device => {
+			if (this.isDeviceSupportIconChange(device))
+				usedIcons.push(GeneralTasmotaDevice.getDeviceIconFileName(device.getData().id));
+		});
+		let iconsToRemove = iconFiles.filter(value => !usedIcons.includes(value));
+		this.log(`removeUnusedIcons: All icon files: ${JSON.stringify(iconFiles)} used icons: ${JSON.stringify(usedIcons)} icons to delete: ${JSON.stringify(iconsToRemove)}`);
+		iconsToRemove.forEach(icon => {
+			try {
+				fs.unlinkSync(`${driverIconFolder}/${icon}`);
+			} 
+			catch(error) {
+			}
+		});
+	}
 	
 	isDeviceSupportIconChange(device) {
 		return this.isIconChangeSupported && fs.existsSync(device.getDeviceIconFileName());
@@ -120,13 +154,17 @@ class GeneralTasmotaDriver extends Homey.Driver {
     setNewDeviceIcon(iconFile, deviceIcon) {
 		try {
 			fs.unlinkSync(deviceIcon);
+		}
+		catch(error) {};
+		try {
+			fs.copyFile(iconFile, deviceIcon, error => {
+				if (error) 
+					throw error;
+			});
 		} 
 		catch(error) {
+			this.log(`setNewDeviceIcon: error: ${error}`);
 		}
-		fs.copyFile(iconFile, deviceIcon, error => {
-			if (error) 
-				throw error;
-		});
 	}
 	
     onPair( session ) {
@@ -159,11 +197,13 @@ class GeneralTasmotaDriver extends Homey.Driver {
 						throw error;
 				});
 				for (let device in selectedDevices) {
-					
+					let iconFileName = selectedDevices[device].icon.substring(selectedDevices[device].icon.lastIndexOf('/') + 1);
+					selectedDevices[device].settings.icon_file = iconFileName;
 					let deviceIconName = GeneralTasmotaDevice.getDeviceIconFileName(selectedDevices[device].data.id);
 					let fullIconName = `${deviceIconsFolderAbs}/${deviceIconName}`
-					this.setNewDeviceIcon('//assets/icons/devices/led_profile.svg', fullIconName);
+					this.setNewDeviceIcon(`//assets/icons/devices/${iconFileName}`, fullIconName);
 					selectedDevices[device].icon = `${deviceIconsFolderRel}/${deviceIconName}`;
+					this.log(`create_devices: ${JSON.stringify(selectedDevices[device])}`);
 				}
 			}
             return selectedDevices;

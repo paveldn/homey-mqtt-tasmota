@@ -153,7 +153,27 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
         this.sendMessage('tasmotas/cmnd/Status', '0');
         return true;
     }
-    
+	
+	getDefaultIcon(settings, capabilities) {
+		if (capabilities.includes('zigbee_pair'))
+			return 'zigbee_bridge.svg';
+		if (capabilities.includes('multiplesockets'))
+			return 'extension_plug.svg';
+		if (capabilities.includes('windowcoverings_state'))
+			return 'curtains.svg';
+		if (capabilities.includes('singlesocket'))
+		{
+			if (capabilities.includes('fan_speed'))
+				return 'table_fan.svg';
+			if (capabilities.includes('dim'))
+				return 'lightbulb.svg';
+			return 'electrical_outlet_1.svg';
+		}		
+		if (capabilities.includes('additional_sensors'))
+			return 'sensor.svg';
+		return 'tasmota.svg';
+	}
+	
     collectedDataToDevice( deviceTopic, messages, swapPrefixTopic) {
         this.log(`collectedDataToDevice: ${JSON.stringify(deviceTopic)} => ${JSON.stringify(messages)}`);
         let devItem = { 
@@ -170,8 +190,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             },
             capabilities: [],
             capabilitiesOptions: {},
-            class: 'other',
-            icon: 'icons/tasmota.svg'
+            class: 'other'
         };
         if (('StatusMQT' in messages) && (messages['StatusMQT'][0]['MqttClient'] !== undefined))
             devItem.data = { id: messages['StatusMQT'][0]['MqttClient']};
@@ -245,7 +264,6 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                     else
                         sens_string.push(sitem);
                 devItem.settings.additional_sensors = sens_string.join(', ');   
-                devItem.icon = 'icons/sensor.svg';
                 devItem.class = 'sensor';               
             }
             if (shutters > 0)
@@ -255,7 +273,6 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                 devItem.capabilities.push('windowcoverings_set');
                 devItem.settings.shutters_number = shutters.toString();
                 devItem.class = 'blinds';
-                devItem.icon = 'icons/curtains.svg';
             }
         }
         if ('StatusSTS' in messages)
@@ -284,11 +301,9 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             if (relaysCount === 1)
             {
                 devItem.class = 'socket';
-                devItem.icon = 'icons/power_socket.svg';
                 if ('Dimmer' in messages['StatusSTS'][0])
                 {
                     devItem.class = 'light';
-                    devItem.icon = 'icons/light_bulb.svg';
                     devItem.settings.is_dimmable = 'Yes';
                     devItem.capabilities.push('dim');
                 }
@@ -310,25 +325,19 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
                     capabilities.push('light_mode'); 
                 if ('FanSpeed' in messages['StatusSTS'][0])
                 {
-                    devItem.icon = 'icons/table_fan.svg';
                     devItem.class = 'fan';
                     devItem.capabilities.push('fan_speed'); 
                     devItem.settings.has_fan = 'Yes';
                 }
             }
             else if (relaysCount > 1)
-            {
-                devItem.icon = 'icons/power_strip.svg';
                 devItem.class = 'other';
-            }
         }
         if (isZigbeeBridge)
-        {
-            devItem.icon = 'icons/zigbee_bridge.svg';
             devItem.class = 'other';
-        }
         // Should be the last one
         devItem.capabilities.push('measure_signal_strength');
+		devItem.icon = '../../../assets/icons/devices/' + getDefaultIcon(devItem.settings, devItem.capabilities);
         if (devItem.capabilities.length <= 1)
             return null;
         return devItem;

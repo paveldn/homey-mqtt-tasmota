@@ -96,17 +96,30 @@ class GeneralTasmotaDevice extends Homey.Device {
         this.updateDevice();
     }
 	
-	applyNewIcon(iconFileName) {
-		this.driver.setNewDeviceIcon(`//assets/icons/devices/${iconFileName}`, this.getDeviceIconFileName());
-		this.homey.notifications.createNotification({excerpt: "Please, restart application to apply new icon"});
+	applyNewIcon(iconFile) {
+		let file = iconFile;
+		if (file === 'default')
+		{
+			file = this.driver.getDefaultIcon(this.getSettings(), this.getCapabilities());
+			this.log(`Applyig icon file as default: ${JSON.stringify(file)}`);
+		}
+		else
+			this.log(`Applyig new icon file ${JSON.stringify(file)}`);
+		this.driver.setNewDeviceIcon(`//assets/icons/devices/${file}`, this.getDeviceIconFileName());
+		//this.homey.notifications.createNotification({excerpt: "Please, restart application to apply new icon"});
+		return file;
 	}
     
     async onSettings(event) {
+		this.log(`onSettings: changes ${JSON.stringify(event.changedKeys)}`);
 		if (event.changedKeys.includes('icon_file') && this.supportIconChange)
 		{
 			let iconFile = event.newSettings.icon_file;
-			this.log(`Applyig new icon file ${JSON.stringify(iconFile)}`);
-			this.applyNewIcon(iconFile);
+			let realFile = this.applyNewIcon(iconFile);
+			if (iconFile != realFile)
+				setTimeout(() => {
+					this.setSettings({icon_file: realFile});
+				}, 200);				
 		}
         if (event.changedKeys.includes('mqtt_topic') || event.changedKeys.includes('swap_prefix_topic'))
         {
@@ -118,6 +131,10 @@ class GeneralTasmotaDevice extends Homey.Device {
             }, 3000);
         }
     }
+	
+	onDeleted() {
+		this.driver.removeDeviceIcon(GeneralTasmotaDevice.getDeviceIconFileName(this.getData().id));
+	}
 
     updateCapabilityValue(cap, value) {
         if (this.hasCapability(cap))

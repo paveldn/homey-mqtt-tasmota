@@ -207,7 +207,8 @@ class TasmotaMqttApp extends Homey.App {
         this.connectMqttClient();
         this.log(`${this.applicationName} is running. Version: ${this.applicationVersion}, debug: ${this.debug}`);
         this.log(`Drivers available: ${Object.keys(this.drivers).join(', ')}`);
-		this.log(`All files in app: ${this.getAllFiles('/', [])}`);
+		if (this.debug)
+			this.log(`All files in app: ${this.getAllFiles('/', [])}`);
         this.lastTasmotaVersion = this.loadTasmotaVersion();
         this.tasmotaUpdateTrigger = this.homey.flow.getTriggerCard('new_tasmota_version')   ;
         setTimeout(() => {

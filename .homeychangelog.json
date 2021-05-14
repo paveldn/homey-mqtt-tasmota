@@ -79,5 +79,8 @@
   },
   "0.9.2": {
     "en": "Some flow cards fixed."
+  },
+  "0.10.0": {
+    "en": "Test version for icon changing mechanism"
   }
 }
