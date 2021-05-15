@@ -27,6 +27,16 @@ class ZigbeeDevice extends GeneralTasmotaDevice {
     }
     
     async onSettings(event) {
+        this.log(`onSettings: changes ${JSON.stringify(event.changedKeys)}`);
+        if (event.changedKeys.includes('icon_file') && this.supportIconChange)
+        {
+            let iconFile = event.newSettings.icon_file;
+            let realFile = this.applyNewIcon(iconFile);
+            if (iconFile != realFile)
+                setTimeout(() => {
+                    this.setSettings({icon_file: realFile});
+                }, 200);                
+        }
         if (event.changedKeys.includes('mqtt_topic') || event.changedKeys.includes('swap_prefix_topic') || event.changedKeys.includes('zigbee_device_id'))
         {
             this.swap_prefix_topic = event.newSettings.swap_prefix_topic;

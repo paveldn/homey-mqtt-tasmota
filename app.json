@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.paveld.tasmota",
-  "version": "0.10.0",
+  "version": "0.10.2",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "brandColor": "#42A3E9",
@@ -823,6 +823,12 @@
               }
             },
             {
+              "id": "bamboo_shades.svg",
+              "label": {
+                "en": "Bamboo shades"
+              }
+            },
+            {
               "id": "ceiling_fan.svg",
               "label": {
                 "en": "Ceiling fan"
@@ -877,9 +883,21 @@
               }
             },
             {
-              "id": "curtains.svg",
+              "id": "curtains_1.svg",
               "label": {
-                "en": "Curtains"
+                "en": "Curtains 1"
+              }
+            },
+            {
+              "id": "curtains_2.svg",
+              "label": {
+                "en": "Curtains 2"
+              }
+            },
+            {
+              "id": "curtains_3.svg",
+              "label": {
+                "en": "Curtains 3"
               }
             },
             {
@@ -1087,6 +1105,18 @@
               }
             },
             {
+              "id": "roller_shutter_door.svg",
+              "label": {
+                "en": "Roller shutter door"
+              }
+            },
+            {
+              "id": "roman_shades.svg",
+              "label": {
+                "en": "Roman shades"
+              }
+            },
+            {
               "id": "sensor.svg",
               "label": {
                 "en": "Sensor"
@@ -1270,6 +1300,70 @@
         "en": "Zigbee device (experimental)"
       },
       "settings": [
+        {
+          "id": "icon_file",
+          "type": "dropdown",
+          "value": "default",
+          "label": {
+            "en": "Device icon"
+          },
+          "values": [
+            {
+              "id": "default",
+              "label": {
+                "en": "(Default icon)"
+              }
+            },
+            {
+              "id": "door_sensor.svg",
+              "label": {
+                "en": "Door sensor"
+              }
+            },
+            {
+              "id": "motion_sensor.svg",
+              "label": {
+                "en": "Motion sensor"
+              }
+            },
+            {
+              "id": "sensor_1.svg",
+              "label": {
+                "en": "Sensor 1"
+              }
+            },
+            {
+              "id": "sensor_2.svg",
+              "label": {
+                "en": "Sensor 2"
+              }
+            },
+            {
+              "id": "tasmota.svg",
+              "label": {
+                "en": "Tasmota"
+              }
+            },
+            {
+              "id": "temperature.svg",
+              "label": {
+                "en": "Temperature"
+              }
+            },
+            {
+              "id": "water_leak.svg",
+              "label": {
+                "en": "Water leak"
+              }
+            },
+            {
+              "id": "zigbee_sensor.svg",
+              "label": {
+                "en": "Zigbee sensor"
+              }
+            }
+          ]
+        },
         {
           "type": "group",
           "label": "Settings",

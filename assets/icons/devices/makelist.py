@@ -2,7 +2,7 @@
 
 files = os.listdir()
 files.sort()
-outFile = open("reult.json","w+")
+outFile = open("result.json","w+")
 for f in files:
     if os.path.isfile(f) and f.endswith('.svg'):
         outFile.write("{\n");
