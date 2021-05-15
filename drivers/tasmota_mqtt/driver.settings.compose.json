@@ -13,318 +13,348 @@
                     "en": "(Default icon)"
                 }
             },
-            {
-                "id": "backlight_led_module.svg",
-                "label": {
-                    "en": "Backlight led module"
-                }
-            },
-            {
-                "id": "backlight_light.svg",
-                "label": {
-                    "en": "Backlight light"
-                }
-            },
-            {
-                "id": "ceiling_fan.svg",
-                "label": {
-                    "en": "Ceiling fan"
-                }
-            },
-            {
-                "id": "ceiling_fixture_light.svg",
-                "label": {
-                    "en": "Ceiling fixture light"
-                }
-            },
-            {
-                "id": "ceiling_light_pendant.svg",
-                "label": {
-                    "en": "Ceiling light pendant"
-                }
-            },
-            {
-                "id": "ceiling_light_spot_1.svg",
-                "label": {
-                    "en": "Ceiling light spot 1"
-                }
-            },
-            {
-                "id": "ceiling_light_spot_2.svg",
-                "label": {
-                    "en": "Ceiling light spot 2"
-                }
-            },
-            {
-                "id": "ceiling_light_spot_3.svg",
-                "label": {
-                    "en": "Ceiling light spot 3"
-                }
-            },
-            {
-                "id": "ceiling_light_spot_4.svg",
-                "label": {
-                    "en": "Ceiling light spot 4"
-                }
-            },
-            {
-                "id": "chandelier.svg",
-                "label": {
-                    "en": "Chandelier"
-                }
-            },
-            {
-                "id": "circuit_breaker.svg",
-                "label": {
-                    "en": "Circuit breaker"
-                }
-            },
-            {
-                "id": "curtains.svg",
-                "label": {
-                    "en": "Curtains"
-                }
-            },
-            {
-                "id": "diode_led.svg",
-                "label": {
-                    "en": "Diode led"
-                }
-            },
-            {
-                "id": "driver_led.svg",
-                "label": {
-                    "en": "Driver led"
-                }
-            },
-            {
-                "id": "electric_box.svg",
-                "label": {
-                    "en": "Electric box"
-                }
-            },
-            {
-                "id": "electric_lamp_led.svg",
-                "label": {
-                    "en": "Electric lamp led"
-                }
-            },
-            {
-                "id": "electric_plug.svg",
-                "label": {
-                    "en": "Electric plug"
-                }
-            },
-            {
-                "id": "electric_switch.svg",
-                "label": {
-                    "en": "Electric switch"
-                }
-            },
-            {
-                "id": "electric_warning.svg",
-                "label": {
-                    "en": "Electric warning"
-                }
-            },
-            {
-                "id": "electrical_junction_box.svg",
-                "label": {
-                    "en": "Electrical junction box"
-                }
-            },
-            {
-                "id": "electrical_outlet_1.svg",
-                "label": {
-                    "en": "Electrical outlet 1"
-                }
-            },
-            {
-                "id": "electrical_outlet_2.svg",
-                "label": {
-                    "en": "Electrical outlet 2"
-                }
-            },
-            {
-                "id": "electrical_outlet_switch.svg",
-                "label": {
-                    "en": "Electrical outlet switch"
-                }
-            },
-            {
-                "id": "electrical_relay_timer.svg",
-                "label": {
-                    "en": "Electrical relay timer"
-                }
-            },
-            {
-                "id": "electricity_meter.svg",
-                "label": {
-                    "en": "Electricity meter"
-                }
-            },
-            {
-                "id": "extension_plug.svg",
-                "label": {
-                    "en": "Extension plug"
-                }
-            },
-            {
-                "id": "floor_lamp.svg",
-                "label": {
-                    "en": "Floor lamp"
-                }
-            },
-            {
-                "id": "garden_lamp.svg",
-                "label": {
-                    "en": "Garden lamp"
-                }
-            },
-            {
-                "id": "house_electrification.svg",
-                "label": {
-                    "en": "House electrification"
-                }
-            },
-            {
-                "id": "house_lightning.svg",
-                "label": {
-                    "en": "House lightning"
-                }
-            },
-            {
-                "id": "kitchen_lighting_pendants.svg",
-                "label": {
-                    "en": "Kitchen lighting pendants"
-                }
-            },
-            {
-                "id": "lamp_light_street_1.svg",
-                "label": {
-                    "en": "Lamp light street 1"
-                }
-            },
-            {
-                "id": "lamp_light_street_2.svg",
-                "label": {
-                    "en": "Lamp light street 2"
-                }
-            },
-            {
-                "id": "led_light_strip.svg",
-                "label": {
-                    "en": "Led light strip"
-                }
-            },
-            {
-                "id": "led_power_supply_1.svg",
-                "label": {
-                    "en": "Led power supply 1"
-                }
-            },
-            {
-                "id": "led_power_supply_2.svg",
-                "label": {
-                    "en": "Led power supply 2"
-                }
-            },
-            {
-                "id": "led_profile.svg",
-                "label": {
-                    "en": "Led profile"
-                }
-            },
-            {
-                "id": "light_outdoor_spot.svg",
-                "label": {
-                    "en": "Light outdoor spot"
-                }
-            },
-            {
-                "id": "light_pendant_1.svg",
-                "label": {
-                    "en": "Light pendant 1"
-                }
-            },
-            {
-                "id": "light_pendant_2.svg",
-                "label": {
-                    "en": "Light pendant 2"
-                }
-            },
-            {
-                "id": "light_pendant_3.svg",
-                "label": {
-                    "en": "Light pendant 3"
-                }
-            },
-            {
-                "id": "lightbox.svg",
-                "label": {
-                    "en": "Lightbox"
-                }
-            },
-            {
-                "id": "lightbulb.svg",
-                "label": {
-                    "en": "Lightbulb"
-                }
-            },
-            {
-                "id": "lightning_protection.svg",
-                "label": {
-                    "en": "Lightning protection"
-                }
-            },
-            {
-                "id": "lled_strip.svg",
-                "label": {
-                    "en": "Lled strip"
-                }
-            },
-            {
-                "id": "power_supply.svg",
-                "label": {
-                    "en": "Power supply"
-                }
-            },
-            {
-                "id": "sensor.svg",
-                "label": {
-                    "en": "Sensor"
-                }
-            },
-            {
-                "id": "table_fan.svg",
-                "label": {
-                    "en": "Table fan"
-                }
-            },
-            {
-                "id": "tasmota.svg",
-                "label": {
-                    "en": "Tasmota"
-                }
-            },
-            {
-                "id": "wall_light_lamp_1.svg",
-                "label": {
-                    "en": "Wall light lamp 1"
-                }
-            },
-            {
-                "id": "wall_light_lamp_2.svg",
-                "label": {
-                    "en": "Wall light lamp 2"
-                }
-            },
-            {
-                "id": "zigbee_bridge.svg",
-                "label": {
-                    "en": "Zigbee bridge"
-                }
-            }
+			{
+				"id": "backlight_led_module.svg",
+				"label": {
+					"en": "Backlight led module"
+				}
+			},
+			{
+				"id": "backlight_light.svg",
+				"label": {
+					"en": "Backlight light"
+				}
+			},
+			{
+				"id": "bamboo_shades.svg",
+				"label": {
+					"en": "Bamboo shades"
+				}
+			},
+			{
+				"id": "ceiling_fan.svg",
+				"label": {
+					"en": "Ceiling fan"
+				}
+			},
+			{
+				"id": "ceiling_fixture_light.svg",
+				"label": {
+					"en": "Ceiling fixture light"
+				}
+			},
+			{
+				"id": "ceiling_light_pendant.svg",
+				"label": {
+					"en": "Ceiling light pendant"
+				}
+			},
+			{
+				"id": "ceiling_light_spot_1.svg",
+				"label": {
+					"en": "Ceiling light spot 1"
+				}
+			},
+			{
+				"id": "ceiling_light_spot_2.svg",
+				"label": {
+					"en": "Ceiling light spot 2"
+				}
+			},
+			{
+				"id": "ceiling_light_spot_3.svg",
+				"label": {
+					"en": "Ceiling light spot 3"
+				}
+			},
+			{
+				"id": "ceiling_light_spot_4.svg",
+				"label": {
+					"en": "Ceiling light spot 4"
+				}
+			},
+			{
+				"id": "chandelier.svg",
+				"label": {
+					"en": "Chandelier"
+				}
+			},
+			{
+				"id": "circuit_breaker.svg",
+				"label": {
+					"en": "Circuit breaker"
+				}
+			},
+			{
+				"id": "curtains_1.svg",
+				"label": {
+					"en": "Curtains 1"
+				}
+			},
+			{
+				"id": "curtains_2.svg",
+				"label": {
+					"en": "Curtains 2"
+				}
+			},
+			{
+				"id": "curtains_3.svg",
+				"label": {
+					"en": "Curtains 3"
+				}
+			},
+			{
+				"id": "diode_led.svg",
+				"label": {
+					"en": "Diode led"
+				}
+			},
+			{
+				"id": "driver_led.svg",
+				"label": {
+					"en": "Driver led"
+				}
+			},
+			{
+				"id": "electric_box.svg",
+				"label": {
+					"en": "Electric box"
+				}
+			},
+			{
+				"id": "electric_lamp_led.svg",
+				"label": {
+					"en": "Electric lamp led"
+				}
+			},
+			{
+				"id": "electric_plug.svg",
+				"label": {
+					"en": "Electric plug"
+				}
+			},
+			{
+				"id": "electric_switch.svg",
+				"label": {
+					"en": "Electric switch"
+				}
+			},
+			{
+				"id": "electric_warning.svg",
+				"label": {
+					"en": "Electric warning"
+				}
+			},
+			{
+				"id": "electrical_junction_box.svg",
+				"label": {
+					"en": "Electrical junction box"
+				}
+			},
+			{
+				"id": "electrical_outlet_1.svg",
+				"label": {
+					"en": "Electrical outlet 1"
+				}
+			},
+			{
+				"id": "electrical_outlet_2.svg",
+				"label": {
+					"en": "Electrical outlet 2"
+				}
+			},
+			{
+				"id": "electrical_outlet_switch.svg",
+				"label": {
+					"en": "Electrical outlet switch"
+				}
+			},
+			{
+				"id": "electrical_relay_timer.svg",
+				"label": {
+					"en": "Electrical relay timer"
+				}
+			},
+			{
+				"id": "electricity_meter.svg",
+				"label": {
+					"en": "Electricity meter"
+				}
+			},
+			{
+				"id": "extension_plug.svg",
+				"label": {
+					"en": "Extension plug"
+				}
+			},
+			{
+				"id": "floor_lamp.svg",
+				"label": {
+					"en": "Floor lamp"
+				}
+			},
+			{
+				"id": "garden_lamp.svg",
+				"label": {
+					"en": "Garden lamp"
+				}
+			},
+			{
+				"id": "house_electrification.svg",
+				"label": {
+					"en": "House electrification"
+				}
+			},
+			{
+				"id": "house_lightning.svg",
+				"label": {
+					"en": "House lightning"
+				}
+			},
+			{
+				"id": "kitchen_lighting_pendants.svg",
+				"label": {
+					"en": "Kitchen lighting pendants"
+				}
+			},
+			{
+				"id": "lamp_light_street_1.svg",
+				"label": {
+					"en": "Lamp light street 1"
+				}
+			},
+			{
+				"id": "lamp_light_street_2.svg",
+				"label": {
+					"en": "Lamp light street 2"
+				}
+			},
+			{
+				"id": "led_light_strip.svg",
+				"label": {
+					"en": "Led light strip"
+				}
+			},
+			{
+				"id": "led_power_supply_1.svg",
+				"label": {
+					"en": "Led power supply 1"
+				}
+			},
+			{
+				"id": "led_power_supply_2.svg",
+				"label": {
+					"en": "Led power supply 2"
+				}
+			},
+			{
+				"id": "led_profile.svg",
+				"label": {
+					"en": "Led profile"
+				}
+			},
+			{
+				"id": "light_outdoor_spot.svg",
+				"label": {
+					"en": "Light outdoor spot"
+				}
+			},
+			{
+				"id": "light_pendant_1.svg",
+				"label": {
+					"en": "Light pendant 1"
+				}
+			},
+			{
+				"id": "light_pendant_2.svg",
+				"label": {
+					"en": "Light pendant 2"
+				}
+			},
+			{
+				"id": "light_pendant_3.svg",
+				"label": {
+					"en": "Light pendant 3"
+				}
+			},
+			{
+				"id": "lightbox.svg",
+				"label": {
+					"en": "Lightbox"
+				}
+			},
+			{
+				"id": "lightbulb.svg",
+				"label": {
+					"en": "Lightbulb"
+				}
+			},
+			{
+				"id": "lightning_protection.svg",
+				"label": {
+					"en": "Lightning protection"
+				}
+			},
+			{
+				"id": "lled_strip.svg",
+				"label": {
+					"en": "Lled strip"
+				}
+			},
+			{
+				"id": "power_supply.svg",
+				"label": {
+					"en": "Power supply"
+				}
+			},
+			{
+				"id": "roller_shutter_door.svg",
+				"label": {
+					"en": "Roller shutter door"
+				}
+			},
+			{
+				"id": "roman_shades.svg",
+				"label": {
+					"en": "Roman shades"
+				}
+			},
+			{
+				"id": "sensor.svg",
+				"label": {
+					"en": "Sensor"
+				}
+			},
+			{
+				"id": "table_fan.svg",
+				"label": {
+					"en": "Table fan"
+				}
+			},
+			{
+				"id": "tasmota.svg",
+				"label": {
+					"en": "Tasmota"
+				}
+			},
+			{
+				"id": "wall_light_lamp_1.svg",
+				"label": {
+					"en": "Wall light lamp 1"
+				}
+			},
+			{
+				"id": "wall_light_lamp_2.svg",
+				"label": {
+					"en": "Wall light lamp 2"
+				}
+			},
+			{
+				"id": "zigbee_bridge.svg",
+				"label": {
+					"en": "Zigbee bridge"
+				}
+			}            
         ]
     },
     {

@@ -337,7 +337,7 @@ class TasmotaDeviceDriver extends GeneralTasmotaDriver {
             devItem.class = 'other';
         // Should be the last one
         devItem.capabilities.push('measure_signal_strength');
-		devItem.icon = '../../../assets/icons/devices/' + getDefaultIcon(devItem.settings, devItem.capabilities);
+		devItem.icon = '../../../assets/icons/devices/' + this.getDefaultIcon(devItem.settings, devItem.capabilities);
         if (devItem.capabilities.length <= 1)
             return null;
         return devItem;

@@ -1,5 +1,69 @@
 [
     {
+        "id": "icon_file",
+        "type": "dropdown",
+        "value": "default",
+        "label": {
+            "en": "Device icon"
+        },
+        "values": [
+            {
+                "id": "default",
+                "label": {
+                    "en": "(Default icon)"
+                }
+            },
+            {
+                "id": "door_sensor.svg",
+                "label": {
+                    "en": "Door sensor"
+                }
+            },
+            {
+                "id": "motion_sensor.svg",
+                "label": {
+                    "en": "Motion sensor"
+                }
+            },
+            {
+                "id": "sensor_1.svg",
+                "label": {
+                    "en": "Sensor 1"
+                }
+            },
+            {
+                "id": "sensor_2.svg",
+                "label": {
+                    "en": "Sensor 2"
+                }
+            },
+            {
+                "id": "tasmota.svg",
+                "label": {
+                    "en": "Tasmota"
+                }
+            },
+            {
+                "id": "temperature.svg",
+                "label": {
+                    "en": "Temperature"
+                }
+            },
+            {
+                "id": "water_leak.svg",
+                "label": {
+                    "en": "Water leak"
+                }
+            },
+            {
+                "id": "zigbee_sensor.svg",
+                "label": {
+                    "en": "Zigbee sensor"
+                }
+            }
+        ]
+    },
+    {
         "type": "group",
         "label": "Settings",
         "children": [

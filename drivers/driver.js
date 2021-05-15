@@ -59,6 +59,7 @@ class GeneralTasmotaDriver extends Homey.Driver {
 	
 	removeUnusedIcons() {
 		let driverIconFolder = GeneralTasmotaDevice.getDriverIconFolder(this.manifest.id, true);
+		try {
 		let iconFiles = fs.readdirSync(driverIconFolder);
 		let usedIcons = [];
 		this.getDevices().forEach( device => {
@@ -74,6 +75,9 @@ class GeneralTasmotaDriver extends Homey.Driver {
 			catch(error) {
 			}
 		});
+		}
+		catch(error) {
+		}
 	}
 	
 	isDeviceSupportIconChange(device) {
@@ -157,13 +161,9 @@ class GeneralTasmotaDriver extends Homey.Driver {
 		}
 		catch(error) {};
 		try {
-			fs.copyFile(iconFile, deviceIcon, error => {
-				if (error) 
-					throw error;
-			});
+			fs.copyFileSync(iconFile, deviceIcon);
 		} 
 		catch(error) {
-			this.log(`setNewDeviceIcon: error: ${error}`);
 		}
 	}
 	
@@ -192,18 +192,25 @@ class GeneralTasmotaDriver extends Homey.Driver {
 				// Assign icons here!
 				let deviceIconsFolderAbs = GeneralTasmotaDevice.getDriverIconFolder(this.manifest.id, true);
 				let deviceIconsFolderRel = GeneralTasmotaDevice.getDriverIconFolder(this.manifest.id, false);
-				fs.mkdir(deviceIconsFolderAbs, { recursive: true }, error => {
-					if (error) 
-						throw error;
-				});
+				this.log(`Creating ${deviceIconsFolderAbs}`);
+				try {
+					fs.mkdirSync(deviceIconsFolderAbs, { recursive: true });
+				}
+				catch(error) {
+				}
 				for (let device in selectedDevices) {
-					let iconFileName = selectedDevices[device].icon.substring(selectedDevices[device].icon.lastIndexOf('/') + 1);
-					selectedDevices[device].settings.icon_file = iconFileName;
-					let deviceIconName = GeneralTasmotaDevice.getDeviceIconFileName(selectedDevices[device].data.id);
-					let fullIconName = `${deviceIconsFolderAbs}/${deviceIconName}`
-					this.setNewDeviceIcon(`//assets/icons/devices/${iconFileName}`, fullIconName);
-					selectedDevices[device].icon = `${deviceIconsFolderRel}/${deviceIconName}`;
-					this.log(`create_devices: ${JSON.stringify(selectedDevices[device])}`);
+					try {
+						let iconFileName = selectedDevices[device].icon.substring(selectedDevices[device].icon.lastIndexOf('/') + 1);
+						selectedDevices[device].settings.icon_file = iconFileName;
+						let deviceIconName = GeneralTasmotaDevice.getDeviceIconFileName(selectedDevices[device].data.id);
+						let fullIconName = `${deviceIconsFolderAbs}/${deviceIconName}`
+						this.setNewDeviceIcon(`//assets/icons/devices/${iconFileName}`, fullIconName);
+						selectedDevices[device].icon = `${deviceIconsFolderRel}/${deviceIconName}`;
+						this.log(`create_devices: ${JSON.stringify(selectedDevices[device])}`);
+					}
+					catch(error) {
+						this.log(`Error creating devie ${selectedDevices[device].data.id}`);
+					}
 				}
 			}
             return selectedDevices;

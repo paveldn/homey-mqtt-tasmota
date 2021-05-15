@@ -114,7 +114,11 @@ class ZigbeeDeviceDriver extends GeneralTasmotaDriver {
             }
         }
     }
-    
+	
+	getDefaultIcon(settings, capabilities) {
+		return 'zigbee_sensor.svg';
+	}
+	
     collectedDataToDevices( deviceTopic, messages, swapPrefixTopic) {
         if (!('ZbStatus3' in messages))
             return [];

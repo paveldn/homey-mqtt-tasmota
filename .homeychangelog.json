@@ -82,5 +82,8 @@
   },
   "0.10.0": {
     "en": "Test version for icon changing mechanism"
+  },
+  "0.10.1": {
+    "en": "Bug fixes"
   }
 }
