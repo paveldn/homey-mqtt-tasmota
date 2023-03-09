@@ -1509,6 +1509,16 @@
     }
   ],
   "capabilities": {
+    "additional_sensors": {
+      "type": "boolean",
+      "title": {
+        "en": "Switch"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": null,
+      "uiQuickAction": false
+    },
     "fan_speed": {
       "type": "enum",
       "values": [
@@ -1716,6 +1726,15 @@
       "setable": false,
       "icon": "assets/icons/capabilities/switch.svg"
     },
+    "singlesocket": {
+      "type": "boolean",
+      "title": {
+        "en": "Switch"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": null
+    },
     "switch": {
       "type": "boolean",
       "title": {
@@ -1723,7 +1742,7 @@
       },
       "getable": true,
       "setable": true,
-      "uiComponent": "toggle",
+      "uiComponent": null,
       "uiQuickAction": false
     },
     "zigbee_pair": {
